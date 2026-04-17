@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "lottie": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "computedHash": "14914410b16c5c0fd56033256f24bd7a8f1eb821bba8b0589c6e466f83c931ef"
+    },
+    "lottie-animator": {
+      "source": "obeskay/lottie-animator-skill",
+      "sourceType": "github",
+      "computedHash": "81d1760d7ae27f80fe62f7306f9b59e48c64a94b638c5fb89c5fa3bc586804bd"
+    },
+    "lottie-bodymovin": {
+      "source": "dylantarre/animation-principles",
+      "sourceType": "github",
+      "computedHash": "b1206cffbc6f080b5835fcd85920ffe59bc05b0f3841412541d6dedc881c8e2c"
+    }
+  }
+}

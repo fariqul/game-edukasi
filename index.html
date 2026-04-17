@@ -1,0 +1,2995 @@
+﻿<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Game edukasi interaktif untuk siswa SMA kelas 10 mata pelajaran Informatika">
+    <title>Informatika Lab Adventure</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Playful Educational Palette
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        },
+                        secondary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                        },
+                        accent: {
+                            50: '#fefce8',
+                            100: '#fef9c3',
+                            200: '#fef08a',
+                            300: '#fde047',
+                            400: '#facc15',
+                            500: '#eab308',
+                        },
+                        purple: {
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                        },
+                        pink: {
+                            400: '#f472b6',
+                            500: '#ec4899',
+                        },
+                        dark: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Fredoka', 'sans-serif'],
+                        'body': ['Nunito', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'bounce-slow': 'bounce 2s ease-in-out infinite',
+                        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { boxShadow: '0 0 20px rgba(14, 165, 233, 0.3)' },
+                            '50%': { boxShadow: '0 0 40px rgba(14, 165, 233, 0.6)' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Anime.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+    <!-- Lottie Web (SVG renderer for quality & accessibility) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <!-- PeerJS for multiplayer -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+
+        .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Mode Card Styles */
+        .mode-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            border: 2px solid transparent;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .mode-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--card-accent);
+        }
+
+        .mode-card.robot {
+            --card-accent: #0ea5e9;
+            --card-glow: rgba(14, 165, 233, 0.4);
+        }
+
+        .mode-card.network {
+            --card-accent: #22c55e;
+            --card-glow: rgba(34, 197, 94, 0.4);
+        }
+
+        .mode-card.computer {
+            --card-accent: #8b5cf6;
+            --card-glow: rgba(139, 92, 246, 0.4);
+        }
+
+        .mode-card.coding {
+            --card-accent: #f59e0b;
+            --card-glow: rgba(245, 158, 11, 0.4);
+        }
+
+        .mode-card:hover {
+            box-shadow: 0 20px 40px var(--card-glow);
+        }
+
+        /* Mode Icons */
+        .mode-icon {
+            font-size: 3.5rem;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .mode-card:hover .mode-icon {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        /* Progress Ring */
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        /* Grid Styles */
+        .robot-grid-cell {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 2px solid #334155;
+            transition: all 0.2s ease;
+        }
+
+        .robot-grid-cell:hover {
+            border-color: #0ea5e9;
+        }
+
+        .robot-grid-cell.robot {
+            background: linear-gradient(145deg, #0ea5e9, #0284c7);
+            border-color: #38bdf8;
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+        }
+
+        .robot-grid-cell.robot2 {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+            border-color: #f87171;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+
+        .robot-grid-cell.goal {
+            background: linear-gradient(145deg, #22c55e, #16a34a);
+            border-color: #4ade80;
+            animation: pulse-glow 1.5s ease-in-out infinite;
+        }
+
+        .robot-grid-cell.goal2 {
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+            border-color: #fbbf24;
+            animation: pulse-glow 1.5s ease-in-out infinite;
+        }
+
+        .robot-grid-cell.obstacle {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+            border-color: #f87171;
+        }
+
+        /* Blocks */
+        .command-block {
+            background: linear-gradient(145deg, #0ea5e9, #0284c7);
+            border-radius: 12px;
+            padding: 12px 20px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .command-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(14, 165, 233, 0.4);
+        }
+
+        .command-block.loop {
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+        }
+
+        .command-block.loop:hover {
+            box-shadow: 0 8px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .command-block.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        /* Sequence Area */
+        .sequence-area {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px dashed #334155;
+            min-height: 120px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .sequence-area.drag-over {
+            border-color: #0ea5e9;
+            background: rgba(14, 165, 233, 0.1);
+        }
+
+        /* Network styles */
+        .network-device {
+            background: linear-gradient(145deg, #1e293b, #334155);
+            border: 2px solid #475569;
+            border-radius: 16px;
+            padding: 16px;
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+
+        .network-device:hover {
+            border-color: #22c55e;
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .network-device.used {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .placed-device {
+            position: absolute;
+            background: linear-gradient(145deg, #1e293b, #334155);
+            border: 3px solid #22c55e;
+            border-radius: 16px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .placed-device.selected {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
+        }
+
+        /* Motherboard */
+        .motherboard {
+            background: #0a1a1a;
+            border-radius: 20px;
+            border: 4px solid #14b8a6;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .motherboard .lottie-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .motherboard .lottie-bg svg {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .motherboard::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 30, 30, 0.35);
+            border-radius: 16px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* PC Case Interior */
+        .case-interior {
+            background: #0a0f19;
+            border-radius: 20px;
+            border: 4px solid #64748b;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.4);
+            min-height: 500px;
+        }
+
+        .case-interior .lottie-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .case-interior .lottie-bg svg {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .case-interior::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 15, 25, 0.4);
+            border-radius: 16px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .case-interior .zone-label {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.85);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #94a3b8;
+            z-index: 5;
+            border: 1px solid rgba(100, 116, 139, 0.3);
+            white-space: nowrap;
+        }
+
+        .motherboard .zone-label {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.85);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #14b8a6;
+            z-index: 5;
+            border: 1px solid rgba(20, 184, 166, 0.3);
+            white-space: nowrap;
+        }
+
+        .component-slot {
+            background: rgba(15, 23, 42, 0.75);
+            border: 3px dashed #475569;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px;
+            min-height: 100px;
+            backdrop-filter: blur(4px);
+        }
+
+        .component-slot .slot-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: #64748b;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .component-slot.filled .slot-label {
+            font-weight: 700;
+            font-size: 0.7rem;
+        }
+
+        .component-slot.hint-revealed {
+            border-color: #92400e;
+            background: rgba(251, 191, 36, 0.05);
+        }
+
+        .component-slot.drag-over {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .component-slot.filled {
+            border-style: solid;
+            border-color: #64748b;
+            background: rgba(100, 116, 139, 0.15);
+        }
+
+        .component-slot.filled.correct {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        .component-slot.filled.incorrect {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Component tooltip */
+        .component-item {
+            cursor: grab;
+        }
+
+        .component-item:hover .comp-tooltip {
+            display: block !important;
+        }
+
+        .comp-tooltip {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Level Navigation */
+        .level-nav-btn {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .level-nav-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .level-nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .level-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Code Editor */
+        .code-editor {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .code-editor-header {
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            border-radius: 12px 12px 0 0;
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .code-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .code-line {
+            padding: 4px 0;
+        }
+
+        .code-slot {
+            background: rgba(245, 158, 11, 0.2);
+            border: 2px dashed #f59e0b;
+            border-radius: 6px;
+            padding: 2px 8px;
+            min-width: 80px;
+            display: inline-block;
+        }
+
+        .code-slot.filled {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            border-style: solid;
+        }
+
+        .code-block {
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: grab;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .code-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Cable styles */
+        .cable-btn {
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .cable-btn.active.straight {
+            background: linear-gradient(145deg, #22c55e, #16a34a);
+            color: white;
+        }
+
+        .cable-btn.active.cross {
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        /* Cable Ordering Game */
+        .rj45-body {
+            background: linear-gradient(180deg, #2d3748, #1a202c);
+            border: 2px solid #4a5568;
+            border-radius: 8px 8px 4px 4px;
+            padding: 12px 6px 8px;
+            position: relative;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .rj45-clip {
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 8px;
+            background: #4a5568;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .rj45-slots {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+        }
+
+        .cable-slot {
+            width: 28px;
+            height: 60px;
+            border: 2px dashed #4a5568;
+            border-radius: 4px;
+            background: rgba(26, 32, 44, 0.6);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .cable-slot:hover {
+            border-color: #a0aec0;
+            background: rgba(74, 85, 104, 0.3);
+        }
+
+        .cable-slot.drag-over {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.15);
+            transform: scaleY(1.05);
+        }
+
+        .cable-slot.filled {
+            border-style: solid;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .cable-slot.correct {
+            border-color: #22c55e !important;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+
+        .cable-slot.wrong {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .cable-slot.error-shake {
+            animation: cableShake 0.4s ease;
+        }
+
+        @keyframes cableShake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-4px);
+            }
+
+            75% {
+                transform: translateX(4px);
+            }
+        }
+
+        .wire-item {
+            width: 50px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            position: relative;
+        }
+
+        .wire-item:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .wire-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.9);
+        }
+
+        .wire-item.used {
+            opacity: 0.2;
+            cursor: default;
+            pointer-events: none;
+            transform: scale(0.85);
+        }
+
+        .wire-label {
+            font-size: 7px;
+            font-weight: 700;
+            color: rgba(0, 0, 0, 0.7);
+            text-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* Hint Toggle */
+        .hint-panel .hint-toggle-btn {
+            cursor: pointer;
+            background: none;
+            border: none;
+            outline: none;
+        }
+
+        .hint-panel.open .hint-chevron {
+            transform: rotate(180deg);
+        }
+
+        .hint-panel .hint-content {
+            overflow: hidden;
+        }
+
+        /* Feedback */
+        .feedback-success {
+            background: linear-gradient(145deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.2));
+            border: 2px solid #22c55e;
+            color: #86efac;
+        }
+
+        .feedback-error {
+            background: linear-gradient(145deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+            color: #fca5a5;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 2px solid #334155;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(145deg, #0ea5e9, #0284c7);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(145deg, #22c55e, #16a34a);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+        }
+
+        .btn-danger {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+        }
+
+        /* Screen transitions */
+        .screen {
+            display: none;
+            animation: fadeSlideIn 0.4s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Decorative elements */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* Data packet */
+        .data-packet {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            z-index: 100;
+            pointer-events: none;
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 10px currentColor;
+            }
+
+            50% {
+                transform: scale(1.3);
+                box-shadow: 0 0 20px currentColor;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* ====== CHARACTER SELECT SCREEN ====== */
+        #character-select {
+            background: radial-gradient(ellipse at 50% 0%, #1a1a4e 0%, #0a0a2e 50%, #050514 100%);
+        }
+
+        #character-select.active,
+        #play-mode-screen.active,
+        #lobby-screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #character-select .stars {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        #character-select .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s);
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0.2;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .char-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 1.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .char-card:hover {
+            border-color: rgba(56, 189, 248, 0.5);
+            background: rgba(56, 189, 248, 0.08);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(56, 189, 248, 0.15);
+        }
+
+        .char-card.selected {
+            border-color: #facc15;
+            background: rgba(250, 204, 21, 0.1);
+            box-shadow: 0 0 30px rgba(250, 204, 21, 0.2), 0 0 60px rgba(250, 204, 21, 0.05);
+        }
+
+        .char-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: #facc15;
+            color: #0f172a;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .char-sprite-container {
+            width: 100px;
+            height: 120px;
+            margin: 0 auto 0.75rem;
+            position: relative;
+        }
+
+        .char-sprite-container img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: opacity 0.1s;
+        }
+
+        .char-sprite-container img.hidden-frame {
+            opacity: 0;
+        }
+
+        #btn-start-game {
+            background: linear-gradient(135deg, #facc15, #f59e0b);
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 1.25rem;
+            padding: 1rem 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(250, 204, 21, 0.3);
+            transition: all 0.3s;
+        }
+
+        #btn-start-game:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 30px rgba(250, 204, 21, 0.4);
+        }
+
+        #btn-start-game:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ====== FLOATING SPACE BACKGROUND ====== */
+        #space-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .floating-char {
+            position: absolute;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+
+        .floating-char img {
+            width: var(--fsize, 60px);
+            height: auto;
+        }
+
+        /* Dashboard selected char avatar */
+        #dashboard-avatar {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.3));
+        }
+
+        /* ====== MULTIPLAYER SCREENS ====== */
+        .pm-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 2rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .pm-card:hover {
+            border-color: rgba(250, 204, 21, 0.5);
+            background: rgba(250, 204, 21, 0.08);
+            transform: translateY(-6px);
+            box-shadow: 0 8px 30px rgba(250, 204, 21, 0.15);
+        }
+
+        .lobby-panel {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 2rem;
+        }
+
+        .pin-digit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3.5rem;
+            background: #1e293b;
+            border: 2px solid #facc15;
+            border-radius: 0.75rem;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #facc15;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .vs-glow {
+            text-shadow: 0 0 40px rgba(250, 204, 21, 0.5), 0 0 80px rgba(250, 204, 21, 0.2);
+        }
+
+        #mp-opponent-bar {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        /* ====== LOADING SCREEN ====== */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: radial-gradient(ellipse at 50% 30%, #1a1a4e 0%, #0a0a2e 40%, #020617 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        #loading-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-ring {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid rgba(250, 204, 21, 0.15);
+            border-top-color: #facc15;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .lottie-loader {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-bar-track {
+            width: 240px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 24px;
+        }
+
+        .loader-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #facc15, #f59e0b, #22c55e);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .loader-tip {
+            margin-top: 16px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.35);
+            max-width: 280px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* ====== SETTINGS BUTTON (FAB) ====== */
+        #settings-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9990;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        #settings-fab:hover {
+            transform: scale(1.1) rotate(30deg);
+            border-color: rgba(250, 204, 21, 0.4);
+            box-shadow: 0 8px 30px rgba(250, 204, 21, 0.15);
+        }
+
+        /* ====== XP BAR ====== */
+        .xp-bar-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 9999px;
+            height: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .xp-bar-fill {
+            height: 100%;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa, #c4b5fd);
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+        }
+
+        /* ====== STAR DISPLAY ====== */
+        .star-display {
+            display: inline-flex;
+            gap: 2px;
+        }
+
+        .star-display .star-icon {
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.3));
+        }
+
+        .star-display .star-icon.empty {
+            opacity: 0.2;
+            filter: none;
+        }
+
+        /* ====== ACHIEVEMENT PANEL ====== */
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .achievement-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-card.unlocked {
+            border-color: rgba(250, 204, 21, 0.3);
+            background: rgba(250, 204, 21, 0.05);
+        }
+
+        .achievement-card.locked {
+            opacity: 0.4;
+            filter: grayscale(1);
+        }
+
+        /* ====== MEDAL STYLES ====== */
+        .medal-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .medal-img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 2px 8px rgba(250, 204, 21, 0.3));
+        }
+
+        .medal-locked {
+            filter: grayscale(1) brightness(0.5) drop-shadow(0 0 0 transparent);
+            opacity: 0.5;
+        }
+
+        .medal-unlocked {
+            animation: medalShine 3s ease-in-out infinite;
+        }
+
+        .achievement-card:hover .medal-unlocked {
+            transform: scale(1.15) rotate(-5deg);
+            filter: drop-shadow(0 4px 16px rgba(250, 204, 21, 0.5));
+        }
+
+        @keyframes medalShine {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 2px 8px rgba(250, 204, 21, 0.3));
+            }
+
+            50% {
+                filter: drop-shadow(0 4px 20px rgba(250, 204, 21, 0.6));
+            }
+        }
+
+        /* Modal medal reveal */
+        .modal-medal-reveal {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .modal-medal-reveal img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        /* ====== STREAK INDICATOR ====== */
+        .streak-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(239, 68, 68, 0.2));
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fb923c;
+        }
+
+        /* ====== ENHANCED MODE CARD ====== */
+        .mode-card .star-row {
+            display: flex;
+            gap: 2px;
+            margin-top: 8px;
+        }
+
+        .mode-card .mini-star {
+            font-size: 0.65rem;
+        }
+
+        /* ====== REDUCED MOTION ====== */
+        .reduced-motion *,
+        .reduced-motion *::before,
+        .reduced-motion *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+
+        /* ====== HIGH CONTRAST ====== */
+        .high-contrast .glass-card {
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .high-contrast .text-dark-200 {
+            color: #e2e8f0 !important;
+        }
+
+        .high-contrast .text-dark-300 {
+            color: #cbd5e1 !important;
+        }
+
+        .high-contrast .mode-card {
+            border-width: 3px;
+        }
+
+        /* ====== LEVEL COMPLETE ENHANCED MODAL ====== */
+        .star-reveal {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 16px 0;
+            align-items: center;
+        }
+
+        .star-reveal .star-big {
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .star-reveal .star-big.revealed {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .star-reveal .star-big.empty-star {
+            opacity: 0.2;
+            transform: scale(0.8);
+            filter: grayscale(1);
+        }
+
+        .star-reveal .star-big.empty-star svg path {
+            fill: #666;
+        }
+
+        /* ====== LOTTIE ANIMATION CONTAINERS ====== */
+        .lottie-inline {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .lottie-celebration {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+        }
+
+        .lottie-star {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lottie-star.empty svg {
+            opacity: 0.3;
+        }
+
+        .lottie-dashboard-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .lottie-loader,
+            .lottie-celebration,
+            .lottie-star,
+            .lottie-dashboard-icon {
+                animation: none !important;
+            }
+        }
+
+        /* ====== DAILY STREAK BANNER ====== */
+        .daily-streak-banner {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(234, 88, 12, 0.08));
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 16px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ====== CIRCUIT BUILDER ====== */
+        .mode-card.circuit {
+            --card-accent: #14b8a6;
+            --card-glow: rgba(20, 184, 166, 0.4);
+        }
+
+        #circuit-canvas {
+            border-radius: 16px;
+            cursor: default;
+            image-rendering: crisp-edges;
+        }
+
+        .circuit-palette-item {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .circuit-palette-item:hover:not(.used) {
+            border-color: #14b8a6;
+            background: rgba(20, 184, 166, 0.1);
+            transform: translateX(4px);
+        }
+
+        .circuit-palette-item.used {
+            opacity: 0.3;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .circuit-palette-tooltip {
+            display: none;
+            position: absolute;
+            left: 105%;
+            top: 0;
+            z-index: 50;
+            width: 180px;
+            padding: 10px;
+            border-radius: 12px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+
+        .circuit-palette-item:hover .circuit-palette-tooltip {
+            display: block;
+        }
+
+        .circuit-control-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .circuit-control-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .circuit-control-btn.active {
+            box-shadow: 0 0 16px rgba(20, 184, 166, 0.5);
+        }
+
+        .circuit-info-panel {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 16px;
+        }
+    </style>
+</head>
+
+<body class="text-white overflow-x-hidden">
+    <!-- ============================================
+         LOADING SCREEN
+         ============================================ -->
+    <div id="loading-screen">
+        <div class="loader-ring" id="loader-ring-css"></div>
+        <div class="lottie-loader" id="loader-lottie" style="display:none;"></div>
+        <h2
+            class="font-display text-2xl font-bold mt-6 bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+            Informatika Lab Adventure
+        </h2>
+        <div class="loader-bar-track">
+            <div class="loader-bar-fill" id="loader-fill"></div>
+        </div>
+        <p class="loader-tip" id="loader-tip">Mempersiapkan petualangan...</p>
+    </div>
+
+    <!-- Settings FAB -->
+    <button id="settings-fab" onclick="SettingsPanel.toggle()" aria-label="Pengaturan" title="Pengaturan (Esc)"><svg
+            width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg></button>
+
+    <!-- Floating Space Background (visible on dashboard) -->
+    <div id="space-bg"></div>
+
+    <!-- Background Decorations -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden" id="blob-bg">
+        <div class="blob w-96 h-96 bg-primary-500 -top-48 -left-48"></div>
+        <div class="blob w-80 h-80 bg-purple-500 top-1/3 -right-40"></div>
+        <div class="blob w-72 h-72 bg-secondary-500 -bottom-36 left-1/4"></div>
+    </div>
+
+    <!-- ============================================
+         CHARACTER SELECT SCREEN
+         ============================================ -->
+    <div id="character-select" class="screen active relative z-10 min-h-screen justify-center items-center px-4 py-8">
+        <!-- Stars -->
+        <div class="stars" id="char-select-stars"></div>
+
+        <!-- Title -->
+        <div class="text-center mb-8 relative z-10">
+            <h1
+                class="font-display text-4xl md:text-5xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-3">
+                Pilih Karaktermu!
+            </h1>
+            <p class="text-dark-200 text-lg">Siapa yang akan menemanimu berpetualang? 🚀</p>
+        </div>
+
+        <!-- Character Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl w-full mb-6 relative z-10 mx-auto"
+            id="char-grid">
+            <!-- Filled by JS -->
+        </div>
+
+        <!-- Name Input -->
+        <div class="relative z-10 mb-6 w-full max-w-xs mx-auto text-center">
+            <label class="block text-sm text-dark-200 mb-1 text-center">Masukkan Namamu:</label>
+            <input id="input-player-name" type="text" maxlength="20" placeholder="Nama kamu..."
+                class="w-full bg-dark-800/80 border-2 border-dark-600 rounded-xl px-4 py-3 text-center text-lg font-bold text-white placeholder-dark-400 focus:border-accent-400 focus:outline-none transition-colors">
+        </div>
+
+        <!-- Start Button -->
+        <button id="btn-start-game" disabled class="relative z-10">
+            🚀 Mulai Petualangan!
+        </button>
+    </div>
+
+    <!-- ============================================
+         PLAY MODE SELECTION (Solo vs Multiplayer)
+         ============================================ -->
+    <div id="play-mode-screen" class="screen relative z-10 min-h-screen justify-center items-center px-4 py-8">
+        <div class="text-center mb-8">
+            <img id="pm-avatar" src="" alt="" class="hidden w-24 h-24 object-contain mx-auto mb-3">
+            <h1
+                class="font-display text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-400 via-purple-400 to-accent-400 bg-clip-text text-transparent mb-2">
+                Pilih Mode Permainan
+            </h1>
+            <p class="text-dark-200 text-lg">Halo, <span id="pm-char-name"
+                    class="font-bold text-accent-400">Player</span>!</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl w-full mb-6 mx-auto">
+            <!-- Solo -->
+            <div class="pm-card" onclick="Multiplayer.goSolo()">
+                <div class="text-5xl mb-3">🎮</div>
+                <h3 class="font-display text-2xl font-bold text-primary-400 mb-2">Main Sendiri</h3>
+                <p class="text-dark-200 text-sm">Pelajari semua materi dengan kecepatanmu sendiri</p>
+            </div>
+            <!-- Multiplayer -->
+            <div class="pm-card" onclick="Multiplayer.goMultiplayer()">
+                <div class="text-5xl mb-3">👥</div>
+                <h3 class="font-display text-2xl font-bold text-accent-400 mb-2">Main Bersama</h3>
+                <p class="text-dark-200 text-sm">Tantang temanmu! Siapa yang selesai duluan? (2 Pemain)</p>
+            </div>
+        </div>
+
+        <button onclick="CharacterSystem.changeCharacter()"
+            class="text-xs text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2">
+            <svg class="w-3 h-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg> Ganti Karakter
+        </button>
+    </div>
+
+    <!-- ============================================
+         MULTIPLAYER LOBBY
+         ============================================ -->
+    <div id="lobby-screen" class="screen relative z-10 min-h-screen justify-center items-center px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="font-display text-4xl font-bold text-accent-400 mb-2"><svg class="w-8 h-8 inline-block"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg> Multiplayer Lobby</h1>
+            <p class="text-dark-200">Buat room atau gabung room temanmu</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl w-full mb-6">
+            <!-- Create Room -->
+            <div class="lobby-panel text-center">
+                <div class="text-4xl mb-3"><svg class="w-10 h-10 mx-auto" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg></div>
+                <h3 class="font-display text-xl font-bold text-primary-400 mb-4">Buat Room</h3>
+                <button onclick="Multiplayer.createRoom()"
+                    class="btn-primary px-6 py-3 rounded-xl font-bold text-white mb-4 w-full">
+                    Buat Room Baru
+                </button>
+                <div id="lobby-pin-area" class="hidden">
+                    <p class="text-dark-200 text-sm mb-2">Bagikan PIN ini ke temanmu:</p>
+                    <div class="flex justify-center gap-2 mb-3" id="lobby-pin-digits"></div>
+                </div>
+                <p class="text-sm text-dark-200" id="lobby-create-status"></p>
+            </div>
+
+            <!-- Join Room -->
+            <div class="lobby-panel text-center">
+                <div class="text-4xl mb-3">🚪</div>
+                <h3 class="font-display text-xl font-bold text-secondary-400 mb-4">Gabung Room</h3>
+                <div class="flex gap-2 mb-3">
+                    <input id="input-room-pin" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                        placeholder="Masukkan 6 digit PIN"
+                        class="flex-1 bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-center font-mono text-lg text-white placeholder-dark-300 focus:border-secondary-400 focus:outline-none transition-colors">
+                </div>
+                <button onclick="Multiplayer.joinRoom()"
+                    class="btn-success px-6 py-3 rounded-xl font-bold text-white w-full">
+                    Gabung!
+                </button>
+                <div id="lobby-join-status"></div>
+            </div>
+        </div>
+
+        <button onclick="Multiplayer.backFromLobby()"
+            class="text-sm text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2">
+            ← Kembali
+        </button>
+    </div>
+
+    <!-- ============================================
+         VS SCREEN
+         ============================================ -->
+    <div id="vs-screen" class="screen relative z-10 min-h-screen justify-center px-4 py-8">
+        <div class="flex items-center justify-center gap-8 md:gap-16 mb-8">
+            <!-- Player 1 -->
+            <div id="vs-p1" class="text-center">
+                <div class="w-32 h-32 md:w-40 md:h-40 mx-auto mb-3 relative">
+                    <img id="vs-p1-img" src="" alt="P1" class="w-full h-full object-contain drop-shadow-lg">
+                </div>
+                <p id="vs-p1-name" class="font-display text-xl font-bold">Player 1</p>
+            </div>
+
+            <!-- VS -->
+            <div id="vs-vs-text" class="text-center">
+                <span class="font-display text-6xl md:text-8xl font-black text-accent-400 vs-glow">VS</span>
+            </div>
+
+            <!-- Player 2 -->
+            <div id="vs-p2" class="text-center">
+                <div class="w-32 h-32 md:w-40 md:h-40 mx-auto mb-3 relative">
+                    <img id="vs-p2-img" src="" alt="P2" class="w-full h-full object-contain drop-shadow-lg">
+                </div>
+                <p id="vs-p2-name" class="font-display text-xl font-bold">Player 2</p>
+            </div>
+        </div>
+
+        <!-- Host start button -->
+        <button id="vs-start-btn" onclick="Multiplayer.vsStart()"
+            class="hidden px-8 py-4 rounded-2xl font-bold text-lg text-dark-900 bg-gradient-to-r from-accent-400 to-accent-500 hover:scale-105 transition-transform shadow-lg shadow-accent-500/30">
+            🚀 Mulai!
+        </button>
+        <!-- Guest wait message -->
+        <p id="vs-wait-msg" class="hidden text-dark-200 text-lg animate-pulse">Menunggu host memulai permainan...</p>
+    </div>
+
+    <!-- ============================================
+         MULTIPLAYER OPPONENT BAR (floating, all screens)
+         ============================================ -->
+    <div id="mp-opponent-bar" class="fixed top-0 left-0 right-0 z-40 hidden px-4 py-2">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img id="mp-opp-avatar" class="w-8 h-8 object-contain" src="" alt="">
+                <span class="text-sm font-bold" id="mp-opp-name">Lawan</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-primary-500/20 text-primary-300"
+                    id="mp-opp-status">Mengerjakan...</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-mono text-accent-400" id="mp-timer">⏱ 00:00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guest waiting overlay on dashboard -->
+    <div id="mp-guest-waiting"
+        class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-dark-800/90 backdrop-blur-sm border border-accent-500/30 rounded-2xl px-6 py-3 text-center">
+        <p class="text-accent-400 font-medium animate-pulse">⏳ Menunggu host memilih mode...</p>
+    </div>
+
+    <!-- ============================================
+         MULTIPLAYER RESULT MODAL
+         ============================================ -->
+    <div id="mp-result-modal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+        <div id="mp-result-content" class="modal-content p-8 max-w-lg w-full text-center">
+            <div class="text-6xl mb-3" id="mp-result-emoji">🏆</div>
+            <h2 id="mp-result-title" class="font-display text-3xl font-bold text-accent-400 mb-2">Hasil</h2>
+            <div id="mp-result-detail" class="mb-6"></div>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button onclick="Multiplayer.resultPlayAgain()"
+                    class="btn-success px-6 py-3 rounded-xl font-bold text-white">
+                    <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg> Main Lagi
+                </button>
+                <button onclick="Multiplayer.resultBackToMenu()"
+                    class="px-6 py-3 rounded-xl font-bold text-dark-200 bg-dark-700 hover:bg-dark-600 transition-colors">
+                    <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg> Kembali ke Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         DASHBOARD
+         ============================================ -->
+    <div id="dashboard" class="screen relative z-10">
+        <div class="max-w-6xl w-full mx-auto px-4 py-8 min-h-screen flex flex-col">
+            <!-- Header -->
+            <header class="text-center mb-12">
+                <div class="inline-block animate-float mb-4">
+                    <img id="dashboard-avatar" src="" alt="Avatar" class="hidden">
+                    <div id="dashboard-trophy-lottie" class="lottie-dashboard-icon" style="display:none;"></div>
+                    <span class="text-7xl" id="dashboard-emoji"></span>
+                </div>
+                <h1
+                    class="font-display text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
+                    Informatika Lab Adventure
+                </h1>
+                <p class="text-xl text-dark-200 font-medium">
+                    Media Pembelajaran Interaktif Kelas 10
+                </p>
+            </header>
+
+            <!-- Daily Streak Banner -->
+            <div class="daily-streak-banner mb-4 hidden" id="daily-streak-banner">
+                <div id="streak-fire-lottie" style="width:32px;height:40px;display:inline-block;"></div>
+                <div>
+                    <p class="font-bold text-orange-300 text-sm">Login Streak: <span id="daily-streak-count">0</span>
+                        Hari!</p>
+                    <p class="text-xs text-orange-400/70">Terus belajar setiap hari!</p>
+                </div>
+            </div>
+
+            <!-- XP & Level Bar -->
+            <div class="glass-card rounded-2xl p-4 mb-4" id="xp-panel">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-lg font-bold text-purple-300"
+                            id="player-level-badge">0</div>
+                        <div>
+                            <p class="text-sm font-bold text-white" id="player-level-title">Pemula</p>
+                            <p class="text-xs text-dark-300">Level <span id="player-level-num">0</span></p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-purple-300 font-mono" id="xp-display">0 XP</p>
+                        <p class="text-xs text-dark-300"><span id="xp-to-next">100</span> XP ke lv. berikutnya</p>
+                    </div>
+                </div>
+                <div class="xp-bar-container">
+                    <div class="xp-bar-fill" id="xp-bar-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="glass-card rounded-2xl p-4 mb-8 flex flex-wrap justify-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-accent-500/20 flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent-400">
+                            <path d="M18 20V10" />
+                            <path d="M12 20V4" />
+                            <path d="M6 20v-6" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-dark-200 uppercase tracking-wide">Total Progress</p>
+                        <p class="text-xl font-bold text-accent-400" id="total-progress">0%</p>
+                    </div>
+                </div>
+                <div class="w-px bg-dark-700 hidden sm:block"></div>
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-secondary-500/20 flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary-400">
+                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                            <path d="M4 22h16" />
+                            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
+                            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+                            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-dark-200 uppercase tracking-wide">Level Selesai</p>
+                        <p class="text-xl font-bold text-secondary-400" id="levels-completed">0/17</p>
+                    </div>
+                </div>
+                <div class="w-px bg-dark-700 hidden sm:block"></div>
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-yellow-400">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-dark-200 uppercase tracking-wide">Total Bintang</p>
+                        <p class="text-xl font-bold text-yellow-400" id="total-stars">0</p>
+                    </div>
+                </div>
+                <div class="w-px bg-dark-700 hidden sm:block"></div>
+                <div class="flex items-center gap-3" id="streak-stat">
+                    <div class="w-9 h-9 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-orange-400">
+                            <path
+                                d="M12 23c-3.6 0-8-3.07-8-8.5C4 10.36 7.44 5.05 12 1c4.56 4.05 8 9.36 8 13.5 0 5.43-4.4 8.5-8 8.5z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-dark-200 uppercase tracking-wide">Streak</p>
+                        <p class="text-xl font-bold text-orange-400" id="current-streak">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Challenge Card -->
+            <div id="daily-challenge-card" class="glass-card rounded-2xl p-5 mb-6">
+                <!-- Generated by DailyChallenge.renderDashboardCard() -->
+            </div>
+
+            <!-- Mode Cards -->
+            <div class="grid md:grid-cols-2 gap-6 flex-1">
+                <!-- Mode 1: Robot -->
+                <button class="mode-card robot rounded-3xl p-6 text-left group" data-mode="robot">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="mode-icon"><img src="assets/PNG robot/Side view/robot_blueJump.png" alt="Robot"
+                                style="width: 3.5rem; height: 3.5rem; object-fit: contain;"></div>
+                        <div class="relative w-16 h-16">
+                            <svg class="progress-ring w-16 h-16" viewBox="0 0 60 60">
+                                <circle cx="30" cy="30" r="26" stroke="#334155" stroke-width="4" fill="none" />
+                                <circle class="progress-ring__circle" cx="30" cy="30" r="26" stroke="#0ea5e9"
+                                    stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="163.36"
+                                    stroke-dashoffset="163.36" id="progress-ring-robot" />
+                            </svg>
+                            <span class="absolute inset-0 flex items-center justify-center text-sm font-bold"
+                                id="progress-robot">0/3</span>
+                        </div>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold text-primary-400 mb-2 group-hover:text-primary-300">
+                        Robot Logic Adventure
+                    </h3>
+                    <p class="text-dark-200 mb-4">Pelajari algoritma dengan menggerakkan robot melalui maze!</p>
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span
+                            class="px-3 py-1 bg-primary-500/20 text-primary-300 rounded-full text-xs font-medium">Sequence</span>
+                        <span
+                            class="px-3 py-1 bg-primary-500/20 text-primary-300 rounded-full text-xs font-medium">Algoritma</span>
+                        <span
+                            class="px-3 py-1 bg-primary-500/20 text-primary-300 rounded-full text-xs font-medium">Loop</span>
+                    </div>
+                    <div class="mt-auto" onclick="event.stopPropagation(); LevelSelect.show('robot');">
+                        <span
+                            class="text-xs text-primary-300/70 hover:text-primary-200 underline underline-offset-2 cursor-pointer">▸
+                            Pilih Level</span>
+                    </div>
+                </button>
+
+                <!-- Mode 2: Network -->
+                <button class="mode-card network rounded-3xl p-6 text-left group" data-mode="network">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="mode-icon" id="mode-icon-network"></div>
+                        <div class="relative w-16 h-16">
+                            <svg class="progress-ring w-16 h-16" viewBox="0 0 60 60">
+                                <circle cx="30" cy="30" r="26" stroke="#334155" stroke-width="4" fill="none" />
+                                <circle class="progress-ring__circle" cx="30" cy="30" r="26" stroke="#22c55e"
+                                    stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="163.36"
+                                    stroke-dashoffset="163.36" id="progress-ring-network" />
+                            </svg>
+                            <span class="absolute inset-0 flex items-center justify-center text-sm font-bold"
+                                id="progress-network">0/3</span>
+                        </div>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold text-secondary-400 mb-2 group-hover:text-secondary-300">
+                        Network Mission
+                    </h3>
+                    <p class="text-dark-200 mb-4">Bangun dan hubungkan jaringan komputer dengan benar!</p>
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span
+                            class="px-3 py-1 bg-secondary-500/20 text-secondary-300 rounded-full text-xs font-medium">Jaringan</span>
+                        <span
+                            class="px-3 py-1 bg-secondary-500/20 text-secondary-300 rounded-full text-xs font-medium">Topologi</span>
+                        <span
+                            class="px-3 py-1 bg-secondary-500/20 text-secondary-300 rounded-full text-xs font-medium">Kabel
+                            UTP</span>
+                    </div>
+                    <div class="mt-auto" onclick="event.stopPropagation(); LevelSelect.show('network');">
+                        <span
+                            class="text-xs text-secondary-300/70 hover:text-secondary-200 underline underline-offset-2 cursor-pointer">▸
+                            Pilih Level</span>
+                    </div>
+                </button>
+
+                <!-- Mode 3: Computer -->
+                <button class="mode-card computer rounded-3xl p-6 text-left group" data-mode="computer">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="mode-icon" id="mode-icon-computer"></div>
+                        <div class="relative w-16 h-16">
+                            <svg class="progress-ring w-16 h-16" viewBox="0 0 60 60">
+                                <circle cx="30" cy="30" r="26" stroke="#334155" stroke-width="4" fill="none" />
+                                <circle class="progress-ring__circle" cx="30" cy="30" r="26" stroke="#8b5cf6"
+                                    stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="163.36"
+                                    stroke-dashoffset="163.36" id="progress-ring-computer" />
+                            </svg>
+                            <span class="absolute inset-0 flex items-center justify-center text-sm font-bold"
+                                id="progress-computer">0/3</span>
+                        </div>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold text-purple-400 mb-2 group-hover:text-purple-300">
+                        Build a Computer
+                    </h3>
+                    <p class="text-dark-200 mb-4">Rakit komputer dengan memasang komponen di tempat yang benar!</p>
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span
+                            class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-medium">Hardware</span>
+                        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-medium">Sistem
+                            Komputer</span>
+                        <span
+                            class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-medium">IPO</span>
+                    </div>
+                    <div class="mt-auto" onclick="event.stopPropagation(); LevelSelect.show('computer');">
+                        <span
+                            class="text-xs text-purple-300/70 hover:text-purple-200 underline underline-offset-2 cursor-pointer">▸
+                            Pilih Level</span>
+                    </div>
+                </button>
+
+                <!-- Mode 4: Coding -->
+                <button class="mode-card coding rounded-3xl p-6 text-left group" data-mode="coding">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="mode-icon" id="mode-icon-coding"></div>
+                        <div class="relative w-16 h-16">
+                            <svg class="progress-ring w-16 h-16" viewBox="0 0 60 60">
+                                <circle cx="30" cy="30" r="26" stroke="#334155" stroke-width="4" fill="none" />
+                                <circle class="progress-ring__circle" cx="30" cy="30" r="26" stroke="#f59e0b"
+                                    stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="163.36"
+                                    stroke-dashoffset="163.36" id="progress-ring-coding" />
+                            </svg>
+                            <span class="absolute inset-0 flex items-center justify-center text-sm font-bold"
+                                id="progress-coding">0/8</span>
+                        </div>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold text-accent-400 mb-2 group-hover:text-accent-300">
+                        Coding Puzzle Lab
+                    </h3>
+                    <p class="text-dark-200 mb-4">Susun blok kode untuk menyelesaikan tantangan pemrograman!</p>
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span
+                            class="px-3 py-1 bg-accent-500/20 text-accent-300 rounded-full text-xs font-medium">Python</span>
+                        <span
+                            class="px-3 py-1 bg-accent-500/20 text-accent-300 rounded-full text-xs font-medium">Loop</span>
+                        <span
+                            class="px-3 py-1 bg-accent-500/20 text-accent-300 rounded-full text-xs font-medium">Debugging</span>
+                    </div>
+                    <div class="mt-auto" onclick="event.stopPropagation(); LevelSelect.show('coding');">
+                        <span
+                            class="text-xs text-accent-300/70 hover:text-accent-200 underline underline-offset-2 cursor-pointer">▸
+                            Pilih Level</span>
+                    </div>
+                </button>
+
+                <!-- Mode 5: Circuit Builder -->
+                <button class="mode-card circuit rounded-3xl p-6 text-left group" data-mode="circuit">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="mode-icon" style="font-size:3.5rem;">🔌</div>
+                        <div class="relative w-16 h-16">
+                            <svg class="progress-ring w-16 h-16" viewBox="0 0 60 60">
+                                <circle cx="30" cy="30" r="26" stroke="#334155" stroke-width="4" fill="none" />
+                                <circle class="progress-ring__circle" cx="30" cy="30" r="26" stroke="#14b8a6"
+                                    stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="163.36"
+                                    stroke-dashoffset="163.36" id="progress-ring-circuit" />
+                            </svg>
+                            <span class="absolute inset-0 flex items-center justify-center text-sm font-bold"
+                                id="progress-circuit">0/3</span>
+                        </div>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold text-teal-400 mb-2 group-hover:text-teal-300">
+                        Circuit Builder
+                    </h3>
+                    <p class="text-dark-200 mb-4">Rancang rangkaian elektronik interaktif dan simulasikan aliran arus!
+                    </p>
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span
+                            class="px-3 py-1 bg-teal-500/20 text-teal-300 rounded-full text-xs font-medium">Elektronik</span>
+                        <span
+                            class="px-3 py-1 bg-teal-500/20 text-teal-300 rounded-full text-xs font-medium">Rangkaian</span>
+                        <span
+                            class="px-3 py-1 bg-teal-500/20 text-teal-300 rounded-full text-xs font-medium">Simulasi</span>
+                    </div>
+                    <div class="mt-auto" onclick="event.stopPropagation(); LevelSelect.show('circuit');">
+                        <span
+                            class="text-xs text-teal-300/70 hover:text-teal-200 underline underline-offset-2 cursor-pointer">▸
+                            Pilih Level</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Achievements Showcase -->
+            <div class="glass-card rounded-2xl p-5 mb-6 mt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-display text-lg font-bold text-white flex items-center gap-2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-400">
+                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                            <path d="M4 22h16" />
+                            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
+                            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+                            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                        </svg>
+                        Pencapaian
+                    </h3>
+                    <span class="text-xs text-dark-300 font-mono" id="achievement-count">0/15</span>
+                </div>
+                <div class="achievement-grid" id="achievement-grid">
+                    <!-- Generated by JS -->
+                </div>
+            </div>
+
+            <!-- Stats Dashboard -->
+            <div id="stats-dashboard-card" class="glass-card rounded-2xl p-5 mb-6">
+                <!-- Generated by StatsDashboard.renderDashboardStats() -->
+            </div>
+
+            <!-- Footer -->
+            <footer class="text-center py-6">
+                <p class="text-dark-200 flex items-center justify-center gap-2 mb-3">
+                    <span class="animate-bounce-slow inline-block text-amber-400"><svg class="w-5 h-5" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg></span>
+                    Pilih lab untuk memulai pembelajaran
+                    <span class="text-xs text-dark-300 ml-2">(Tekan 1-4 untuk pilih cepat)</span>
+                </p>
+                <div class="flex items-center justify-center gap-4">
+                    <button onclick="CharacterSystem.changeCharacter()"
+                        class="text-xs text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2">
+                        <svg class="w-3 h-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg> Ganti Karakter
+                    </button>
+                    <span class="text-dark-700">•</span>
+                    <button onclick="SettingsPanel.open()"
+                        class="text-xs text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2">
+                        <svg class="w-3 h-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg> Pengaturan
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODE 1: ROBOT LOGIC ADVENTURE
+         ============================================ -->
+    <div id="robot-screen" class="screen relative z-10">
+        <div class="max-w-6xl w-full mx-auto px-4 py-6 min-h-screen">
+            <!-- Header -->
+            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
+                <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
+                    data-back="dashboard">
+                    ⬅ Kembali
+                </button>
+                <h2 class="font-display text-2xl font-bold text-primary-400 flex items-center gap-2">
+                    <img src="assets/PNG robot/Side view/robot_blueBody.png" alt="Robot"
+                        style="width: 2rem; height: 2rem; object-fit: contain;"> Robot Logic Adventure
+                </h2>
+                <div class="flex items-center gap-2">
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                        onclick="resetToLevel1('robot')" title="Reset ke Level 1">↺ 1</button>
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-primary-500/20 text-primary-300 hover:bg-primary-500/30"
+                        onclick="goToPrevLevel('robot')" title="Level sebelumnya">◀</button>
+                    <div class="px-3 py-1 bg-primary-500/20 rounded-xl">
+                        <span class="font-bold text-sm">Lv.<span id="robot-level">1</span>/20</span>
+                    </div>
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-primary-500/20 text-primary-300 hover:bg-primary-500/30"
+                        onclick="goToNextLevel('robot')" title="Level berikutnya">▶</button>
+                </div>
+            </header>
+
+            <!-- Mission Panel -->
+            <div class="glass-card rounded-2xl p-4 mb-4 border-l-4 border-primary-500">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="font-display text-lg font-bold text-primary-400 mb-1"><svg
+                                class="w-5 h-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg> Misi</h3>
+                        <p class="text-dark-100" id="robot-mission">Bantu robot mencapai bendera hijau!</p>
+                    </div>
+                    <div class="flex flex-col gap-1 items-end">
+                        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-medium"
+                            id="robot-concept">Sequence</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold hidden" id="robot-dual-badge">
+                        </span>
+                        <span class="px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-bold hidden"
+                            id="robot-cmd-limit">
+                            <svg class="w-3 h-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg> Maks: 0
+                        </span>
+                        <span class="px-2 py-0.5 bg-dark-700 text-dark-300 rounded text-[10px] font-medium hidden"
+                            id="robot-phase">
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hint Panel -->
+            <div class="glass-card rounded-2xl p-4 mb-6 bg-accent-500/10 border border-accent-500/20 hint-panel"
+                data-hint-for="robot">
+                <button
+                    class="hint-toggle-btn w-full flex items-center justify-between text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                    onclick="toggleHintPanel(this)">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        Lihat Hint
+                    </span>
+                    <svg class="w-4 h-4 hint-chevron transition-transform" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <p class="text-dark-100 text-sm mt-3 hint-content" style="display:none;">
+                    <span id="robot-hint">Gunakan perintah MAJU untuk menggerakkan robot.</span>
+                </p>
+            </div>
+
+            <!-- Game Area -->
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Grid -->
+                <div class="lg:col-span-2 glass-card rounded-2xl p-6 flex items-center justify-center">
+                    <div class="grid grid-cols-5 gap-2 p-4 bg-dark-900/50 rounded-xl" id="robot-grid">
+                        <!-- Grid generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col">
+                    <h4 class="font-display text-lg font-bold text-dark-100 mb-4"><svg class="w-5 h-5 inline-block"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg> Perintah</h4>
+
+                    <!-- Command Blocks -->
+                    <div class="flex flex-wrap gap-2 mb-6" id="command-blocks">
+                        <div class="command-block text-white font-semibold text-sm" draggable="true"
+                            data-command="forward">
+                            ⬆️ Maju
+                        </div>
+                        <div class="command-block text-white font-semibold text-sm" draggable="true"
+                            data-command="left">
+                            ↩️ Kiri
+                        </div>
+                        <div class="command-block text-white font-semibold text-sm" draggable="true"
+                            data-command="right">
+                            ↪️ Kanan
+                        </div>
+                        <div class="command-block loop text-white font-semibold text-sm" draggable="true"
+                            data-command="loop">
+                            🔄 Loop (2x)
+                        </div>
+                    </div>
+
+                    <!-- Sequence Area -->
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-display text-sm font-bold text-dark-200">Urutan Perintah:</h4>
+                        <span class="text-sm font-bold text-dark-200" id="command-count">0</span>
+                    </div>
+                    <div class="sequence-area p-4 flex flex-wrap gap-2 content-start flex-1 mb-4" id="sequence-area">
+                        <span class="text-dark-200 text-sm w-full text-center py-8">Seret blok perintah ke sini</span>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3">
+                        <button class="btn-danger flex-1 py-3 rounded-xl font-bold text-white" id="btn-clear-robot">
+                            <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg> Hapus
+                        </button>
+                        <button class="btn-success flex-1 py-3 rounded-xl font-bold text-white" id="btn-run-robot">
+                            ▶️ Jalankan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback -->
+            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="robot-feedback"></div>
+
+            <!-- Tutorial Overlay -->
+            <div id="robot-tutorial-overlay" class="fixed inset-0 z-[60] hidden items-center justify-center p-4"
+                style="background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(8px);">
+                <div class="glass-card rounded-3xl p-8 max-w-md w-full text-center border border-primary-500/30"
+                    style="box-shadow: 0 0 60px rgba(99, 102, 241, 0.2);">
+                    <div class="text-6xl mb-6" id="tutorial-icon">👋</div>
+                    <h3 class="font-display text-xl font-bold text-primary-400 mb-3">📖 Tutorial</h3>
+                    <p class="text-dark-100 mb-8 text-lg leading-relaxed" id="tutorial-message">...</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-dark-400 text-sm font-mono" id="tutorial-step-indicator">1/3</span>
+                        <button class="btn-primary px-8 py-3 rounded-xl font-bold text-white text-lg"
+                            id="tutorial-next-btn">
+                            Lanjut ➡️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODE 2: NETWORK MISSION
+         ============================================ -->
+    <div id="network-screen" class="screen relative z-10">
+        <div class="max-w-6xl w-full mx-auto px-4 py-6 min-h-screen">
+            <!-- Header -->
+            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
+                <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
+                    data-back="dashboard">
+                    ⬅ Kembali
+                </button>
+                <h2 class="font-display text-2xl font-bold text-secondary-400 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg> Network Mission
+                </h2>
+                <div class="flex items-center gap-2">
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                        onclick="resetToLevel1('network')" title="Reset ke Level 1">↺ 1</button>
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-secondary-500/20 text-secondary-300 hover:bg-secondary-500/30"
+                        onclick="goToPrevLevel('network')" title="Level sebelumnya">◀</button>
+                    <div class="px-3 py-1 bg-secondary-500/20 rounded-xl">
+                        <span class="font-bold text-sm">Lv.<span id="network-level">1</span>/17</span>
+                    </div>
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-secondary-500/20 text-secondary-300 hover:bg-secondary-500/30"
+                        onclick="goToNextLevel('network')" title="Level berikutnya">▶</button>
+                </div>
+            </header>
+
+            <!-- Mission Panel -->
+            <div class="glass-card rounded-2xl p-4 mb-4 border-l-4 border-secondary-500">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="font-display text-lg font-bold text-secondary-400 mb-1"><svg
+                                class="w-5 h-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg> Misi</h3>
+                        <p class="text-dark-100" id="network-mission">Hubungkan PC ke Server dengan benar!</p>
+                    </div>
+                    <span class="px-3 py-1 bg-secondary-500/20 text-secondary-300 rounded-full text-xs font-medium"
+                        id="network-concept">Direct Connection</span>
+                </div>
+            </div>
+
+            <!-- Hint Panel -->
+            <div class="glass-card rounded-2xl p-4 mb-4 bg-accent-500/10 border border-accent-500/20 hint-panel"
+                data-hint-for="network">
+                <button
+                    class="hint-toggle-btn w-full flex items-center justify-between text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                    onclick="toggleHintPanel(this)">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        Lihat Hint
+                    </span>
+                    <svg class="w-4 h-4 hint-chevron transition-transform" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <p class="text-dark-100 text-sm mt-3 hint-content" style="display:none;">
+                    <span id="network-hint">Hubungkan PC langsung ke Server dengan kabel.</span>
+                </p>
+            </div>
+
+            <!-- Cable Info -->
+            <div class="glass-card rounded-2xl p-4 mb-4 border-l-4 border-primary-500" id="cable-info-panel">
+                <h4 class="font-display text-sm font-bold text-primary-400 mb-2"><svg class="w-4 h-4 inline-block"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg> Jenis Kabel UTP:</h4>
+                <div class="flex flex-wrap gap-6 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-secondary-400 font-bold text-lg">━━━</span>
+                        <span><strong>Straight:</strong> PC↔Switch, Switch↔Router</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-accent-400 font-bold text-lg">━╳━</span>
+                        <span><strong>Cross:</strong> PC↔PC, Switch↔Switch</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Required Cable Hint -->
+            <div class="glass-card rounded-2xl p-4 mb-6 bg-dark-700/50 border border-primary-500/30"
+                id="required-cable-panel">
+                <h4 class="font-display text-sm font-bold text-accent-400 mb-2"><svg class="w-4 h-4 inline-block"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10" stroke-width="2" />
+                        <circle cx="12" cy="12" r="6" stroke-width="2" />
+                        <circle cx="12" cy="12" r="2" fill="currentColor" />
+                    </svg> Kabel yang Dibutuhkan di Level Ini:</h4>
+                <div class="flex flex-wrap gap-3 text-sm" id="required-cable-hint">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+            <!-- Cable Ordering Workspace (for cable levels) -->
+            <div id="cable-workspace" class="mb-6" style="display: none;"></div>
+
+            <!-- Topology Workspace -->
+            <div id="topology-workspace" class="grid lg:grid-cols-4 gap-6 mb-6">
+                <!-- Device Palette -->
+                <div class="glass-card rounded-2xl p-4" id="device-palette">
+                    <h4 class="font-display font-bold text-dark-100 mb-4"><svg class="w-5 h-5 inline-block" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg> Perangkat</h4>
+                    <!-- Devices generated by JS -->
+                </div>
+
+                <!-- Canvas -->
+                <div class="lg:col-span-3 glass-card rounded-2xl p-4 min-h-[400px] relative" id="network-canvas">
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none z-0" id="connection-svg"></svg>
+                    <div class="relative z-10 w-full h-full min-h-[360px]" id="canvas-area">
+                        <p
+                            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-dark-200 text-center">
+                            Seret perangkat ke sini dan hubungkan dengan klik
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Topology Controls -->
+            <div class="flex flex-wrap justify-center gap-4" id="topology-controls">
+                <button class="btn-danger px-6 py-3 rounded-xl font-bold text-white" id="btn-clear-network">
+                    <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg> Reset
+                </button>
+                <div class="flex bg-dark-800 rounded-xl p-1 gap-1">
+                    <button class="cable-btn active straight text-sm" id="btn-cable-straight" data-cable="straight">
+                        ━━━ Straight
+                    </button>
+                    <button class="cable-btn text-dark-200 text-sm" id="btn-cable-cross" data-cable="cross">
+                        ━╳━ Cross
+                    </button>
+                </div>
+                <button class="btn-primary px-6 py-3 rounded-xl font-bold text-white" id="btn-connect-mode">
+                    <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg> Mode Kabel
+                </button>
+                <button class="btn-success px-6 py-3 rounded-xl font-bold text-white" id="btn-validate-network">
+                    <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg> Validasi
+                </button>
+            </div>
+
+            <!-- Feedback -->
+            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="network-feedback"></div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODE 3: BUILD A COMPUTER
+         ============================================ -->
+    <div id="computer-screen" class="screen relative z-10">
+        <div class="max-w-6xl w-full mx-auto px-4 py-6 min-h-screen">
+            <!-- Header -->
+            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
+                <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
+                    data-back="dashboard">
+                    ⬅ Kembali
+                </button>
+                <h2 class="font-display text-2xl font-bold text-purple-400 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg> Build a Computer
+                </h2>
+                <div class="flex items-center gap-2">
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                        onclick="resetToLevel1('computer')" title="Reset ke Level 1">↺ 1</button>
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
+                        onclick="goToPrevLevel('computer')" title="Level sebelumnya">◀</button>
+                    <div class="px-3 py-1 bg-purple-500/20 rounded-xl">
+                        <span class="font-bold text-sm">Lv.<span id="computer-level">1</span>/15</span>
+                    </div>
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
+                        onclick="goToNextLevel('computer')" title="Level berikutnya">▶</button>
+                </div>
+            </header>
+
+            <!-- Mission Panel -->
+            <div class="glass-card rounded-2xl p-4 mb-4 border-l-4 border-purple-500">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="font-display text-lg font-bold text-purple-400 mb-1"><svg
+                                class="w-5 h-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg> Misi</h3>
+                        <p class="text-dark-100" id="computer-mission">Pasang semua komponen ke posisi yang benar!</p>
+                    </div>
+                    <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-medium"
+                        id="computer-concept">CPU</span>
+                </div>
+            </div>
+
+            <!-- Hint Panel -->
+            <div class="glass-card rounded-2xl p-4 mb-6 bg-accent-500/10 border border-accent-500/20 hint-panel"
+                data-hint-for="computer">
+                <button
+                    class="hint-toggle-btn w-full flex items-center justify-between text-sm font-semibold text-purple-400 hover:text-purple-300 transition-colors"
+                    onclick="toggleHintPanel(this)">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                        </svg>
+                        Lihat Hint
+                    </span>
+                    <svg class="w-4 h-4 hint-chevron transition-transform" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div class="hint-content" style="display:none;">
+                    <p class="text-dark-100 text-sm mt-3">
+                        <span id="computer-hint">Pasang komponen di slot yang tepat. Hover mouse di atas komponen untuk
+                            melihat deskripsinya!</span>
+                    </p>
+                    <p class="text-dark-300 text-xs mt-1 flex items-center gap-1">
+                        <span class="text-amber-400"><svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg></span> Tidak yakin? Gunakan tombol <b>Hint</b> untuk mengungkap satu slot (tapi
+                        bintang berkurang!). Tekan <b>Power On</b> untuk cek jawaban.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="grid lg:grid-cols-6 gap-4 mb-6">
+                <!-- Component Palette -->
+                <div class="glass-card rounded-2xl p-4 max-h-[600px] overflow-y-auto" id="component-palette">
+                    <h4 class="font-display font-bold text-dark-100 mb-4"><svg class="w-5 h-5 inline-block" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+                        </svg> Komponen</h4>
+                    <!-- Components generated by JS -->
+                </div>
+
+                <!-- Motherboard Zone -->
+                <div class="lg:col-span-3 glass-card rounded-2xl p-2 flex items-center justify-center">
+                    <div class="motherboard w-full relative" id="motherboard" style="min-height: 500px;">
+                        <div class="lottie-bg" id="motherboard-lottie-bg"></div>
+                        <span class="zone-label"><svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+                            </svg> Motherboard</span>
+                        <!-- Motherboard Layout Container -->
+                        <div id="motherboard-slots" class="relative w-full h-full"
+                            style="min-height: 480px; z-index: 2;">
+                            <!-- Slots generated dynamically by JS based on level -->
+                        </div>
+                        <!-- LED indicator -->
+                        <div class="led-indicator absolute top-4 right-4 w-3 h-3 rounded-full bg-dark-600 opacity-0"
+                            style="z-index: 3;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PC Case Interior Zone -->
+                <div class="lg:col-span-2 flex flex-col gap-4">
+                    <div class="case-interior w-full relative flex-1" id="case-interior" style="min-height: 340px;">
+                        <div class="lottie-bg" id="case-interior-lottie-bg"></div>
+                        <span class="zone-label"><svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg> Inside PC Case</span>
+                        <div id="case-slots" class="relative w-full h-full"
+                            style="min-height: 320px; padding-top: 32px; z-index: 2;">
+                            <!-- Case component slots generated by JS -->
+                        </div>
+                    </div>
+                    <!-- Case Status -->
+                    <div class="glass-card rounded-2xl p-3 flex items-center gap-3" id="case-preview-panel">
+                        <div id="case-image-container" class="flex-shrink-0"
+                            style="background: transparent; border-radius: 8px; overflow: hidden; width: 70px; height: 90px;">
+                            <div id="case-lottie" style="width: 70px; height: 90px;"></div>
+                        </div>
+                        <div>
+                            <h4 class="font-display font-bold text-dark-200 text-sm">Status</h4>
+                            <p id="case-status" class="text-xs text-dark-300 font-semibold">⚫ Power Off</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex justify-center gap-4">
+                <button class="btn-danger px-6 py-3 rounded-xl font-bold text-white" id="btn-clear-computer">
+                    <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg> Reset
+                </button>
+                <button class="px-6 py-3 rounded-xl font-bold text-white" id="btn-hint-computer"
+                    style="background: linear-gradient(135deg, #f59e0b, #d97706); transition: all 0.3s;">
+                    <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg> Hint (−⭐)
+                </button>
+                <button class="btn-warning px-8 py-3 rounded-xl font-bold text-white" id="btn-power-computer">
+                    <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg> Power On
+                </button>
+            </div>
+
+            <!-- Feedback -->
+            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="computer-feedback"></div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODE 4: CODING PUZZLE LAB
+         ============================================ -->
+    <div id="coding-screen" class="screen relative z-10">
+        <div class="max-w-6xl w-full mx-auto px-4 py-6 min-h-screen">
+            <!-- Header -->
+            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
+                <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
+                    data-back="dashboard">
+                    ⬅ Kembali
+                </button>
+                <h2 class="font-display text-2xl font-bold text-accent-400 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                    </svg> Coding Puzzle Lab
+                </h2>
+                <div class="flex items-center gap-2">
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                        onclick="resetToLevel1('coding')" title="Reset ke Level 1">↺ 1</button>
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-accent-500/20 text-accent-300 hover:bg-accent-500/30"
+                        onclick="goToPrevLevel('coding')" title="Level sebelumnya">◀</button>
+                    <div class="px-3 py-1 bg-accent-500/20 rounded-xl">
+                        <span class="font-bold text-sm">Lv.<span id="coding-level">1</span>/15</span>
+                    </div>
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-accent-500/20 text-accent-300 hover:bg-accent-500/30"
+                        onclick="goToNextLevel('coding')" title="Level berikutnya">▶</button>
+                </div>
+            </header>
+
+            <!-- Mission Panel -->
+            <div class="glass-card rounded-2xl p-4 mb-4 border-l-4 border-accent-500">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-display text-lg font-bold text-accent-400 mb-1"><svg
+                                class="w-5 h-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg> Tantangan</h3>
+                        <p class="text-dark-100" id="coding-mission">Lengkapi kode dengan blok yang benar!</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-medium"
+                            id="coding-concept">Print</span>
+                        <span class="px-4 py-2 bg-accent-500/20 text-accent-300 rounded-xl font-medium text-sm"
+                            id="puzzle-type">
+                            Tipe: Fill the Gap
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hint Panel -->
+            <div class="glass-card rounded-2xl p-4 mb-6 bg-accent-500/10 border border-accent-500/20 hint-panel"
+                data-hint-for="coding">
+                <button
+                    class="hint-toggle-btn w-full flex items-center justify-between text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                    onclick="toggleHintPanel(this)">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        Lihat Hint
+                    </span>
+                    <svg class="w-4 h-4 hint-chevron transition-transform" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <p class="text-dark-100 text-sm mt-3 hint-content" style="display:none;">
+                    <span id="coding-hint">Gunakan tanda kutip untuk teks.</span>
+                </p>
+            </div>
+
+            <!-- Workspace -->
+            <div class="grid lg:grid-cols-3 gap-6 mb-6">
+                <!-- Code Editor -->
+                <div class="lg:col-span-2">
+                    <div class="code-editor rounded-xl overflow-hidden">
+                        <div class="code-editor-header">
+                            <div class="code-dot bg-red-500"></div>
+                            <div class="code-dot bg-yellow-500"></div>
+                            <div class="code-dot bg-green-500"></div>
+                            <span class="text-dark-200 text-sm ml-4 font-mono">puzzle.py</span>
+                        </div>
+                        <div class="p-4 min-h-[200px] text-sm" id="code-area">
+                            <!-- Code generated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Output -->
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="glass-card rounded-2xl p-4">
+                            <h4 class="font-display font-bold text-dark-100 mb-2"><svg class="w-4 h-4 inline-block"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" stroke-width="2" />
+                                    <circle cx="12" cy="12" r="6" stroke-width="2" />
+                                    <circle cx="12" cy="12" r="2" fill="currentColor" />
+                                </svg> Output yang Diharapkan:</h4>
+                            <div class="bg-dark-900/50 rounded-xl p-4 font-mono text-sm min-h-[60px] border border-accent-500/20"
+                                id="expected-output-display">
+                                <span class="text-dark-300">...</span>
+                            </div>
+                        </div>
+                        <div class="glass-card rounded-2xl p-4">
+                            <h4 class="font-display font-bold text-dark-100 mb-2"><svg class="w-4 h-4 inline-block"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg> Output Kamu:</h4>
+                            <div class="bg-dark-900/50 rounded-xl p-4 font-mono text-sm min-h-[60px]"
+                                id="output-display">
+                                <span class="text-dark-300">Tekan Jalankan untuk melihat hasil...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Blocks -->
+                <div class="glass-card rounded-2xl p-4">
+                    <h4 class="font-display font-bold text-dark-100 mb-4"><svg class="w-5 h-5 inline-block" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg> Blok Kode</h4>
+                    <div class="flex flex-col gap-2" id="blocks-area">
+                        <!-- Blocks generated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex justify-center gap-4">
+                <button class="btn-danger px-6 py-3 rounded-xl font-bold text-white" id="btn-reset-code">
+                    <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg> Reset
+                </button>
+                <button class="btn-success px-8 py-3 rounded-xl font-bold text-white" id="btn-run-code">
+                    ▶️ Jalankan
+                </button>
+                <button
+                    class="btn-primary px-6 py-3 rounded-xl font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    id="btn-next-puzzle" disabled>
+                    ➡️ Lanjut
+                </button>
+            </div>
+
+            <!-- Feedback -->
+            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="coding-feedback"></div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODE 5: CIRCUIT BUILDER
+         ============================================ -->
+    <div id="circuit-screen" class="screen relative z-10">
+        <div class="max-w-7xl w-full mx-auto px-4 py-6 min-h-screen">
+            <!-- Header -->
+            <header class="glass-card rounded-2xl p-4 mb-4 flex items-center justify-between">
+                <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
+                    data-back="dashboard">
+                    ⬅ Kembali
+                </button>
+                <h2 class="font-display text-2xl font-bold text-teal-400 flex items-center gap-2">
+                    🔌 Circuit Builder
+                </h2>
+                <div class="flex items-center gap-2">
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                        onclick="resetToLevel1('circuit')" title="Reset ke Level 1">↺ 1</button>
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-teal-500/20 text-teal-300 hover:bg-teal-500/30"
+                        onclick="goToPrevLevel('circuit')" title="Level sebelumnya">◀</button>
+                    <div class="px-3 py-1 bg-teal-500/20 rounded-xl">
+                        <span class="font-bold text-sm">Lv.<span id="circuit-level">1</span>/3</span>
+                    </div>
+                    <button
+                        class="level-nav-btn px-2 py-1 rounded-lg text-xs font-bold bg-teal-500/20 text-teal-300 hover:bg-teal-500/30"
+                        onclick="goToNextLevel('circuit')" title="Level berikutnya">▶</button>
+                </div>
+            </header>
+
+            <!-- Mission Panel -->
+            <div class="glass-card rounded-2xl p-4 mb-4 border-l-4 border-teal-500">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-display text-lg font-bold text-teal-400 mb-1">⚡ Tantangan</h3>
+                        <p class="text-dark-100" id="circuit-mission">Buat rangkaian seri sederhana!</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-3 py-1 bg-teal-500/20 text-teal-300 rounded-full text-xs font-medium"
+                            id="circuit-concept">Rangkaian Seri</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hint Panel -->
+            <div class="glass-card rounded-2xl p-4 mb-4 bg-teal-500/10 border border-teal-500/20 hint-panel"
+                data-hint-for="circuit">
+                <button
+                    class="hint-toggle-btn w-full flex items-center justify-between text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                    onclick="toggleHintPanel(this)">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        Lihat Hint
+                    </span>
+                    <svg class="w-4 h-4 hint-chevron transition-transform" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <p class="text-dark-100 text-sm mt-3 hint-content" style="display:none;">
+                    <span id="circuit-hint">Hubungkan komponen satu per satu.</span>
+                </p>
+            </div>
+
+            <!-- Main Workspace -->
+            <div class="grid lg:grid-cols-4 gap-4 mb-4">
+                <!-- Component Palette -->
+                <div class="lg:col-span-1">
+                    <div class="glass-card rounded-2xl p-4">
+                        <div id="circuit-palette">
+                            <!-- Generated by JS -->
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="circuit-info-panel mt-4">
+                            <h5 class="font-bold text-xs text-teal-300 mb-2">📋 Cara Main</h5>
+                            <ul class="text-[10px] text-dark-300 space-y-1">
+                                <li>• <b>Drag</b> komponen dari panel ke papan</li>
+                                <li>• <b>Klik pin</b> (titik) untuk hubungkan kabel</li>
+                                <li>• <b>Klik Switch</b> untuk ON/OFF</li>
+                                <li>• <b>Double-click</b> komponen untuk hapus</li>
+                                <li>• <b>Klik kanan</b> kabel untuk hapus</li>
+                                <li>• Tekan <b>⚡ Simulasi</b> untuk cek rangkaian</li>
+                            </ul>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="circuit-info-panel mt-3">
+                            <h5 class="font-bold text-xs text-purple-300 mb-1">📖 Konsep</h5>
+                            <p class="text-[10px] text-dark-300" id="circuit-description">Rangkaian seri: semua komponen
+                                terhubung dalam satu jalur.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Circuit Board Canvas -->
+                <div class="lg:col-span-3">
+                    <div class="glass-card rounded-2xl p-3"
+                        style="background: rgba(10,42,26,0.4); border-color: rgba(20,184,166,0.2);">
+                        <canvas id="circuit-canvas" width="700" height="440"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex flex-wrap justify-center gap-3 mb-4">
+                <button class="circuit-control-btn text-white" id="circuit-wire-btn"
+                    style="background: linear-gradient(145deg, #14b8a6, #0d9488);">
+                    🔗 Kabel
+                </button>
+                <button class="circuit-control-btn text-white" id="circuit-simulate-btn"
+                    style="background: linear-gradient(145deg, #22c55e, #16a34a);">
+                    ⚡ Simulasi
+                </button>
+                <button class="circuit-control-btn text-white" id="circuit-delete-btn"
+                    style="background: linear-gradient(145deg, #f59e0b, #d97706);">
+                    🗑 Hapus Terpilih
+                </button>
+                <button class="circuit-control-btn text-white" id="circuit-reset-btn"
+                    style="background: linear-gradient(145deg, #ef4444, #dc2626);">
+                    ↺ Reset Semua
+                </button>
+            </div>
+
+            <!-- Feedback -->
+            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="circuit-feedback"></div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         SUCCESS MODAL (Enhanced with Stars)
+         ============================================ -->
+    <div class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4" id="success-modal">
+        <div class="modal-content p-8 max-w-md w-full text-center">
+            <div class="mb-4" id="modal-celebration-lottie" style="width:100px;height:100px;margin:0 auto;"></div>
+            <h2 class="font-display text-3xl font-bold text-white mb-2">Level Selesai!</h2>
+
+            <!-- Star Rating Display -->
+            <div class="star-reveal mb-4" id="modal-stars">
+                <div class="star-big" id="modal-star-1" style="width:60px;height:60px;"></div>
+                <div class="star-big" id="modal-star-2" style="width:60px;height:60px;"></div>
+                <div class="star-big" id="modal-star-3" style="width:60px;height:60px;"></div>
+            </div>
+
+            <!-- XP Gained -->
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30 mb-3"
+                id="modal-xp-display">
+                <span class="text-purple-300 font-bold font-mono" id="modal-xp-amount">+0 XP</span>
+            </div>
+
+            <!-- Streak -->
+            <div class="hidden mb-3" id="modal-streak-display">
+                <span class="streak-badge" id="modal-streak-text"
+                    style="display:inline-flex;align-items:center;gap:6px;"><span id="modal-streak-fire"
+                        style="width:28px;height:35px;display:inline-block;"></span> Streak 0x</span>
+            </div>
+
+            <!-- Medal Reveal for New Achievements -->
+            <div class="hidden mb-3 flex-wrap justify-center gap-4" id="modal-medal-container">
+                <!-- Generated by showEnhancedModal() -->
+            </div>
+
+            <p class="text-dark-200 mb-6" id="success-message">Kamu berhasil menyelesaikan tantangan!</p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button class="btn-success px-6 py-3 rounded-xl font-bold text-white" id="btn-next-level">
+                    ➡️ Level Berikutnya
+                </button>
+                <button
+                    class="px-6 py-3 rounded-xl font-bold text-dark-200 bg-dark-700 hover:bg-dark-600 transition-colors"
+                    id="btn-back-menu">
+                    <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg> Kembali ke Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Select Overlay -->
+    <div id="level-select-overlay" class="fixed inset-0 z-[55] hidden items-center justify-center p-4"
+        style="background: rgba(15,23,42,0.92); backdrop-filter: blur(8px);">
+        <!-- Generated by LevelSelect.show() -->
+    </div>
+
+    <!-- Concept Summary Overlay -->
+    <div id="concept-summary-overlay" class="fixed inset-0 z-[56] hidden items-center justify-center p-4"
+        style="background: rgba(15,23,42,0.85); backdrop-filter: blur(6px);">
+        <!-- Generated by AdaptiveHints.showConceptSummary() -->
+    </div>
+
+    <!-- Scripts (order matters: utilities first, then game modules) -->
+    <script src="js/lottieManager.js"></script>
+    <script src="js/soundManager.js"></script>
+    <script src="js/progressSystem.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/keyboard.js"></script>
+    <script src="js/settingsPanel.js"></script>
+    <script src="js/adaptiveHints.js"></script>
+    <script src="js/dailyChallenge.js"></script>
+    <script src="js/levelSelect.js"></script>
+    <script src="js/statsDashboard.js"></script>
+    <script src="js/characterSelect.js"></script>
+    <script src="js/multiplayer.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/robot.js"></script>
+    <script src="js/network.js"></script>
+    <script src="js/computer.js"></script>
+    <script src="js/codingPuzzle.js"></script>
+    <script src="js/circuit.js"></script>
+
+    <!-- Loading Screen Controller -->
+    <script>
+            (function () {
+                const tips = [
+                    '💡 Tip: Tekan M untuk mute/unmute suara',
+                    '💡 Tip: Tekan Esc untuk buka pengaturan',
+                    '💡 Tip: Gunakan Ctrl+Enter untuk jalankan perintah',
+                    '💡 Tip: Tekan R untuk reset level saat ini',
+                    '💡 Tip: Alt+← dan Alt+→ untuk navigasi level',
+                    '💡 Tip: Selesaikan level tanpa hint untuk dapat 3 bintang!',
+                    '💡 Tip: Streak bertambah setiap level berturut-turut berhasil',
+                    '💡 Tip: Raih semua achievement untuk jadi Supreme Master!'
+                ];
+
+                const tipEl = document.getElementById('loader-tip');
+                const fillEl = document.getElementById('loader-fill');
+                const screen = document.getElementById('loading-screen');
+
+                // Random tip
+                if (tipEl) tipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
+
+                // Simulate loading progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 25 + 10;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        // Fade out after loading complete
+                        setTimeout(() => {
+                            if (screen) screen.classList.add('fade-out');
+                            setTimeout(() => {
+                                if (screen) screen.style.display = 'none';
+                            }, 600);
+                        }, 300);
+                    }
+                    if (fillEl) fillEl.style.width = `${Math.min(progress, 100)}%`;
+                }, 200);
+            })();
+    </script>
+
+
+</body>
+
+</html>
