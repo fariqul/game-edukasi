@@ -25,6 +25,7 @@ const GameState = {
         circuit: 1
     }
 };
+let latestModeInitToken = 0;
 
 // ============================================
 // INITIALIZATION
@@ -64,6 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
         CharacterSystem.init();
     } else {
         animateDashboardEntrance();
+    }
+
+    // Preload mode pertama saat browser idle agar transisi klik pertama lebih cepat.
+    if (typeof ModuleLoader !== 'undefined') {
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => ModuleLoader.preload('robot'));
+        } else {
+            setTimeout(() => ModuleLoader.preload('robot'), 600);
+        }
     }
 });
 
@@ -226,8 +236,18 @@ function animateProgressRings() {
 function initNavigation() {
     // Mode cards on dashboard
     document.querySelectorAll('.mode-card').forEach(card => {
+        const mode = card.dataset.mode;
+
+        // Hint preload saat user mulai berinteraksi dengan kartu mode.
+        const preloadMode = () => {
+            if (typeof ModuleLoader !== 'undefined' && mode) {
+                ModuleLoader.preload(mode);
+            }
+        };
+        card.addEventListener('mouseenter', preloadMode, { once: true });
+        card.addEventListener('focus', preloadMode, { once: true });
+
         card.addEventListener('click', () => {
-            const mode = card.dataset.mode;
             // If multiplayer host, send game-start to opponent
             if (typeof Multiplayer !== 'undefined' && Multiplayer.isActive() && Multiplayer.isHostPlayer()) {
                 Multiplayer.startMultiplayerMode(mode);
@@ -247,6 +267,7 @@ function initNavigation() {
 }
 
 function navigateTo(screenId) {
+    return new Promise((resolve) => {
     // Play navigation sound
     if (typeof SoundManager !== 'undefined') {
         SoundManager.play(screenId === 'dashboard' ? 'back' : 'navigate');
@@ -258,13 +279,18 @@ function navigateTo(screenId) {
         LottieManager.destroyInScope('#' + currentScreen.id);
     }
 
+    if (!currentScreen) {
+        resolve();
+        return;
+    }
+
     anime({
         targets: currentScreen,
         opacity: [1, 0],
         translateY: [0, -20],
         duration: 300,
         easing: 'easeInQuart',
-        complete: () => {
+        complete: async () => {
             // Hide all screens
             document.querySelectorAll('.screen').forEach(screen => {
                 screen.classList.remove('active');
@@ -278,7 +304,7 @@ function navigateTo(screenId) {
             } else {
                 targetScreen = document.getElementById(`${screenId}-screen`);
                 GameState.currentScreen = screenId;
-                initMode(screenId);
+                await initMode(screenId);
             }
 
             if (targetScreen) {
@@ -310,15 +336,29 @@ function navigateTo(screenId) {
                 }
             }
 
-            // Start level tracking when entering a game mode
-            if (['robot', 'network', 'computer', 'coding', 'circuit'].includes(screenId)) {
-                if (typeof ProgressSystem !== 'undefined') ProgressSystem.startLevel();
-            }
+            resolve();
         }
+    });
     });
 }
 
-function initMode(mode) {
+async function initMode(mode) {
+    const initToken = ++latestModeInitToken;
+
+    if (typeof ModuleLoader !== 'undefined') {
+        try {
+            await ModuleLoader.loadMode(mode);
+        } catch (error) {
+            console.error(error);
+            if (typeof Toast !== 'undefined' && typeof Toast.show === 'function') {
+                Toast.show(`Gagal memuat mode ${mode}. Coba refresh halaman.`, 'error');
+            }
+            return false;
+        }
+    }
+
+    if (initToken !== latestModeInitToken) return false;
+
     // Reset hint panels to closed state
     resetHintPanels();
 
@@ -364,6 +404,8 @@ function initMode(mode) {
             }
             break;
     }
+
+    return true;
 }
 
 // ============================================
@@ -468,8 +510,14 @@ function loadProgress() {
     if (saved) {
         try {
             const data = JSON.parse(saved);
-            GameState.progress = data.progress || GameState.progress;
-            GameState.currentLevel = data.currentLevel || GameState.currentLevel;
+            if (typeof StateGuards !== 'undefined' && typeof StateGuards.normalizeGameState === 'function') {
+                const normalized = StateGuards.normalizeGameState(data, GameState);
+                GameState.progress = normalized.progress;
+                GameState.currentLevel = normalized.currentLevel;
+            } else {
+                GameState.progress = data.progress || GameState.progress;
+                GameState.currentLevel = data.currentLevel || GameState.currentLevel;
+            }
         } catch (e) {
             console.warn('Failed to load progress:', e);
         }
@@ -485,11 +533,11 @@ function initModal() {
     const btnNext = document.getElementById('btn-next-level');
     const btnBack = document.getElementById('btn-back-menu');
 
-    btnNext.addEventListener('click', () => {
+    btnNext.addEventListener('click', async () => {
         hideModal();
         const mode = GameState.currentScreen;
         if (advanceLevel(mode)) {
-            initMode(mode);
+            await initMode(mode);
             updateLevelIndicator(mode);
         } else {
             navigateTo('dashboard');
@@ -683,27 +731,27 @@ function hideFeedback(elementId) {
 // LEVEL NAVIGATION
 // ============================================
 
-function goToPrevLevel(mode) {
+async function goToPrevLevel(mode) {
     if (GameState.currentLevel[mode] > 1) {
         GameState.currentLevel[mode]--;
-        initMode(mode);
+        await initMode(mode);
         updateLevelIndicator(mode);
     }
 }
 
-function goToNextLevel(mode) {
+async function goToNextLevel(mode) {
     const maxLevel = GameState.progress[mode].completed + 1;
     const total = GameState.progress[mode].total;
     if (GameState.currentLevel[mode] < Math.min(maxLevel, total)) {
         GameState.currentLevel[mode]++;
-        initMode(mode);
+        await initMode(mode);
         updateLevelIndicator(mode);
     }
 }
 
-function resetToLevel1(mode) {
+async function resetToLevel1(mode) {
     GameState.currentLevel[mode] = 1;
-    initMode(mode);
+    await initMode(mode);
     updateLevelIndicator(mode);
 }
 
@@ -801,6 +849,26 @@ function updateDailyStreak() {
 // ACHIEVEMENT GRID
 // ============================================
 
+function achievementIconSvg(iconKey) {
+    const map = {
+        Belajar: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h11a3 3 0 0 1 3 3v9H7a3 3 0 0 0-3 3V6Z"/><path d="M18 9h2a2 2 0 0 1 0 4h-2"/></svg>',
+        Bintang: '<svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+        Robot: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="8" width="10" height="8" rx="2"/><path d="M12 4v3M9 12h.01M15 12h.01"/></svg>',
+        Network: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M12 7v5m0 0-7 4m7-4 7 4"/></svg>',
+        Computer: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+        Puzzle: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 8-4 4 4 4m8-8 4 4-4 4"/></svg>',
+        Streak: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c2 3 .8 5.5-1 7 3.2-.7 6 1.6 6 5 0 3.3-2.7 6-6 6s-6-2.7-6-6c0-3.1 2-5 4-6.5C8.3 6 9.4 4 12 3Z"/></svg>',
+        Maksimal: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 4 3 6 6 .9-4.5 4.4 1 6.2L12 18.7l-5.5 2.8 1-6.2L3 10.9l6-.9L12 4Z"/></svg>',
+        XP: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 7h5l-4 10h5m2-10 5 10M14.5 12h4"/></svg>',
+        Explorer: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m12 8 2.5 3.5L12 16l-2.5-4.5L12 8Z"/></svg>',
+        Simulasi: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h7l-2 8 9-12h-7l2-4"/></svg>',
+        Algoritma: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h6m0 0-2-2m2 2-2 2M14 17h6m0 0-2-2m2 2-2 2"/><path d="M10 7h4v10h-4z"/></svg>',
+        Prestasi: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8v4a4 4 0 0 1-8 0V3Z"/><path d="M6 7H4a3 3 0 0 0 3 3m8-3h2a3 3 0 0 1-3 3"/><path d="M12 11v4m-3 6h6"/></svg>',
+        Master: '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 4 3 6 6 .9-4.5 4.4 1 6.2L12 18.7l-5.5 2.8 1-6.2L3 10.9l6-.9L12 4Z"/></svg>'
+    };
+    return map[iconKey] || map.Belajar;
+}
+
 function updateAchievementGrid() {
     if (typeof ProgressSystem === 'undefined') return;
 
@@ -818,8 +886,8 @@ function updateAchievementGrid() {
         const card = document.createElement('div');
         card.className = `achievement-card ${ach.unlocked ? 'unlocked' : 'locked'}`;
         const medalImg = ach.medal
-            ? `<img src="${ach.medal}" alt="${ach.name}" class="medal-img ${ach.unlocked ? 'medal-unlocked' : 'medal-locked'}" draggable="false">`
-            : `<div class="text-3xl mb-2">${ach.icon}</div>`;
+            ? `<img src="${ach.medal}" alt="${ach.name}" loading="lazy" decoding="async" class="medal-img ${ach.unlocked ? 'medal-unlocked' : 'medal-locked'}" draggable="false">`
+            : `<div class="text-3xl mb-2">${achievementIconSvg(ach.icon)}</div>`;
         card.innerHTML = `
             <div class="medal-container">${medalImg}</div>
             <p class="text-xs font-bold text-white mb-1">${ach.name}</p>
@@ -843,7 +911,7 @@ function showEnhancedModal(mode, levelNum, options = {}) {
     const modal = document.getElementById('success-modal');
     const messageEl = document.getElementById('success-message');
 
-    // Celebration Lottie animation (replaces 🎉 emoji)
+    // Celebration Lottie animation (replaces Sukses emoji)
     const celebrationEl = document.getElementById('modal-celebration-lottie');
     if (celebrationEl && typeof LottieManager !== 'undefined') {
         celebrationEl.innerHTML = '';
@@ -853,7 +921,7 @@ function showEnhancedModal(mode, levelNum, options = {}) {
         });
     }
 
-    // Stars animation with Lottie (replaces ⭐ emoji)
+    // Stars animation with Lottie (replaces Bintang emoji)
     const stars = result ? result.stars : 1;
     for (let i = 1; i <= 3; i++) {
         const starEl = document.getElementById(`modal-star-${i}`);
@@ -867,15 +935,18 @@ function showEnhancedModal(mode, levelNum, options = {}) {
                 setTimeout(() => {
                     starEl.classList.add('revealed');
                     if (typeof LottieManager !== 'undefined') {
-                        // Use Lottie star reveal with staggered timing (Disney: Staging)
-                        LottieManager.playOneShot(starEl, 'star-reveal', {
-                            ariaLabel: `Star ${i} earned`,
-                            speed: 1.1,
-                            onComplete: () => {
-                                // Keep star visible after animation
-                                starEl.innerHTML = '<svg viewBox="0 0 24 24" width="40" height="40" style="margin:10px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FFD700"/></svg>';
-                            }
+                        // Avoid playOneShot auto-destroy clearing the star after reveal.
+                        const animId = LottieManager.create(starEl, 'star-reveal', {
+                            autoplay: false,
+                            loop: false,
+                            ariaLabel: `Star ${i} earned`
                         });
+                        setTimeout(() => LottieManager.play(animId, { speed: 1.1 }), 20);
+                        // Freeze final visible state as static star so learners can read earned stars.
+                        setTimeout(() => {
+                            if (animId) LottieManager.destroy(animId);
+                            starEl.innerHTML = '<svg viewBox="0 0 24 24" width="40" height="40" style="margin:10px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FFD700"/></svg>';
+                        }, 1200);
                     }
                     if (typeof SoundManager !== 'undefined') SoundManager.play('starEarned');
                     if (typeof Particles !== 'undefined') {
@@ -905,15 +976,15 @@ function showEnhancedModal(mode, levelNum, options = {}) {
     const streakText = document.getElementById('modal-streak-text');
     if (result && result.streak > 1) {
         if (streakDisplay) streakDisplay.classList.remove('hidden');
-        if (streakText) streakText.textContent = `🔥 Streak ${result.streak}x`;
+        if (streakText) streakText.textContent = `Streak ${result.streak}x`;
     } else if (streakDisplay) {
         streakDisplay.classList.add('hidden');
     }
 
     // Message
     let msg = 'Kamu berhasil menyelesaikan tantangan!';
-    if (result && result.isNewBest) msg = '🎯 Skor terbaik baru!';
-    if (result && stars === 3) msg = '⭐ Sempurna! 3 Bintang!';
+    if (result && result.isNewBest) msg = 'Skor terbaik baru!';
+    if (result && stars === 3) msg = 'Sempurna! 3 Bintang!';
     if (messageEl) messageEl.textContent = msg;
 
     // Medal reveal for new achievements
@@ -923,7 +994,7 @@ function showEnhancedModal(mode, levelNum, options = {}) {
             medalContainer.classList.remove('hidden');
             medalContainer.innerHTML = result.newAchievements.map(ach => `
                 <div class="modal-medal-reveal">
-                    ${ach.medal ? `<img src="${ach.medal}" alt="${ach.name}" class="medal-reveal-anim">` : `<span class="text-5xl">${ach.icon}</span>`}
+                    ${ach.medal ? `<img src="${ach.medal}" alt="${ach.name}" loading="lazy" decoding="async" class="medal-reveal-anim">` : `<span class="text-5xl">${achievementIconSvg(ach.icon)}</span>`}
                     <span class="text-sm font-bold text-yellow-300">${ach.name}</span>
                 </div>
             `).join('');

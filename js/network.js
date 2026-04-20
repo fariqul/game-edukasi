@@ -35,7 +35,7 @@ const NetworkGame = (() => {
         {
             id: 1,
             type: 'cable',
-            mission: "Level 1: Susunan Kabel Straight (T568B) 🔌",
+            mission: "Level 1: Susunan Kabel Straight (T568B)",
             hint: "Kabel Straight menggunakan standar T568B di kedua ujung. Urutan: Putih-Orange, Orange, Putih-Hijau, Biru, Putih-Biru, Hijau, Putih-Coklat, Coklat.",
             concept: "Kabel Straight-Through (T568B)",
             cableType: 'straight',
@@ -47,9 +47,9 @@ const NetworkGame = (() => {
         {
             id: 2,
             type: 'cable',
-            mission: "Level 2: Susunan Kabel Cross (T568A ↔ T568B) ✂️",
+            mission: "Level 2: Susunan Kabel Cross (T568A ke T568B)",
             hint: "Kabel Cross: ujung A menggunakan T568A, ujung B menggunakan T568B. Pin 1-2 dan 3-6 ditukar posisinya.",
-            concept: "Kabel Crossover (T568A ↔ T568B)",
+            concept: "Kabel Crossover (T568A ke T568B)",
             cableType: 'cross',
             ends: [
                 { label: 'Ujung A (T568A)', order: T568A_ORDER },
@@ -61,7 +61,7 @@ const NetworkGame = (() => {
         {
             id: 3,
             type: 'topology',
-            mission: "Level 3: Koneksi Langsung! 🔌",
+            mission: "Level 3: Koneksi Langsung!",
             hint: "Hubungkan PC langsung ke Server dengan kabel.",
             concept: "Direct Connection",
             required: ['pc', 'server'],
@@ -71,7 +71,7 @@ const NetworkGame = (() => {
         {
             id: 4,
             type: 'topology',
-            mission: "Level 4: Dua PC, Satu Server 💻💻",
+            mission: "Level 4: Dua PC, Satu Server",
             hint: "Kedua PC harus terhubung ke Server.",
             concept: "Point-to-Point",
             required: ['pc', 'pc', 'server'],
@@ -83,7 +83,7 @@ const NetworkGame = (() => {
         {
             id: 5,
             type: 'topology',
-            mission: "Level 5: Kenali Switch! 🔀",
+            mission: "Level 5: Kenali Switch!",
             hint: "Switch menghubungkan banyak perangkat dalam satu jaringan.",
             concept: "Switch - Hub Jaringan",
             required: ['pc', 'switch', 'server'],
@@ -93,7 +93,7 @@ const NetworkGame = (() => {
         {
             id: 6,
             type: 'topology',
-            mission: "Level 6: LAN dengan Switch 🏢",
+            mission: "Level 6: LAN dengan Switch",
             hint: "Hubungkan 2 PC ke Switch, lalu Switch ke Server.",
             concept: "Local Area Network",
             required: ['pc', 'pc', 'switch', 'server'],
@@ -103,7 +103,7 @@ const NetworkGame = (() => {
         {
             id: 7,
             type: 'topology',
-            mission: "Level 7: Jaringan 3 PC! 💻💻💻",
+            mission: "Level 7: Jaringan 3 PC!",
             hint: "Tiga PC berbagi satu Switch untuk akses Server.",
             concept: "Star Topology",
             required: ['pc', 'pc', 'pc', 'switch', 'server'],
@@ -115,7 +115,7 @@ const NetworkGame = (() => {
         {
             id: 8,
             type: 'topology',
-            mission: "Level 8: Kenali Router! 📡",
+            mission: "Level 8: Kenali Router!",
             hint: "Router menghubungkan jaringan berbeda. Hubungkan: PC → Router → Server.",
             concept: "Router - Gateway",
             required: ['pc', 'router', 'server'],
@@ -125,7 +125,7 @@ const NetworkGame = (() => {
         {
             id: 9,
             type: 'topology',
-            mission: "Level 9: Dua Jaringan Berbeda 🌐🌐",
+            mission: "Level 9: Dua Jaringan Berbeda",
             hint: "Bangun 2 LAN: PC → Switch (kiri), dan Switch (kanan) → Server. Sambungkan keduanya lewat Router di tengah.",
             concept: "Inter-Network Communication",
             required: ['pc', 'switch', 'router', 'switch', 'server'],
@@ -135,7 +135,7 @@ const NetworkGame = (() => {
         {
             id: 10,
             type: 'topology',
-            mission: "Level 10: Jaringan Kantor 🏬",
+            mission: "Level 10: Jaringan Kantor",
             hint: "Jaringan kantor: 2 PC terhubung ke Switch → Switch ke Router → Router ke Switch lain → Switch ke Server.",
             concept: "Enterprise Network",
             required: ['pc', 'pc', 'switch', 'router', 'switch', 'server'],
@@ -147,7 +147,7 @@ const NetworkGame = (() => {
         {
             id: 11,
             type: 'topology',
-            mission: "Level 11: Dual Server Setup 🖥️🖥️",
+            mission: "Level 11: Dual Server Setup",
             hint: "Redundansi data: 2 PC → Switch → Router → Switch → 2 Server (utama + backup). Pastikan kedua server terhubung ke switch yang sama.",
             concept: "Redundancy",
             required: ['pc', 'pc', 'switch', 'router', 'switch', 'server', 'server'],
@@ -161,7 +161,7 @@ const NetworkGame = (() => {
         {
             id: 12,
             type: 'topology',
-            mission: "Level 12: Master Network! 🏆",
+            mission: "Level 12: Master Network!",
             hint: "Enterprise Network: 3 PC ke Switch kiri → Router di tengah → Switch kanan ke 2 Server. Ini arsitektur jaringan perusahaan!",
             concept: "Complex Enterprise Network",
             required: ['pc', 'pc', 'pc', 'switch', 'switch', 'router', 'server', 'server'],
@@ -177,7 +177,7 @@ const NetworkGame = (() => {
         {
             id: 13,
             type: 'topology',
-            mission: "Level 13: IP Addressing Basics 🔢",
+            mission: "Level 13: IP Addressing Basics",
             hint: "Setiap perangkat butuh IP unik! Hubungkan: 2 PC → Router → Server. Gunakan kabel ethernet (straight-through).",
             concept: "IP Address - Layer 3",
             required: ['pc', 'pc', 'router', 'server'],
@@ -195,7 +195,7 @@ const NetworkGame = (() => {
         {
             id: 14,
             type: 'topology',
-            mission: "Level 14: Subnetting Visual 🎨",
+            mission: "Level 14: Subnetting Visual",
             hint: "Pisahkan jaringan menjadi beberapa subnet untuk keamanan!",
             concept: "Subnetting - Network Segmentation",
             required: ['pc', 'pc', 'switch', 'router', 'switch', 'pc', 'pc', 'server'],
@@ -212,7 +212,7 @@ const NetworkGame = (() => {
         {
             id: 15,
             type: 'topology',
-            mission: "Level 15: Protocol Layers 📚",
+            mission: "Level 15: Protocol Layers",
             hint: "Data melewati 7 layer OSI saat dikirim antar jaringan. Hubungkan: PC → Switch → Router → Router → Switch → Server.",
             concept: "OSI Model - 7 Layers",
             required: ['pc', 'switch', 'router', 'router', 'switch', 'server'],
@@ -227,7 +227,7 @@ const NetworkGame = (() => {
         {
             id: 16,
             type: 'topology',
-            mission: "Level 16: DNS & DHCP Server 🌐",
+            mission: "Level 16: DNS & DHCP Server",
             hint: "DNS menerjemahkan nama domain ke IP. DHCP memberikan IP otomatis!",
             concept: "DNS & DHCP Services",
             required: ['pc', 'pc', 'pc', 'switch', 'router', 'dns-server', 'dhcp-server'],
@@ -241,7 +241,7 @@ const NetworkGame = (() => {
         {
             id: 17,
             type: 'topology',
-            mission: "Level 17: Firewall Security! 🔥🛡️",
+            mission: "Level 17: Firewall Security!",
             hint: "Keamanan Enterprise: 2 PC → Switch → Firewall → Router → Switch → 2 Server. Firewall menyaring traffic berbahaya sebelum masuk jaringan.",
             concept: "Network Security - Firewall",
             required: ['pc', 'pc', 'switch', 'firewall', 'router', 'switch', 'server', 'server'],
@@ -628,7 +628,7 @@ const NetworkGame = (() => {
 
         if (!allCorrect) {
             if (typeof SoundManager !== 'undefined') SoundManager.play('error');
-            showFeedback('network-feedback', `❌ ${errors.join(' | ')}`, false);
+            showFeedback('network-feedback', `${errors.join(' | ')}`, false);
             // Shake workspace
             if (typeof anime !== 'undefined') {
                 anime({
@@ -658,7 +658,7 @@ const NetworkGame = (() => {
         });
 
         const cableLabel = currentLevel.cableType === 'straight' ? 'Straight-Through' : 'Crossover';
-        showFeedback('network-feedback', `✅ Sempurna! Susunan kabel ${cableLabel} benar!`, true);
+        showFeedback('network-feedback', `Sempurna! Susunan kabel ${cableLabel} benar!`, true);
 
         setTimeout(() => {
             completeLevel('network', {
@@ -690,7 +690,7 @@ const NetworkGame = (() => {
             const cableType = getCorrectCableType(pair[0], pair[1]);
             const label = cableType === 'straight' ? '━━━ Straight' : '━╳━ Cross';
             const color = cableType === 'straight' ? 'text-green-400' : 'text-yellow-400';
-            details.push(`<span class="inline-flex items-center gap-1"><span class="${color} font-bold">${label}</span> <span class="text-dark-200">(${pair[0].toUpperCase()} ↔ ${pair[1].toUpperCase()})</span></span>`);
+            details.push(`<span class="inline-flex items-center gap-1"><span class="${color} font-bold">${label}</span> <span class="text-dark-200">(${pair[0].toUpperCase()} ke ${pair[1].toUpperCase()})</span></span>`);
         });
 
         el.innerHTML = details.join('<span class="text-dark-300 mx-1">|</span>');
@@ -1023,11 +1023,11 @@ const NetworkGame = (() => {
             if (connectMode) {
                 btn.classList.remove('btn-primary');
                 btn.classList.add('btn-success');
-                btn.innerHTML = '🔗 Mode Kabel: ON';
+                btn.innerHTML = '<svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg> Mode Kabel: ON';
             } else {
                 btn.classList.remove('btn-success');
                 btn.classList.add('btn-primary');
-                btn.innerHTML = '🔗 Mode Kabel';
+                btn.innerHTML = '<svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg> Mode Kabel';
                 selectedDevice = null;
                 document.querySelectorAll('.placed-device.selected').forEach(el => {
                     el.classList.remove('selected');
@@ -1076,7 +1076,7 @@ const NetworkGame = (() => {
         const placedSorted = [...placedTypes].sort();
 
         if (JSON.stringify(placedSorted) !== JSON.stringify(requiredTypes)) {
-            showFeedback('network-feedback', '❌ Belum semua perangkat ditempatkan!', false);
+            showFeedback('network-feedback', 'Belum semua perangkat ditempatkan!', false);
             anime({
                 targets: '#network-canvas',
                 translateX: [-5, 5, -5, 5, 0],
@@ -1087,14 +1087,18 @@ const NetworkGame = (() => {
         }
 
         if (connections.length < currentLevel.correctTopology.length) {
-            showFeedback('network-feedback', '❌ Koneksi belum lengkap! Hubungkan semua perangkat.', false);
+            showFeedback('network-feedback', 'Koneksi belum lengkap! Hubungkan semua perangkat.', false);
+            return;
+        }
+        if (connections.length > currentLevel.correctTopology.length) {
+            showFeedback('network-feedback', 'Koneksi berlebihan. Hapus kabel yang tidak diperlukan.', false);
             return;
         }
 
-        const isValid = validateTopology();
+        const topologyResult = validateTopology();
 
-        if (!isValid) {
-            showFeedback('network-feedback', `❌ Topologi belum benar! Hint: ${currentLevel.hint}`, false);
+        if (!topologyResult.ok) {
+            showFeedback('network-feedback', topologyResult.message || `Topologi belum benar! Hint: ${currentLevel.hint}`, false);
             anime({
                 targets: '#network-canvas',
                 translateX: [-5, 5, -5, 5, 0],
@@ -1138,28 +1142,46 @@ const NetworkGame = (() => {
 
         const requiredPairs = currentLevel.correctTopology.map(p => [...p].sort());
 
-        // Count occurrences of each pair type needed
+        const diff = typeof LearningRules !== 'undefined' && typeof LearningRules.explainTopologyDiff === 'function'
+            ? LearningRules.explainTopologyDiff(connectedPairs, requiredPairs)
+            : null;
+        if (diff && !diff.exact) {
+            const missingHint = diff.missing.length > 0 ? `Kurang: ${diff.missing.map(formatPairKey).join(', ')}` : '';
+            const extraHint = diff.extra.length > 0 ? `Lebih: ${diff.extra.map(formatPairKey).join(', ')}` : '';
+            return {
+                ok: false,
+                message: `Topologi belum tepat. ${[missingHint, extraHint].filter(Boolean).join(' | ')}`
+            };
+        }
+
+        // Wajib exact match: tidak boleh ada koneksi kurang/lebih.
+        if (typeof GameLogicRules !== 'undefined' && typeof GameLogicRules.isExactTopologyMatch === 'function') {
+            const ok = GameLogicRules.isExactTopologyMatch(connectedPairs, requiredPairs);
+            return ok ? { ok: true } : { ok: false, message: `Topologi belum benar! Hint: ${currentLevel.hint}` };
+        }
+
+        // Fallback legacy
+        if (connectedPairs.length !== requiredPairs.length) return { ok: false, message: 'Jumlah koneksi tidak sesuai kebutuhan level.' };
         const requiredCounts = {};
         requiredPairs.forEach(pair => {
             const key = pair.join('-');
             requiredCounts[key] = (requiredCounts[key] || 0) + 1;
         });
-
-        // Count occurrences of each pair type we have
         const connectedCounts = {};
         connectedPairs.forEach(pair => {
             const key = pair.join('-');
             connectedCounts[key] = (connectedCounts[key] || 0) + 1;
         });
-
-        // Check if all required pairs are present with correct counts
         for (const [key, count] of Object.entries(requiredCounts)) {
-            if ((connectedCounts[key] || 0) < count) {
-                return false;
-            }
+            if ((connectedCounts[key] || 0) !== count) return { ok: false, message: `Koneksi ${formatPairKey(key)} belum sesuai.` };
         }
+        const ok = Object.keys(connectedCounts).length === Object.keys(requiredCounts).length;
+        return ok ? { ok: true } : { ok: false, message: 'Ada koneksi yang tidak diperlukan.' };
+    }
 
-        return true;
+    function formatPairKey(key) {
+        const [a, b] = key.split('-');
+        return `${(a || '').toUpperCase()}ke${(b || '').toUpperCase()}`;
     }
 
     function validateCableTypes() {
@@ -1175,16 +1197,19 @@ const NetworkGame = (() => {
                 const toName = to.type.toUpperCase();
                 const correctLabel = correct === 'straight' ? 'Straight (━━━)' : 'Crossover (━╳━)';
                 const usedLabel = conn.cableType === 'straight' ? 'Straight (━━━)' : 'Crossover (━╳━)';
-                errors.push(`❌ Kabel salah antara ${fromName} ↔ ${toName}! Kamu pakai ${usedLabel}, seharusnya ${correctLabel}.`);
+                errors.push(`Kabel salah antara ${fromName} ke ${toName}! Kamu pakai ${usedLabel}, seharusnya ${correctLabel}.`);
             }
         });
         return errors;
     }
 
     function animateDataFlow() {
-        showFeedback('network-feedback', '✅ Jaringan terhubung! Data mengalir...', true);
-
         const path = buildDataPath();
+        const route = typeof ModeFeedbackRules !== 'undefined'
+            ? ModeFeedbackRules.formatNetworkPathSummary(path)
+            : '';
+        const routeMsg = route ? `<br><span class="text-xs text-dark-200">Rute data: ${route}</span>` : '';
+        showFeedback('network-feedback', `Jaringan terhubung! Data mengalir...${routeMsg}`, true);
 
         if (path.length < 2) {
             simpleDataAnimation();

@@ -21,6 +21,7 @@ const Multiplayer = (() => {
 
     let gameStartTime = 0;
     let timerInterval = null;
+    let reconnectTimer = null;
     let myCompleted = false;
     let myTime = 0;
     let opponentCompleted = false;
@@ -63,6 +64,31 @@ const Multiplayer = (() => {
         const m = Math.floor(s / 60);
         const sec = s % 60;
         return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function mapPeerError(errType) {
+        if (typeof MultiplayerRules !== 'undefined') {
+            return MultiplayerRules.mapPeerErrorMessage(errType, isHost);
+        }
+        return 'Terjadi error koneksi multiplayer.';
+    }
+
+    function attemptPeerReconnect(statusEl) {
+        if (!peer) return;
+        const canReconnect = typeof MultiplayerRules !== 'undefined'
+            ? MultiplayerRules.shouldAttemptReconnect(peer)
+            : (peer.disconnected && !peer.destroyed);
+        if (!canReconnect) return;
+
+        if (statusEl) statusEl.textContent = 'Koneksi putus, mencoba reconnect...';
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+            try {
+                peer.reconnect();
+            } catch (e) {
+                if (statusEl) statusEl.textContent = 'Reconnect gagal. Coba buat/join room lagi.';
+            }
+        }, 2000);
     }
 
     // ============================================
@@ -206,8 +232,12 @@ const Multiplayer = (() => {
                 peer.destroy();
                 createRoom();
             } else {
-                if (createStatus) createStatus.textContent = 'Error: ' + err.message;
+                if (createStatus) createStatus.textContent = mapPeerError(err.type);
             }
+        });
+
+        peer.on('disconnected', () => {
+            attemptPeerReconnect(createStatus);
         });
     }
 
@@ -253,9 +283,13 @@ const Multiplayer = (() => {
 
         peer.on('error', (err) => {
             if (joinStatus) {
-                joinStatus.textContent = 'Room tidak ditemukan atau error.';
+                joinStatus.textContent = mapPeerError(err.type);
                 joinStatus.className = 'text-red-400 text-sm mt-2';
             }
+        });
+
+        peer.on('disconnected', () => {
+            attemptPeerReconnect(joinStatus);
         });
 
         // Timeout
@@ -290,6 +324,10 @@ const Multiplayer = (() => {
         conn.on('close', () => {
             active = false;
             if (timerInterval) clearInterval(timerInterval);
+            showDisconnectNotice();
+        });
+
+        conn.on('error', () => {
             showDisconnectNotice();
         });
     }
@@ -368,7 +406,7 @@ const Multiplayer = (() => {
         if (startBtn) {
             if (isHost) {
                 startBtn.classList.remove('hidden');
-                startBtn.textContent = '🚀 Mulai!';
+                startBtn.textContent = 'Mulai!';
             } else {
                 startBtn.classList.add('hidden');
                 const waitMsg = document.getElementById('vs-wait-msg');
@@ -440,7 +478,7 @@ const Multiplayer = (() => {
         beginGame(mode, level);
     }
 
-    function beginGame(mode, level) {
+    async function beginGame(mode, level) {
         // Reset state
         myCompleted = false;
         myTime = 0;
@@ -450,7 +488,7 @@ const Multiplayer = (() => {
 
         // Navigate to the mode
         if (typeof navigateTo === 'function') {
-            navigateTo(mode);
+            await navigateTo(mode);
         }
 
         // Start timer
@@ -513,7 +551,7 @@ const Multiplayer = (() => {
             setTimeout(() => showResult(), 500);
         } else {
             // Opponent finished first
-            updateOpponentBarStatus(`✅ Lawan selesai! (${formatTime(time)})`);
+            updateOpponentBarStatus(`Lawan selesai! (${formatTime(time)})`);
         }
     }
 
@@ -533,11 +571,20 @@ const Multiplayer = (() => {
         const title = document.getElementById('mp-result-title');
         const detail = document.getElementById('mp-result-detail');
 
+        const winnerSvg = '<svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8v4a4 4 0 0 1-8 0V3Z"/><path d="M6 7H4a3 3 0 0 0 3 3m8-3h2a3 3 0 0 1-3 3"/><path d="M12 11v4m-3 6h6"/></svg>';
+        const loseSvg = '<svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>';
+
         if (won) {
-            if (emoji) emoji.textContent = '🏆';
+            if (emoji) {
+                emoji.innerHTML = winnerSvg;
+                emoji.className = 'text-6xl mb-3 text-amber-300 flex justify-center';
+            }
             if (title) { title.textContent = 'Kamu Menang!'; title.className = 'font-display text-3xl font-bold text-accent-400 mb-2'; }
         } else {
-            if (emoji) emoji.textContent = '😔';
+            if (emoji) {
+                emoji.innerHTML = loseSvg;
+                emoji.className = 'text-6xl mb-3 text-red-400 flex justify-center';
+            }
             if (title) { title.textContent = 'Lawan Menang!'; title.className = 'font-display text-3xl font-bold text-red-400 mb-2'; }
         }
 
@@ -545,12 +592,12 @@ const Multiplayer = (() => {
             detail.innerHTML = `
                 <div class="flex justify-center gap-8 text-sm mt-2">
                     <div class="text-center">
-                        <img src="${charImgPath(myCharacter.id, won ? 'cheer0' : 'hurt')}" class="w-16 h-16 object-contain mx-auto mb-1">
+                        <img src="${charImgPath(myCharacter.id, won ? 'cheer0' : 'hurt')}" loading="lazy" decoding="async" class="w-16 h-16 object-contain mx-auto mb-1">
                         <p class="font-bold" style="color:${CHAR_DATA[myCharacter.id]?.color}">${CharacterSystem.getPlayerName()}</p>
                         <p class="text-accent-400 font-mono text-lg">${formatTime(myTime)}</p>
                     </div>
                     <div class="text-center">
-                        <img src="${charImgPath(opponentCharacter.id, !won ? 'cheer0' : 'hurt')}" class="w-16 h-16 object-contain mx-auto mb-1">
+                        <img src="${charImgPath(opponentCharacter.id, !won ? 'cheer0' : 'hurt')}" loading="lazy" decoding="async" class="w-16 h-16 object-contain mx-auto mb-1">
                         <p class="font-bold" style="color:${opponentCharacter.color}">${opponentCharacter.name}</p>
                         <p class="text-accent-400 font-mono text-lg">${formatTime(opponentTime)}</p>
                     </div>
@@ -631,7 +678,7 @@ const Multiplayer = (() => {
             bar.classList.remove('hidden');
             const status = document.getElementById('mp-opp-status');
             if (status) {
-                status.textContent = '⚠️ Lawan terputus!';
+                status.textContent = 'Lawan terputus!';
                 status.className = 'text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400';
             }
         }
@@ -645,6 +692,7 @@ const Multiplayer = (() => {
     function disconnect() {
         active = false;
         if (timerInterval) clearInterval(timerInterval);
+        if (reconnectTimer) clearTimeout(reconnectTimer);
         if (conn) { try { conn.close(); } catch(e) {} conn = null; }
         if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
         showOpponentBar(false);

@@ -2,7 +2,7 @@
  * INFORMATIKA LAB ADVENTURE
  * Mode 3: Build a Computer
  * Konsep: Sistem Komputer, Fungsi Hardware, Input-Process-Output
- * 10 Levels with Progressive Difficulty
+ * 15 Levels with Progressive Difficulty
  */
 
 const ComputerGame = (() => {
@@ -14,7 +14,7 @@ const ComputerGame = (() => {
         // ===== BEGINNER: Basic Components =====
         {
             id: 1,
-            mission: "Level 1: Otak Komputer! 🧠",
+            mission: "Level 1: Otak Komputer! Algoritma",
             hint: "CPU adalah otak komputer. Pasang di slot yang tepat!",
             concept: "CPU - Central Processing Unit",
             required: ['cpu'],
@@ -24,7 +24,7 @@ const ComputerGame = (() => {
         },
         {
             id: 2,
-            mission: "Level 2: CPU + RAM = Power! ⚡",
+            mission: "Level 2: CPU + RAM = Power! Simulasi",
             hint: "RAM membantu CPU bekerja lebih cepat dengan menyimpan data sementara.",
             concept: "Memory - RAM",
             required: ['cpu', 'ram'],
@@ -35,7 +35,7 @@ const ComputerGame = (() => {
         },
         {
             id: 3,
-            mission: "Level 3: Simpan Data! 💾",
+            mission: "Level 3: Simpan Data! Storage",
             hint: "Storage menyimpan semua file secara permanen.",
             concept: "Storage - HDD/SSD",
             required: ['cpu', 'ram', 'storage'],
@@ -49,7 +49,7 @@ const ComputerGame = (() => {
         // ===== EASY: Power System =====
         {
             id: 4,
-            mission: "Level 4: Tenaga Listrik! 🔌",
+            mission: "Level 4: Tenaga Listrik! Koneksi",
             hint: "Semua komponen butuh listrik dari PSU.",
             concept: "PSU - Power Supply",
             required: ['cpu', 'ram', 'storage', 'psu'],
@@ -62,7 +62,7 @@ const ComputerGame = (() => {
         },
         {
             id: 5,
-            mission: "Level 5: Motherboard Lengkap! 🖥️",
+            mission: "Level 5: Motherboard Lengkap!",
             hint: "Tambahkan Motherboard sebagai papan utama penghubung.",
             concept: "Motherboard - Main Board",
             required: ['motherboard', 'cpu', 'ram', 'storage', 'psu'],
@@ -78,7 +78,7 @@ const ComputerGame = (() => {
         // ===== MEDIUM: Graphics & Cooling =====
         {
             id: 6,
-            mission: "Level 6: Komputer Gaming! 🎮",
+            mission: "Level 6: Komputer Gaming! Game",
             hint: "GPU merender grafis game. Pasang CPU, RAM, Storage, PSU seperti biasa, lalu tambahkan GPU di slot yang tepat!",
             concept: "GPU - Graphics Card",
             required: ['cpu', 'ram', 'storage', 'psu', 'gpu'],
@@ -92,7 +92,7 @@ const ComputerGame = (() => {
         },
         {
             id: 7,
-            mission: "Level 7: Jaga Suhu! ❄️",
+            mission: "Level 7: Jaga Suhu! Pendingin",
             hint: "Cooler menjaga suhu CPU tetap dingin agar tidak overheat.",
             concept: "Cooling System",
             required: ['cpu', 'ram', 'storage', 'psu', 'gpu', 'cooler'],
@@ -109,7 +109,7 @@ const ComputerGame = (() => {
         // ===== INTERMEDIATE: Peripherals =====
         {
             id: 8,
-            mission: "Level 8: Input & Output! ⌨️🖱️",
+            mission: "Level 8: Input & Output! Input Output",
             hint: "Keyboard dan Mouse adalah perangkat input utama.",
             concept: "I/O Devices",
             required: ['cpu', 'ram', 'storage', 'psu', 'keyboard', 'mouse'],
@@ -124,7 +124,7 @@ const ComputerGame = (() => {
         },
         {
             id: 9,
-            mission: "Level 9: Tampilan Visual! 🖥️",
+            mission: "Level 9: Tampilan Visual!",
             hint: "Monitor menampilkan output dari komputer.",
             concept: "Display Output",
             required: ['cpu', 'ram', 'storage', 'psu', 'gpu', 'monitor'],
@@ -141,7 +141,7 @@ const ComputerGame = (() => {
         // ===== ADVANCED: Complete System =====
         {
             id: 10,
-            mission: "Level 10: Master Builder! 🏆",
+            mission: "Level 10: Master Builder!",
             hint: "Build lengkap! Urutan ideal: Motherboard → CPU → Cooler → RAM → Storage → PSU → GPU → Case. Semua harus di slot yang tepat!",
             concept: "Complete PC Build",
             required: ['motherboard', 'cpu', 'cooler', 'ram', 'storage', 'psu', 'gpu', 'case'],
@@ -160,7 +160,7 @@ const ComputerGame = (() => {
         // ===== GRADE 12: Advanced Computer Architecture =====
         {
             id: 11,
-            mission: "Level 11: BIOS & Boot Process 🔧",
+            mission: "Level 11: BIOS & Boot Process",
             hint: "BIOS/UEFI menginisialisasi hardware sebelum OS. Pasang Motherboard, CPU, RAM, Storage, PSU, lalu BIOS Chip!",
             concept: "BIOS/UEFI - Boot Sequence",
             required: ['motherboard', 'cpu', 'ram', 'storage', 'psu', 'bios-chip'],
@@ -175,7 +175,7 @@ const ComputerGame = (() => {
         },
         {
             id: 12,
-            mission: "Level 12: Binary & Data Representation 0️⃣1️⃣",
+            mission: "Level 12: Binary & Data Representation",
             hint: "Semua data dalam komputer disimpan sebagai 0 dan 1!",
             concept: "Binary System - Digital Logic",
             required: ['cpu', 'alu', 'register', 'ram', 'storage'],
@@ -189,7 +189,7 @@ const ComputerGame = (() => {
         },
         {
             id: 13,
-            mission: "Level 13: Memory Hierarchy 📊",
+            mission: "Level 13: Memory Hierarchy",
             hint: "Hierarki memori: L1 Cache (tercepat) → L2 → L3 → RAM → Storage (terbesar). Pasang semua dari tercepat ke terbesar!",
             concept: "Cache & Memory Levels",
             required: ['cpu', 'l1-cache', 'l2-cache', 'l3-cache', 'ram', 'storage'],
@@ -204,7 +204,7 @@ const ComputerGame = (() => {
         },
         {
             id: 14,
-            mission: "Level 14: Bus Architecture 🚌",
+            mission: "Level 14: Bus Architecture",
             hint: "Bus adalah jalur data yang menghubungkan semua komponen!",
             concept: "System Bus - Data Transfer",
             required: ['cpu', 'north-bridge', 'south-bridge', 'ram', 'gpu', 'storage', 'usb-controller'],
@@ -220,7 +220,7 @@ const ComputerGame = (() => {
         },
         {
             id: 15,
-            mission: "Level 15: Complete System + OS! 🏆👑",
+            mission: "Level 15: Complete System + OS!",
             hint: "Grand Build! Rakit semua hardware, lalu \"install\" OS. Tanpa OS, hardware hanyalah besi mati. OS mengelola semua resource!",
             concept: "Full System Architecture",
             required: ['motherboard', 'cpu', 'cooler', 'ram', 'gpu', 'storage', 'psu', 'case', 'os-installer'],
@@ -501,7 +501,7 @@ const ComputerGame = (() => {
                     <span class="text-xs text-dark-300">Drag ke slot</span>
                 </div>
                 ${desc ? `<div class="comp-tooltip hidden group-hover:block absolute left-full ml-2 top-0 z-50 w-52 p-3 rounded-xl bg-dark-800 border border-dark-500 shadow-xl text-xs text-dark-100 leading-relaxed pointer-events-none">
-                    <span class="font-bold text-accent-400 block mb-1">ℹ️ ${data.name}</span>
+                    <span class="font-bold text-accent-400 block mb-1">Info ${data.name}</span>
                     ${desc}
                 </div>` : ''}
             `;
@@ -546,18 +546,29 @@ const ComputerGame = (() => {
         'os-installer':   { top: '68%', left: '60%', w: '35%',  h: '90px' }
     };
 
-    // Categorize components by zone
-    const componentZone = {
-        // Directly on motherboard
-        'cpu': 'motherboard', 'ram': 'motherboard', 'gpu': 'motherboard',
-        'cooler': 'motherboard', 'bios-chip': 'motherboard', 'alu': 'motherboard',
-        'register': 'motherboard', 'l1-cache': 'motherboard', 'l2-cache': 'motherboard',
-        'l3-cache': 'motherboard', 'north-bridge': 'motherboard', 'south-bridge': 'motherboard',
-        'usb-controller': 'motherboard',
-        // Inside the PC case (not on motherboard)
-        'psu': 'case', 'storage': 'case', 'motherboard': 'case', 'case': 'case',
-        'keyboard': 'case', 'mouse': 'case', 'monitor': 'case', 'os-installer': 'case'
+    // External peripherals/software panel layout
+    const externalLayout = {
+        'monitor':      { top: '10%', left: '5%',  w: '45%', h: '90px' },
+        'keyboard':     { top: '10%', left: '52%', w: '43%', h: '90px' },
+        'mouse':        { top: '55%', left: '5%',  w: '45%', h: '80px' },
+        'os-installer': { top: '55%', left: '52%', w: '43%', h: '80px' }
     };
+
+    function getZoneForComponent(component) {
+        if (typeof ComputerLearningRules !== 'undefined' && typeof ComputerLearningRules.getComponentZone === 'function') {
+            return ComputerLearningRules.getComponentZone(component);
+        }
+        if (['psu', 'storage', 'motherboard', 'case'].includes(component)) return 'case';
+        if (['keyboard', 'mouse', 'monitor', 'os-installer'].includes(component)) return 'external';
+        return 'motherboard';
+    }
+
+    function getSlotDisplayName(slotType) {
+        if (typeof ComputerLearningRules !== 'undefined' && typeof ComputerLearningRules.getSlotDisplayName === 'function') {
+            return ComputerLearningRules.getSlotDisplayName(slotType);
+        }
+        return slotType;
+    }
 
     // Smart grid fallback: auto-arrange components in a grid if no layout defined
     function getGridPositions(components) {
@@ -646,6 +657,7 @@ const ComputerGame = (() => {
     function resetMotherboard() {
         const mbSlots = document.getElementById('motherboard-slots');
         const caseSlots = document.getElementById('case-slots');
+        const externalSlots = document.getElementById('external-slots');
         const mbLottieBg = document.getElementById('motherboard-lottie-bg');
         const caseLottieBg = document.getElementById('case-interior-lottie-bg');
         const caseLottie = document.getElementById('case-lottie');
@@ -653,12 +665,14 @@ const ComputerGame = (() => {
         if (typeof LottieManager !== 'undefined') {
             LottieManager.destroyInScope(mbSlots);
             if (caseSlots) LottieManager.destroyInScope(caseSlots);
+            if (externalSlots) LottieManager.destroyInScope(externalSlots);
             if (mbLottieBg) LottieManager.destroyInScope(mbLottieBg);
             if (caseLottieBg) LottieManager.destroyInScope(caseLottieBg);
             if (caseLottie) LottieManager.destroyInScope(caseLottie);
         }
         mbSlots.innerHTML = '';
         if (caseSlots) caseSlots.innerHTML = '';
+        if (externalSlots) externalSlots.innerHTML = '';
 
         // Initialize Lottie backgrounds
         if (typeof LottieManager !== 'undefined') {
@@ -678,18 +692,20 @@ const ComputerGame = (() => {
         const difficulty = getSlotDifficulty();
 
         // Split components by zone
-        const moboComps = currentLevel.required.filter(c => (componentZone[c] || 'motherboard') === 'motherboard');
-        const caseComps = currentLevel.required.filter(c => (componentZone[c] || 'motherboard') === 'case');
+        const moboComps = currentLevel.required.filter(c => getZoneForComponent(c) === 'motherboard');
+        const caseComps = currentLevel.required.filter(c => getZoneForComponent(c) === 'case');
+        const externalComps = currentLevel.required.filter(c => getZoneForComponent(c) === 'external');
 
         // Auto-grid for case components
         const casePositions = getGridPositions(caseComps);
+        const externalPositions = getGridPositions(externalComps);
 
         // Create slots for motherboard components
         let slotNum = 1;
         moboComps.forEach(comp => {
             const data = componentData[comp] || { lottie: null, name: comp, color: '#666' };
             const pos = mbLayout[comp] || positions[comp] || { top: '10%', left: '10%', w: '130px', h: '110px' };
-            const slot = createSlot(comp, data, pos, slotNum, difficulty);
+            const slot = createSlot(comp, data, pos, slotNum, difficulty, 'motherboard');
             mbSlots.appendChild(slot);
             slotNum++;
         });
@@ -698,19 +714,33 @@ const ComputerGame = (() => {
         caseComps.forEach(comp => {
             const data = componentData[comp] || { lottie: null, name: comp, color: '#666' };
             const pos = caseLayout[comp] || casePositions[comp] || { top: '10%', left: '10%', w: '130px', h: '100px' };
-            const slot = createSlot(comp, data, pos, slotNum, difficulty);
+            const slot = createSlot(comp, data, pos, slotNum, difficulty, 'case');
             if (caseSlots) caseSlots.appendChild(slot);
+            slotNum++;
+        });
+
+        // Create slots for external/peripheral components
+        externalComps.forEach(comp => {
+            const data = componentData[comp] || { lottie: null, name: comp, color: '#666' };
+            const pos = externalLayout[comp] || externalPositions[comp] || { top: '10%', left: '10%', w: '130px', h: '90px' };
+            const slot = createSlot(comp, data, pos, slotNum, difficulty, 'external');
+            if (externalSlots) externalSlots.appendChild(slot);
             slotNum++;
         });
 
         // Initialize Lottie animations in the slot ghost icons
         initLottiesIn(mbSlots, 'comp-mb-slots');
         if (caseSlots) initLottiesIn(caseSlots, 'comp-case-slots');
+        if (externalSlots) initLottiesIn(externalSlots, 'comp-external-slots');
 
         // Show/hide case interior based on whether level has case components
         const caseInterior = document.getElementById('case-interior');
         if (caseInterior) {
             caseInterior.style.display = caseComps.length > 0 ? '' : 'none';
+        }
+        const externalPanel = document.getElementById('external-zone-panel');
+        if (externalPanel) {
+            externalPanel.style.display = externalComps.length > 0 ? '' : 'none';
         }
 
         // Update hint counter display
@@ -720,11 +750,12 @@ const ComputerGame = (() => {
         updateCaseImage('off');
     }
 
-    function createSlot(comp, data, pos, slotNum, difficulty) {
+    function createSlot(comp, data, pos, slotNum, difficulty, zone) {
         const slot = document.createElement('div');
         slot.className = 'component-slot';
         slot.dataset.slot = comp;
         slot.dataset.slotNum = slotNum;
+        slot.dataset.zone = zone || 'motherboard';
         slot.style.position = 'absolute';
         slot.style.top = pos.top;
         slot.style.left = pos.left;
@@ -742,9 +773,14 @@ const ComputerGame = (() => {
         } else {
             slotContent = `<span class="flex items-center justify-center opacity-60 text-2xl text-dark-400">?</span>`;
         }
-        slotContent += `<span class="slot-label text-dark-500" style="font-size: 0.6rem;">Slot ${slotNum}</span>`;
+        const zoneText = zone === 'external' ? 'External' : zone === 'case' ? 'Case' : 'Motherboard';
+        const slotName = getSlotDisplayName(comp);
+        const labelText = difficulty === 'hard' ? `Slot ${slotNum}` : slotName;
+        slotContent += `<span class="slot-zone-tag">${zoneText}</span>`;
+        slotContent += `<span class="slot-label text-dark-500" style="font-size: 0.6rem;">${labelText}</span>`;
 
         slot.innerHTML = slotContent;
+        slot.setAttribute('title', `${slotName} (${zoneText})`);
         return slot;
     }
 
@@ -763,6 +799,7 @@ const ComputerGame = (() => {
         slot.classList.add('filled');
         slot.innerHTML = `
             <span class="flex items-center justify-center" style="width:80%;height:65%;">${lottieHtml}</span>
+            <span class="slot-zone-tag">${slot.dataset.zone === 'external' ? 'External' : slot.dataset.zone === 'case' ? 'Case' : 'Motherboard'}</span>
             <span class="slot-label" style="color: #94a3b8">${data.name}</span>
         `;
 
@@ -789,7 +826,8 @@ const ComputerGame = (() => {
         }
 
         // Show a neutral "component placed" message - no right/wrong
-        showFeedback('computer-feedback', `✅ ${data.name} dipasang di Slot ${slot.dataset.slotNum}. Tekan Power On untuk menguji!`, true);
+        const targetLabel = getSlotDisplayName(slotType);
+        showFeedback('computer-feedback', `${data.name} ditempatkan pada area <b>${targetLabel}</b>. Tekan Power On untuk validasi akhir.`, true);
 
         return true;
     }
@@ -805,6 +843,7 @@ const ComputerGame = (() => {
         const palette = document.getElementById('component-palette');
         const mbArea = document.getElementById('motherboard-slots');
         const caseArea = document.getElementById('case-slots');
+        const externalArea = document.getElementById('external-slots');
 
         palette.addEventListener('dragstart', (e) => {
             const item = e.target.closest('.component-item');
@@ -820,7 +859,7 @@ const ComputerGame = (() => {
         });
 
         // Handle drag-drop for both motherboard and case zones
-        [mbArea, caseArea].forEach(area => {
+        [mbArea, caseArea, externalArea].forEach(area => {
             if (!area) return;
             area.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -863,10 +902,10 @@ const ComputerGame = (() => {
             });
             if (unrevealedSlots.length === 0) {
                 hintBtn.disabled = true;
-                hintBtn.textContent = '🔍 Semua terungkap';
+                hintBtn.textContent = 'Petunjuk Semua terungkap';
             } else {
                 hintBtn.disabled = false;
-                hintBtn.textContent = `🔍 Hint (−⭐)`;
+                hintBtn.textContent = `Petunjuk Hint (−Bintang)`;
             }
         }
     }
@@ -881,14 +920,14 @@ const ComputerGame = (() => {
         });
 
         if (unrevealedSlots.length === 0) {
-            showFeedback('computer-feedback', '💡 Semua slot sudah terungkap!', true);
+            showFeedback('computer-feedback', 'Hint Semua slot sudah terungkap!', true);
             return;
         }
 
         // Reveal one random slot's name
         const randomSlot = unrevealedSlots[Math.floor(Math.random() * unrevealedSlots.length)];
         const slot = document.querySelector(`.component-slot[data-slot="${randomSlot}"]`);
-        const data = componentData[randomSlot] || { name: randomSlot, icon: '❓' };
+        const data = componentData[randomSlot] || { name: randomSlot, icon: 'Tidak diketahui' };
 
         if (slot) {
             slot.classList.add('hint-revealed');
@@ -909,7 +948,7 @@ const ComputerGame = (() => {
             });
 
             hintsUsed++;
-            showFeedback('computer-feedback', `🔍 Hint: Slot itu untuk <b>${data.name}</b>! (Hint dipakai: ${hintsUsed})`, true);
+            showFeedback('computer-feedback', `Petunjuk Hint: Slot itu untuk <b>${data.name}</b>! (Hint dipakai: ${hintsUsed})`, true);
         }
 
         updateHintButton();
@@ -954,7 +993,7 @@ const ComputerGame = (() => {
         const placedCount = Object.keys(placedComponents).length;
 
         if (placedCount < requiredCount) {
-            showFeedback('computer-feedback', `❌ Belum lengkap! Pasang semua ${requiredCount} komponen.`, false);
+            showFeedback('computer-feedback', `Belum lengkap! Pasang semua ${requiredCount} komponen.`, false);
             anime({
                 targets: '#motherboard-slots',
                 translateX: [-5, 5, -5, 5, 0],
@@ -973,8 +1012,8 @@ const ComputerGame = (() => {
                 if (label) {
                     label.style.color = info.correct ? '#22c55e' : '#ef4444';
                     label.textContent = info.correct 
-                        ? `✅ ${componentData[info.type]?.name || info.type}` 
-                        : `❌ ${componentData[info.type]?.name || info.type} (salah!)`;
+                        ? `${componentData[info.type]?.name || info.type}` 
+                        : `${componentData[info.type]?.name || info.type} (salah!)`;
                 }
             }
         });
@@ -987,7 +1026,13 @@ const ComputerGame = (() => {
 
             // Count wrong placements
             const wrongCount = Object.values(placedComponents).filter(c => !c.correct).length;
-            showFeedback('computer-feedback', `❌ ${wrongCount} komponen salah tempat! Perhatikan posisi masing-masing komponen.`, false);
+            const wrongHints = typeof ComputerLearningRules !== 'undefined' && typeof ComputerLearningRules.buildWrongPlacementHints === 'function'
+                ? ComputerLearningRules.buildWrongPlacementHints(placedComponents)
+                : [];
+            const detail = wrongHints.length
+                ? `<div class="text-left text-xs mt-2 p-3 bg-dark-900/40 rounded-xl">${wrongHints.slice(0, 4).map(h => `• ${h}`).join('<br>')}</div>`
+                : '';
+            showFeedback('computer-feedback', `${wrongCount} komponen salah tempat!${detail}`, false);
             anime({
                 targets: '.component-slot.incorrect',
                 translateX: [-5, 5, -5, 5, 0],
@@ -1001,7 +1046,7 @@ const ComputerGame = (() => {
         isBooting = true;
         updateCaseImage('booting');
         if (typeof SoundManager !== 'undefined') SoundManager.play('powerOn');
-        showFeedback('computer-feedback', '⚡ Menyalakan komputer...', true);
+        showFeedback('computer-feedback', 'Simulasi Menyalakan komputer...', true);
 
         await animateBootSequence();
         await animatePowerOn();
@@ -1015,11 +1060,11 @@ const ComputerGame = (() => {
             .map(comp => `<b>${componentData[comp]?.name || comp}</b>: ${currentLevel.description[comp]}`)
             .join('<br>');
 
-        const hintPenalty = hintsUsed > 0 ? ` (${hintsUsed} hint dipakai)` : ' 🌟 Tanpa hint!';
+        const hintPenalty = hintsUsed > 0 ? ` (${hintsUsed} hint dipakai)` : ' Bonus Tanpa hint!';
         showFeedback('computer-feedback', 
-            `✅ Komputer berhasil dirakit dan menyala!${hintPenalty}<br><br>
+            `Komputer berhasil dirakit dan menyala!${hintPenalty}<br><br>
             <div class="text-left text-xs mt-2 p-3 bg-dark-800/50 rounded-xl leading-relaxed">
-                <span class="font-bold text-accent-400">📚 Apa yang kamu pelajari:</span><br>${descList}
+                <span class="font-bold text-accent-400">Materi Apa yang kamu pelajari:</span><br>${descList}
             </div>`, true);
 
         setTimeout(() => {

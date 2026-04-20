@@ -26,14 +26,14 @@ const SettingsPanel = (() => {
             <div class="settings-drawer absolute right-0 top-0 bottom-0 w-full max-w-md bg-gradient-to-b from-[#1e293b] to-[#0f172a] border-l border-white/10 shadow-2xl transform translate-x-full transition-transform duration-300 overflow-y-auto" id="settings-drawer">
                 <!-- Header -->
                 <div class="sticky top-0 z-10 bg-[#1e293b]/90 backdrop-blur-sm border-b border-white/10 p-5 flex items-center justify-between">
-                    <h2 class="font-display text-2xl font-bold text-white flex items-center gap-2">⚙️ Pengaturan</h2>
-                    <button onclick="SettingsPanel.close()" class="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-xl transition-colors" aria-label="Tutup pengaturan">✕</button>
+                    <h2 class="font-display text-2xl font-bold text-white flex items-center gap-2">Sistem Pengaturan</h2>
+                    <button onclick="SettingsPanel.close()" class="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-xl transition-colors" aria-label="Tutup pengaturan">X</button>
                 </div>
 
                 <div class="p-5 space-y-6">
                     <!-- Sound Section -->
                     <section class="settings-section">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">🔊 Suara</h3>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">Audio Suara</h3>
                         <div class="space-y-4">
                             <div class="flex items-center justify-between bg-white/5 rounded-xl p-4">
                                 <div>
@@ -58,7 +58,7 @@ const SettingsPanel = (() => {
 
                     <!-- Accessibility Section -->
                     <section class="settings-section">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">♿ Aksesibilitas</h3>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">Aksesibilitas Aksesibilitas</h3>
                         <div class="space-y-4">
                             <div class="flex items-center justify-between bg-white/5 rounded-xl p-4">
                                 <div>
@@ -98,7 +98,7 @@ const SettingsPanel = (() => {
 
                     <!-- Display Section -->
                     <section class="settings-section">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">🎨 Tampilan</h3>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">Visual Tampilan</h3>
                         <div class="space-y-4">
                             <div class="flex items-center justify-between bg-white/5 rounded-xl p-4">
                                 <div>
@@ -126,17 +126,17 @@ const SettingsPanel = (() => {
 
                     <!-- Data Section -->
                     <section class="settings-section">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">💾 Data</h3>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">Storage Data</h3>
                         <div class="space-y-3">
                             <button onclick="SettingsPanel.resetProgress()" class="w-full py-3 rounded-xl text-sm font-bold bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition-colors">
-                                🗑️ Reset Semua Progress
+                                Reset Reset Semua Progress
                             </button>
                         </div>
                     </section>
 
                     <!-- Keyboard Shortcuts -->
                     <section class="settings-section">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">⌨️ Pintasan Keyboard</h3>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">Keyboard Pintasan Keyboard</h3>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between bg-white/5 rounded-lg p-3">
                                 <span class="text-slate-300">Buka Pengaturan</span>
@@ -164,7 +164,7 @@ const SettingsPanel = (() => {
                     <!-- Version Info -->
                     <div class="text-center pt-4 pb-8 border-t border-white/5">
                         <p class="text-xs text-slate-500">Informatika Lab Adventure v2.0</p>
-                        <p class="text-xs text-slate-600 mt-1">Made with ❤️ for Indonesian Students</p>
+                        <p class="text-xs text-slate-600 mt-1">Made with Dengan semangat for Indonesian Students</p>
                     </div>
                 </div>
             </div>
@@ -318,7 +318,7 @@ const SettingsPanel = (() => {
     // ============================================
 
     function resetProgress() {
-        if (confirm('⚠️ Yakin ingin menghapus SEMUA progress? Ini tidak bisa dikembalikan!')) {
+        if (confirm('Peringatan Yakin ingin menghapus SEMUA progress? Ini tidak bisa dikembalikan!')) {
             localStorage.clear();
             location.reload();
         }

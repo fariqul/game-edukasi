@@ -14,7 +14,7 @@ const RobotGame = (() => {
         // ===== BEGINNER: Basic Movement =====
         {
             id: 1,
-            mission: "Level 1: Maju Ke Depan! 🚀",
+            mission: "Level 1: Maju Ke Depan! Mulai",
             hint: "Gunakan perintah MAJU untuk menggerakkan robot ke bendera.",
             concept: "Sequence - Urutan Perintah",
             grid: [
@@ -30,7 +30,7 @@ const RobotGame = (() => {
         },
         {
             id: 2,
-            mission: "Level 2: Langkah Lebih Jauh! 📏",
+            mission: "Level 2: Langkah Lebih Jauh!",
             hint: "Robot perlu lebih banyak langkah untuk mencapai tujuan.",
             concept: "Sequence - Urutan Lebih Panjang",
             grid: [
@@ -48,7 +48,7 @@ const RobotGame = (() => {
         // ===== EASY: Introducing Turns =====
         {
             id: 3,
-            mission: "Level 3: Belajar Berbelok! ↩️",
+            mission: "Level 3: Belajar Berbelok! Kiri",
             hint: "Gunakan KIRI atau KANAN untuk mengubah arah robot.",
             concept: "Turns - Mengubah Arah",
             grid: [
@@ -64,7 +64,7 @@ const RobotGame = (() => {
         },
         {
             id: 4,
-            mission: "Level 4: Jalur Bentuk L 🔄",
+            mission: "Level 4: Jalur Bentuk L",
             hint: "Kombinasikan maju dan belok untuk membentuk huruf L.",
             concept: "Turns - Pola L",
             grid: [
@@ -82,7 +82,7 @@ const RobotGame = (() => {
         // ===== MEDIUM: Obstacles =====
         {
             id: 5,
-            mission: "Level 5: Hindari Rintangan! 🧱",
+            mission: "Level 5: Hindari Rintangan!",
             hint: "Ada tembok! Cari jalan memutar untuk mencapai tujuan.",
             concept: "Problem Solving - Menghindari Rintangan",
             grid: [
@@ -98,7 +98,7 @@ const RobotGame = (() => {
         },
         {
             id: 6,
-            mission: "Level 6: Labirin Mini 🏃",
+            mission: "Level 6: Labirin Mini",
             hint: "Navigasi melalui labirin dengan hati-hati!",
             concept: "Maze Navigation",
             grid: [
@@ -116,7 +116,7 @@ const RobotGame = (() => {
         // ===== INTERMEDIATE: Introducing Loops =====
         {
             id: 7,
-            mission: "Level 7: Kekuatan Loop! 🔁",
+            mission: "Level 7: Kekuatan Loop!",
             hint: "Gunakan LOOP untuk mengulang perintah 2x. Lebih efisien!",
             concept: "Loop - Pengulangan",
             grid: [
@@ -132,7 +132,7 @@ const RobotGame = (() => {
         },
         {
             id: 8,
-            mission: "Level 8: Loop + Belok 🔄",
+            mission: "Level 8: Loop + Belok",
             hint: "Kombinasikan loop dengan perintah belok!",
             concept: "Loop dengan Turn",
             grid: [
@@ -150,7 +150,7 @@ const RobotGame = (() => {
         // ===== ADVANCED: Complex Challenges =====
         {
             id: 9,
-            mission: "Level 9: Labirin Besar 🏰",
+            mission: "Level 9: Labirin Besar Maze",
             hint: "Labirin kompleks! Rencanakan rute dengan cermat.",
             concept: "Complex Problem Solving",
             grid: [
@@ -166,7 +166,7 @@ const RobotGame = (() => {
         },
         {
             id: 10,
-            mission: "Level 10: Master Challenge! 🏆",
+            mission: "Level 10: Master Challenge!",
             hint: "Level terakhir! Gunakan semua yang kamu pelajari!",
             concept: "Mastery - Semua Konsep",
             grid: [
@@ -184,7 +184,7 @@ const RobotGame = (() => {
         // ===== GRADE 12: Advanced Computational Thinking =====
         {
             id: 11,
-            mission: "Level 11: Nested Loop Pattern 🔄🔄",
+            mission: "Level 11: Nested Loop Pattern",
             hint: "Gunakan loop di dalam loop! Pattern: (maju-maju-belok) x 2",
             concept: "Nested Loops - Loop Bersarang",
             grid: [
@@ -200,7 +200,7 @@ const RobotGame = (() => {
         },
         {
             id: 12,
-            mission: "Level 12: Zigzag Algorithm ⚡",
+            mission: "Level 12: Zigzag Algorithm Simulasi",
             hint: "Buat pola zigzag yang efisien dengan loop!",
             concept: "Algorithm Design",
             grid: [
@@ -216,7 +216,7 @@ const RobotGame = (() => {
         },
         {
             id: 13,
-            mission: "Level 13: Function Thinking 📦",
+            mission: "Level 13: Function Thinking Fungsi",
             hint: "Bayangkan pattern sebagai fungsi yang bisa dipanggil berulang!",
             concept: "Procedural Thinking",
             grid: [
@@ -232,7 +232,7 @@ const RobotGame = (() => {
         },
         {
             id: 14,
-            mission: "Level 14: Optimization Challenge 🎯",
+            mission: "Level 14: Optimization Challenge Target",
             hint: "Temukan rute TERPENDEK! Minimal commands = bonus bintang!",
             concept: "Algorithm Optimization",
             grid: [
@@ -248,7 +248,7 @@ const RobotGame = (() => {
         },
         {
             id: 15,
-            mission: "Level 15: Ultimate Maze Master! 🏆👑",
+            mission: "Level 15: Ultimate Maze Master!",
             hint: "Level ultimate! Kombinasikan semua teknik: sequence, loop, planning!",
             concept: "Mastery - Computational Thinking",
             grid: [
@@ -267,7 +267,7 @@ const RobotGame = (() => {
         // ===== DUAL ROBOT CHALLENGES =====
         {
             id: 16,
-            mission: "Level 16: Dual Robot Sync! 🤖🤖",
+            mission: "Level 16: Dual Robot Sync!",
             hint: "Dua robot harus sampai ke tujuan masing-masing dengan perintah yang SAMA!",
             concept: "Parallel Thinking",
             dualMode: 'parallel',
@@ -285,7 +285,7 @@ const RobotGame = (() => {
         },
         {
             id: 17,
-            mission: "Level 17: Mirror Mind! 🪞🤖",
+            mission: "Level 17: Mirror Mind!",
             hint: "Robot merah bergerak TERBALIK! Kiri jadi Kanan, Atas jadi Bawah. Pikirkan dua perspektif!",
             concept: "Mirror Logic - Berpikir Terbalik",
             dualMode: 'mirror',
@@ -303,7 +303,7 @@ const RobotGame = (() => {
         },
         {
             id: 18,
-            mission: "Level 18: Dual Obstacle Run! 🤖🧱🤖",
+            mission: "Level 18: Dual Obstacle Run! Dual Obstacle",
             hint: "Dua robot, satu perintah, beda rintangan! Cari jalur yang aman untuk keduanya.",
             concept: "Parallel Problem Solving",
             dualMode: 'parallel',
@@ -321,7 +321,7 @@ const RobotGame = (() => {
         },
         {
             id: 19,
-            mission: "Level 19: Mirror Maze! 🪞🏰",
+            mission: "Level 19: Mirror Maze!",
             hint: "Robot mirror di labirin! Saat kamu belok kiri, mirror belok kanan. Rencanakan dengan cermat!",
             concept: "Advanced Mirror Logic",
             dualMode: 'mirror',
@@ -339,7 +339,7 @@ const RobotGame = (() => {
         },
         {
             id: 20,
-            mission: "Level 20: Ultimate Dual Master! 🏆🤖🤖🏆",
+            mission: "Level 20: Ultimate Dual Master!",
             hint: "Level ultimate! Dua robot dengan rintangan berbeda. Pikirkan jalur yang bisa dilalui KEDUANYA!",
             concept: "Mastery - Dual Computational Thinking",
             dualMode: 'parallel',
@@ -365,18 +365,18 @@ const RobotGame = (() => {
     const difficultyConfig = {
         // Phase 1: Tutorial - Sangat dermawan, ada panduan langkah
         1: { maxCommands: 8, phase: 'Tutorial', tutorial: [
-            { icon: '👋', msg: 'Selamat datang di Robot Logic! Tujuanmu: bawa robot 🤖 ke bendera 🏁.' },
-            { icon: '⬆️', msg: 'Seret blok ⬆️ MAJU ke area "Urutan Perintah" untuk menggerakkan robot ke arah yang dihadapinya.' },
-            { icon: '▶️', msg: 'Klik ▶️ Jalankan jika sudah siap! Klik blok di urutan untuk menghapusnya.' }
+            { icon: 'Halo', msg: 'Selamat datang di Robot Logic! Tujuanmu: bawa robot Robot ke bendera Tujuan.' },
+            { icon: 'Maju', msg: 'Seret blok Maju MAJU ke area "Urutan Perintah" untuk menggerakkan robot ke arah yang dihadapinya.' },
+            { icon: 'Jalankan', msg: 'Klik Jalankan jika sudah siap! Klik blok di urutan untuk menghapusnya.' }
         ]},
         2: { maxCommands: 8, phase: 'Tutorial', tutorial: [
-            { icon: '📏', msg: 'Robot butuh lebih banyak langkah kali ini.' },
-            { icon: '💡', msg: 'Hitung jarak dari robot ke bendera, lalu tambahkan blok MAJU yang cukup.' }
+            { icon: 'Jarak', msg: 'Robot butuh lebih banyak langkah kali ini.' },
+            { icon: 'Hint', msg: 'Hitung jarak dari robot ke bendera, lalu tambahkan blok MAJU yang cukup.' }
         ]},
         3: { maxCommands: 10, phase: 'Tutorial', tutorial: [
-            { icon: '↩️', msg: 'Bendera ada di arah berbeda! Kamu perlu berbelok.' },
-            { icon: '🔄', msg: 'Blok KIRI / KANAN memutar arah hadap robot, BUKAN memindahkannya.' },
-            { icon: '💡', msg: 'Setelah belok, gunakan MAJU untuk berjalan ke arah baru.' }
+            { icon: 'Kiri', msg: 'Bendera ada di arah berbeda! Kamu perlu berbelok.' },
+            { icon: 'Loop', msg: 'Blok KIRI / KANAN memutar arah hadap robot, BUKAN memindahkannya.' },
+            { icon: 'Hint', msg: 'Setelah belok, gunakan MAJU untuk berjalan ke arah baru.' }
         ]},
         // Phase 2: Beginner - Batas cukup longgar
         4: { maxCommands: 9, phase: 'Beginner' },
@@ -384,9 +384,9 @@ const RobotGame = (() => {
         6: { maxCommands: 13, phase: 'Intermediate' },
         // Phase 3: Loop Introduction - Harus efisien
         7: { maxCommands: 5, phase: 'Loop', tutorial: [
-            { icon: '🔁', msg: 'Blok baru: LOOP! Mengulang 2 perintah setelahnya sebanyak 2 kali (jadi total 4 aksi).' },
-            { icon: '⚡', msg: 'Contoh: LOOP → MAJU → MAJU = robot maju 4 langkah!' },
-            { icon: '📊', msg: 'Perhatikan batas perintah di kanan atas! Loop membantu kamu hemat perintah.' }
+            { icon: 'Loop', msg: 'Blok baru: LOOP! Mengulang 2 perintah setelahnya sebanyak 2 kali (jadi total 4 aksi).' },
+            { icon: 'Simulasi', msg: 'Contoh: LOOP → MAJU → MAJU = robot maju 4 langkah!' },
+            { icon: 'Efisien', msg: 'Perhatikan batas perintah di kanan atas! Loop membantu kamu hemat perintah.' }
         ]},
         8: { maxCommands: 5, phase: 'Loop' },
         // Phase 4: Advanced - Batas mulai ketat
@@ -401,13 +401,13 @@ const RobotGame = (() => {
         15: { maxCommands: 21, phase: 'Master' },
         // Phase 7: Dual Robot
         16: { maxCommands: 6, phase: 'Dual', tutorial: [
-            { icon: '🤖🤖', msg: 'Mode Dual Robot! Dua robot bergerak BERSAMAAN dengan perintah yang sama.' },
-            { icon: '🏁🚩', msg: 'Robot Biru menuju 🏁 dan Robot Merah menuju 🚩.' },
-            { icon: '💡', msg: 'Pikirkan jalur yang bisa dilalui KEDUA robot sekaligus!' }
+            { icon: 'Dual Robot', msg: 'Mode Dual Robot! Dua robot bergerak BERSAMAAN dengan perintah yang sama.' },
+            { icon: 'Tujuan', msg: 'Robot Biru menuju Tujuan dan Robot Merah menuju Goal.' },
+            { icon: 'Hint', msg: 'Pikirkan jalur yang bisa dilalui KEDUA robot sekaligus!' }
         ]},
         17: { maxCommands: 6, phase: 'Dual Mirror', tutorial: [
-            { icon: '🪞', msg: 'Mode Mirror! Robot Merah bergerak TERBALIK dari Robot Biru.' },
-            { icon: '↩️', msg: 'Saat Biru belok KIRI, Merah belok KANAN. Pikirkan dua perspektif!' }
+            { icon: 'Mirror', msg: 'Mode Mirror! Robot Merah bergerak TERBALIK dari Robot Biru.' },
+            { icon: 'Kiri', msg: 'Saat Biru belok KIRI, Merah belok KANAN. Pikirkan dua perspektif!' }
         ]},
         18: { maxCommands: 8, phase: 'Dual' },
         19: { maxCommands: 9, phase: 'Dual' },
@@ -478,10 +478,10 @@ const RobotGame = (() => {
             if (isDualMode()) {
                 dualBadge.classList.remove('hidden');
                 if (currentLevel.dualMode === 'mirror') {
-                    dualBadge.textContent = '🪞 MIRROR MODE';
+                    dualBadge.textContent = 'MIRROR MODE';
                     dualBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-pink-500/30 text-pink-300 border border-pink-500/50';
                 } else {
-                    dualBadge.textContent = '🤖🤖 DUAL MODE';
+                    dualBadge.textContent = 'DUAL MODE';
                     dualBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-500/30 text-red-300 border border-red-500/50';
                 }
             } else {
@@ -504,7 +504,7 @@ const RobotGame = (() => {
         if (cmdLimitEl) {
             if (currentLevel.maxCommands) {
                 cmdLimitEl.classList.remove('hidden');
-                cmdLimitEl.textContent = `📊 Maks: ${currentLevel.maxCommands} perintah`;
+                cmdLimitEl.textContent = `Maks: ${currentLevel.maxCommands} perintah`;
             } else {
                 cmdLimitEl.classList.add('hidden');
             }
@@ -592,6 +592,16 @@ const RobotGame = (() => {
     // GRID RENDERING
     // ============================================
 
+    function gridIconSvg(type) {
+        if (type === 'goal') {
+            return '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v16"/><path d="M6 5h11l-2.5 3 2.5 3H6"/></svg>';
+        }
+        if (type === 'goal2') {
+            return '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 4v16"/><path d="M18 5H7l2.5 3L7 11h11"/></svg>';
+        }
+        return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m4 4 16 16M20 4 4 20"/></svg>';
+    }
+
     function renderGrid() {
         const gridContainer = document.getElementById('robot-grid');
         gridContainer.innerHTML = '';
@@ -622,14 +632,14 @@ const RobotGame = (() => {
                     robot2Direction = currentLevel.startDirection2 || 'right';
                 } else if (value === 'G') {
                     cell.classList.add('goal');
-                    cell.innerHTML = '🏁';
+                    cell.innerHTML = gridIconSvg('goal');
                 } else if (value === 'F') {
                     // Robot 2 (merah) goal
                     cell.classList.add('goal2');
-                    cell.innerHTML = '🚩';
+                    cell.innerHTML = gridIconSvg('goal2');
                 } else if (value === 'X') {
                     cell.classList.add('obstacle');
-                    cell.innerHTML = '🧱';
+                    cell.innerHTML = gridIconSvg('obstacle');
                 }
 
                 gridContainer.appendChild(cell);
@@ -655,7 +665,7 @@ const RobotGame = (() => {
                 'right': 'rotate(0deg)'
             };
             const transform = rotations[direction] || 'rotate(0deg)';
-            return `<img src="assets/PNG robot/Top view/robot_${color}.png" alt="Robot" style="width: 2.5rem; height: 2.5rem; object-fit: contain; transform: ${transform}; transition: transform 0.3s ease; filter: drop-shadow(0 0 6px ${glow});">`;
+            return `<img src="assets/PNG robot/Top view/robot_${color}.png" alt="Robot" loading="lazy" decoding="async" style="width: 2.5rem; height: 2.5rem; object-fit: contain; transform: ${transform}; transition: transform 0.3s ease; filter: drop-shadow(0 0 6px ${glow});">`;
         } else {
             // Side view saat robot diam
             const rotations = {
@@ -665,7 +675,7 @@ const RobotGame = (() => {
                 'right': 'rotate(0deg)'
             };
             const transform = rotations[direction] || 'rotate(0deg)';
-            return `<img src="assets/PNG robot/Side view/robot_${color}Body.png" alt="Robot" style="width: 2.5rem; height: 2.5rem; object-fit: contain; transform: ${transform}; transition: transform 0.3s ease;">`;
+            return `<img src="assets/PNG robot/Side view/robot_${color}Body.png" alt="Robot" loading="lazy" decoding="async" style="width: 2.5rem; height: 2.5rem; object-fit: contain; transform: ${transform}; transition: transform 0.3s ease;">`;
         }
     }
 
@@ -677,8 +687,8 @@ const RobotGame = (() => {
             const cellX = parseInt(cell.dataset.x);
             const cellY = parseInt(cell.dataset.y);
             const val = currentLevel.grid[cellY][cellX];
-            if (val === 'G') { cell.classList.add('goal'); cell.innerHTML = '🏁'; }
-            if (val === 'F') { cell.classList.add('goal2'); cell.innerHTML = '🚩'; }
+            if (val === 'G') { cell.classList.add('goal'); cell.innerHTML = gridIconSvg('goal'); }
+            if (val === 'F') { cell.classList.add('goal2'); cell.innerHTML = gridIconSvg('goal2'); }
         });
 
         // Clear robot 2
@@ -688,8 +698,8 @@ const RobotGame = (() => {
             const cellX = parseInt(cell.dataset.x);
             const cellY = parseInt(cell.dataset.y);
             const val = currentLevel.grid[cellY][cellX];
-            if (val === 'G') { cell.classList.add('goal'); cell.innerHTML = '🏁'; }
-            if (val === 'F') { cell.classList.add('goal2'); cell.innerHTML = '🚩'; }
+            if (val === 'G') { cell.classList.add('goal'); cell.innerHTML = gridIconSvg('goal'); }
+            if (val === 'F') { cell.classList.add('goal2'); cell.innerHTML = gridIconSvg('goal2'); }
         });
 
         // Place robot 1 (blue)
@@ -719,15 +729,25 @@ const RobotGame = (() => {
     // COMMAND BLOCKS
     // ============================================
 
+    function commandIconSvg(command) {
+        const icons = {
+            forward: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m0-14-4 4m4-4 4 4"/></svg>',
+            left: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 6 8 12l6 6"/></svg>',
+            right: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 6 6 6-6 6"/></svg>',
+            loop: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6"/></svg>'
+        };
+        return icons[command] || icons.forward;
+    }
+
     function renderCommandBlocks() {
         const container = document.getElementById('command-blocks');
         container.innerHTML = '';
 
         const commands = [
-            { id: 'forward', icon: '⬆️', label: 'Maju', color: 'primary' },
-            { id: 'left', icon: '↩️', label: 'Kiri', color: 'accent' },
-            { id: 'right', icon: '↪️', label: 'Kanan', color: 'accent' },
-            { id: 'loop', icon: '🔄', label: 'Loop (2x)', color: 'purple' }
+            { id: 'forward', label: 'Maju', color: 'primary' },
+            { id: 'left', label: 'Kiri', color: 'accent' },
+            { id: 'right', label: 'Kanan', color: 'accent' },
+            { id: 'loop', label: 'Loop (2x)', color: 'purple' }
         ];
 
         commands.forEach(cmd => {
@@ -735,7 +755,7 @@ const RobotGame = (() => {
             block.className = `command-block ${cmd.id === 'loop' ? 'loop' : ''} text-white font-semibold text-sm cursor-pointer`;
             block.draggable = true;
             block.dataset.command = cmd.id;
-            block.innerHTML = `${cmd.icon} ${cmd.label}`;
+            block.innerHTML = `${commandIconSvg(cmd.id)} <span>${cmd.label}</span>`;
             // Click to add (mobile-friendly)
             block.addEventListener('click', () => {
                 if (!isRunning) addToSequence(cmd.id);
@@ -749,12 +769,13 @@ const RobotGame = (() => {
         const sequenceArea = document.getElementById('sequence-area');
         sequenceArea.innerHTML = '<span class="text-dark-200 text-sm w-full text-center py-8">Seret blok perintah ke sini</span>';
         updateCommandCount();
+        updateLoopPreview();
         hideFeedback('robot-feedback');
     }
 
     function addToSequence(command) {
         if (currentLevel.maxCommands && commandSequence.length >= currentLevel.maxCommands) {
-            showFeedback('robot-feedback', `⚠️ Batas ${currentLevel.maxCommands} perintah tercapai! Hapus perintah atau gunakan Loop.`, false);
+            showFeedback('robot-feedback', `Peringatan Batas ${currentLevel.maxCommands} perintah tercapai! Hapus perintah atau gunakan Loop.`, false);
             if (typeof SoundManager !== 'undefined') SoundManager.play('warning');
             anime({
                 targets: '#command-count',
@@ -800,6 +821,7 @@ const RobotGame = (() => {
 
         // Show command count
         updateCommandCount();
+        updateLoopPreview();
     }
 
     function updateCommandCount() {
@@ -828,12 +850,34 @@ const RobotGame = (() => {
 
     function getCommandDisplay(cmd) {
         const displays = {
-            'forward': '⬆️ Maju',
-            'left': '↩️ Kiri',
-            'right': '↪️ Kanan',
-            'loop': '🔄 Loop (2x)'
+            'forward': `${commandIconSvg('forward')} <span>Maju</span>`,
+            'left': `${commandIconSvg('left')} <span>Kiri</span>`,
+            'right': `${commandIconSvg('right')} <span>Kanan</span>`,
+            'loop': `${commandIconSvg('loop')} <span>Loop (2x)</span>`
         };
         return displays[cmd] || cmd;
+    }
+
+    function updateLoopPreview() {
+        const previewEl = document.getElementById('loop-preview');
+        if (!previewEl) return;
+        if (commandSequence.length === 0) {
+            previewEl.textContent = '';
+            return;
+        }
+
+        const expand = typeof RobotSequenceRules !== 'undefined'
+            ? RobotSequenceRules.expandRobotSequence(commandSequence)
+            : { ok: true, expanded: [...commandSequence] };
+
+        if (!expand.ok) {
+            previewEl.textContent = `Peringatan ${expand.error}`;
+            previewEl.className = 'text-xs text-red-300 mb-2 min-h-[1rem]';
+            return;
+        }
+
+        previewEl.textContent = `Preview eksekusi: ${expand.expanded.length} langkah`;
+        previewEl.className = 'text-xs text-dark-300 mb-2 min-h-[1rem]';
     }
 
     function removeFromSequence(index) {
@@ -916,6 +960,7 @@ const RobotGame = (() => {
     async function runSequence() {
         if (isRunning || commandSequence.length === 0) return;
         isRunning = true;
+        lastCrashReason = null;
 
         const rows = currentLevel.grid.length;
         const cols = currentLevel.grid[0].length;
@@ -935,35 +980,36 @@ const RobotGame = (() => {
         }
         updateRobotCell();
 
-        // Expand loops
-        const expandedCommands = [];
-        let inLoop = false;
-        let loopCommands = [];
-
-        for (const cmd of commandSequence) {
-            if (cmd === 'loop') {
-                inLoop = true;
-                loopCommands = [];
-            } else if (inLoop) {
-                loopCommands.push(cmd);
-                if (loopCommands.length === 2) {
-                    expandedCommands.push(...loopCommands, ...loopCommands);
-                    inLoop = false;
-                }
-            } else {
-                expandedCommands.push(cmd);
-            }
+        // Expand loops with validation
+        const expandedResult = typeof RobotSequenceRules !== 'undefined'
+            ? RobotSequenceRules.expandRobotSequence(commandSequence)
+            : { ok: true, expanded: [...commandSequence] };
+        if (!expandedResult.ok) {
+            showFeedback('robot-feedback', `Peringatan ${expandedResult.error}`, false);
+            if (typeof SoundManager !== 'undefined') SoundManager.play('warning');
+            isRunning = false;
+            return;
         }
+        const expandedCommands = expandedResult.expanded;
 
         // Execute commands
-        for (const cmd of expandedCommands) {
+        for (let idx = 0; idx < expandedCommands.length; idx++) {
+            const cmd = expandedCommands[idx];
             const success = await executeCommand(cmd);
             if (!success) {
                 const whoFailed = lastCrashRobot === 2 ? 'Robot Merah' : 'Robot Biru';
                 const relevantCrash = lastCrashRobot === 2 ? crashCount2 : crashCount;
-                const damageMsg = relevantCrash === 1
-                    ? `💥 ${whoFailed} rusak ringan! (Damage 1) Coba lagi!`
-                    : `💥💥 ${whoFailed} rusak parah! (Damage 2) Coba lagi!`;
+                const damageMsg = typeof ModeFeedbackRules !== 'undefined'
+                    ? ModeFeedbackRules.getRobotFailureMessage({
+                        robotName: whoFailed,
+                        crashCount: relevantCrash,
+                        reason: lastCrashReason,
+                        stepIndex: idx,
+                        totalSteps: expandedCommands.length
+                    })
+                    : (relevantCrash === 1
+                        ? `Gagal ${whoFailed} rusak ringan! (Damage 1) Coba lagi!`
+                        : `Gagal berat ${whoFailed} rusak parah! (Damage 2) Coba lagi!`);
                 showFeedback('robot-feedback', damageMsg, false);
                 if (typeof SoundManager !== 'undefined') SoundManager.play('error');
                 animateFailure();
@@ -985,9 +1031,9 @@ const RobotGame = (() => {
         updateRobotCell();
 
         if (goal1Reached && goal2Reached) {
-            const efficiency = commandSequence.length <= currentLevel.minCommands ? '⭐ Efisien!' : '';
-            const dualBonus = isDualMode() ? ' Dual robot berhasil sync! 🤝' : '';
-            showFeedback('robot-feedback', `🎉 Berhasil! ${efficiency}${dualBonus}`, true);
+            const efficiency = commandSequence.length <= currentLevel.minCommands ? 'Bintang Efisien!' : '';
+            const dualBonus = isDualMode() ? ' Dual robot berhasil sync! Sinkron' : '';
+            showFeedback('robot-feedback', `Sukses Berhasil! ${efficiency}${dualBonus}`, true);
             if (typeof SoundManager !== 'undefined') SoundManager.play('success');
             animateSuccess();
             await delay(800);
@@ -1000,15 +1046,16 @@ const RobotGame = (() => {
                 errorsOccurred: totalErrors
             });
         } else if (!goal1Reached && !goal2Reached) {
-            showFeedback('robot-feedback', '❌ Kedua robot belum sampai ke tujuan!', false);
+            showFeedback('robot-feedback', 'Kedua robot belum sampai ke tujuan!', false);
         } else if (!goal1Reached) {
-            showFeedback('robot-feedback', '❌ Robot Biru belum sampai ke bendera!', false);
+            showFeedback('robot-feedback', 'Robot Biru belum sampai ke bendera!', false);
         } else {
-            showFeedback('robot-feedback', '❌ Robot Merah belum sampai ke tujuan!', false);
+            showFeedback('robot-feedback', 'Robot Merah belum sampai ke tujuan!', false);
         }
     }
 
     let lastCrashRobot = 0;
+    let lastCrashReason = null;
 
     async function executeCommand(cmd) {
         if (cmd === 'forward') {
@@ -1085,7 +1132,7 @@ const RobotGame = (() => {
         );
         if (cell) {
             const img = getDamageImage(color);
-            cell.innerHTML = `<img src="${img}" alt="Robot Damaged" style="width: 2.5rem; height: 2.5rem; object-fit: contain; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.7));">`;
+            cell.innerHTML = `<img src="${img}" alt="Robot Damaged" loading="lazy" decoding="async" style="width: 2.5rem; height: 2.5rem; object-fit: contain; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.7));">`;
         }
     }
 
@@ -1105,12 +1152,14 @@ const RobotGame = (() => {
 
         if (newX < 0 || newX >= cols || newY < 0 || newY >= rows) {
             if (color === 'blue') { crashCount++; } else { crashCount2++; }
+            lastCrashReason = 'out';
             showDamageRobot(color);
             return false;
         }
 
         if (currentLevel.grid[newY][newX] === 'X') {
             if (color === 'blue') { crashCount++; } else { crashCount2++; }
+            lastCrashReason = 'wall';
             showDamageRobot(color);
             return false;
         }
@@ -1133,6 +1182,24 @@ const RobotGame = (() => {
     // ============================================
     // TUTORIAL SYSTEM
     // ============================================
+
+    function tutorialIconSvg(iconKey) {
+        const map = {
+            Halo: '<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 10h.01M15 10h.01"/></svg>',
+            Maju: commandIconSvg('forward'),
+            Kiri: commandIconSvg('left'),
+            Jalankan: '<svg viewBox="0 0 24 24" width="54" height="54" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+            Jarak: '<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/><path d="m8 8-4 4 4 4m8-8 4 4-4 4"/></svg>',
+            Hint: '<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a7 7 0 0 0-4 12.8V19a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-3.2A7 7 0 0 0 12 3Z"/><path d="M10 19h4"/></svg>',
+            Loop: commandIconSvg('loop'),
+            Simulasi: '<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h7l-2 8 9-12h-7l2-4"/></svg>',
+            Efisien: '<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+            'Dual Robot': '<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="7" height="6" rx="1.5"/><rect x="14" y="8" width="7" height="6" rx="1.5"/><path d="M6.5 5v3M17.5 5v3"/></svg>',
+            Tujuan: gridIconSvg('goal'),
+            Mirror: '<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><rect x="4" y="5" width="6" height="14" rx="1.5"/><rect x="14" y="5" width="6" height="14" rx="1.5"/></svg>'
+        };
+        return map[iconKey] || '<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>';
+    }
 
     function showTutorial() {
         if (!currentLevel.tutorial || currentLevel.tutorial.length === 0) return;
@@ -1165,10 +1232,10 @@ const RobotGame = (() => {
         const indicator = document.getElementById('tutorial-step-indicator');
         const btn = document.getElementById('tutorial-next-btn');
 
-        if (icon) icon.textContent = step.icon;
+        if (icon) icon.innerHTML = tutorialIconSvg(step.icon);
         if (msg) msg.textContent = step.msg;
         if (indicator) indicator.textContent = `${tutorialStepIndex + 1}/${currentLevel.tutorial.length}`;
-        if (btn) btn.textContent = tutorialStepIndex === currentLevel.tutorial.length - 1 ? 'Mulai! 🚀' : 'Lanjut ➡️';
+        if (btn) btn.textContent = tutorialStepIndex === currentLevel.tutorial.length - 1 ? 'Mulai!' : 'Lanjut';
 
         anime({
             targets: '#tutorial-icon',

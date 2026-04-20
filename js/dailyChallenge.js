@@ -61,10 +61,10 @@ const DailyChallenge = (() => {
         // Generate bonus objectives
         const bonusObjectives = [];
         const allBonuses = [
-            { id: 'speed', text: '⚡ Selesaikan dalam 60 detik', icon: '⚡' },
-            { id: 'perfect', text: '⭐ Raih 3 bintang', icon: '⭐' },
-            { id: 'no_error', text: '🎯 Tanpa kesalahan', icon: '🎯' },
-            { id: 'efficient', text: '📊 Gunakan perintah minimal', icon: '📊' }
+            { id: 'speed', text: 'Selesaikan dalam 60 detik', icon: 'speed' },
+            { id: 'perfect', text: 'Raih 3 bintang', icon: 'perfect' },
+            { id: 'no_error', text: 'Tanpa kesalahan', icon: 'no_error' },
+            { id: 'efficient', text: 'Gunakan perintah minimal', icon: 'efficient' }
         ];
 
         // Pick 2 bonus objectives
@@ -158,12 +158,32 @@ const DailyChallenge = (() => {
 
     function getModeInfo(mode) {
         const info = {
-            robot: { name: 'Robot Logic', icon: '🤖', color: 'primary', gradient: 'from-blue-500 to-cyan-500' },
-            network: { name: 'Network Mission', icon: '🌐', color: 'secondary', gradient: 'from-green-500 to-emerald-500' },
-            computer: { name: 'Build Computer', icon: '🖥️', color: 'purple', gradient: 'from-purple-500 to-violet-500' },
-            coding: { name: 'Coding Puzzle', icon: '🧩', color: 'accent', gradient: 'from-amber-500 to-orange-500' }
+            robot: { name: 'Robot Logic', icon: 'robot', color: 'primary', gradient: 'from-blue-500 to-cyan-500' },
+            network: { name: 'Network Mission', icon: 'network', color: 'secondary', gradient: 'from-green-500 to-emerald-500' },
+            computer: { name: 'Build Computer', icon: 'computer', color: 'purple', gradient: 'from-purple-500 to-violet-500' },
+            coding: { name: 'Coding Puzzle', icon: 'coding', color: 'accent', gradient: 'from-amber-500 to-orange-500' }
         };
         return info[mode] || info.robot;
+    }
+
+    function modeIconSvg(icon) {
+        const map = {
+            robot: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="8" width="10" height="8" rx="2"/><path d="M12 4v3M9 12h.01M15 12h.01M5 16h14"/></svg>',
+            network: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M12 7v5m0 0-7 4m7-4 7 4"/></svg>',
+            computer: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+            coding: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 8-4 4 4 4m8-8 4 4-4 4"/></svg>'
+        };
+        return map[icon] || map.robot;
+    }
+
+    function bonusIconSvg(icon) {
+        const map = {
+            speed: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h7l-2 8 9-12h-7l2-4"/></svg>',
+            perfect: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+            no_error: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>',
+            efficient: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg>'
+        };
+        return map[icon] || map.speed;
     }
 
     function renderDashboardCard() {
@@ -179,16 +199,16 @@ const DailyChallenge = (() => {
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-3">
                     <div class="w-12 h-12 rounded-2xl bg-gradient-to-br ${modeInfo.gradient} flex items-center justify-center text-2xl shadow-lg">
-                        ${modeInfo.icon}
+                        ${modeIconSvg(modeInfo.icon)}
                     </div>
                     <div>
-                        <h3 class="font-display text-lg font-bold text-white">🎯 Tantangan Harian</h3>
+                        <h3 class="font-display text-lg font-bold text-white">Target Tantangan Harian</h3>
                         <p class="text-xs text-dark-300">${challenge.dateString}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    ${state.currentStreak > 0 ? `<span class="px-2 py-1 bg-orange-500/20 text-orange-300 rounded-lg text-xs font-bold">🔥 ${state.currentStreak}</span>` : ''}
-                    ${completed ? '<span class="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-xs font-bold">✅ Selesai</span>' : ''}
+                    ${state.currentStreak > 0 ? `<span class="px-2 py-1 bg-orange-500/20 text-orange-300 rounded-lg text-xs font-bold">Streak ${state.currentStreak}</span>` : ''}
+                    ${completed ? '<span class="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-xs font-bold">Selesai</span>' : ''}
                 </div>
             </div>
 
@@ -212,14 +232,14 @@ const DailyChallenge = (() => {
             <div class="flex gap-2 mb-4">
                 ${challenge.bonusObjectives.map(b => `
                     <div class="flex-1 px-2 py-1.5 rounded-lg bg-dark-800/50 border border-dark-600 text-center">
-                        <span class="text-xs text-dark-200">${b.text}</span>
+                        <span class="text-xs text-dark-200 inline-flex items-center gap-1">${bonusIconSvg(b.icon)} ${b.text}</span>
                     </div>
                 `).join('')}
             </div>
 
             <button class="w-full py-3 rounded-xl font-bold text-white text-lg ${completed ? 'bg-dark-600 cursor-not-allowed opacity-50' : `bg-gradient-to-r ${modeInfo.gradient} hover:shadow-lg hover:shadow-${modeInfo.color}-500/20`} transition-all"
                     ${completed ? 'disabled' : ''} id="daily-play-btn">
-                ${completed ? '✅ Tantangan Hari Ini Selesai!' : '🚀 Mulai Tantangan!'}
+                ${completed ? 'Tantangan Hari Ini Selesai!' : 'Mulai Tantangan!'}
             </button>
 
             <div class="flex justify-center gap-6 mt-3">
@@ -284,13 +304,13 @@ const DailyChallenge = (() => {
                 // Show daily challenge completion toast
                 if (typeof Toast !== 'undefined') {
                     setTimeout(() => {
-                        Toast.show('🎯 Tantangan Harian Selesai!', 'achievement');
+                        Toast.show('Target Tantangan Harian Selesai!', 'achievement');
                         setTimeout(() => {
                             Toast.show(`+${result.totalXP} XP Harian (${result.bonusCount} bonus)`, 'xp');
                         }, 800);
                         if (result.streak > 1) {
                             setTimeout(() => {
-                                Toast.show(`🔥 Daily Streak: ${result.streak} hari!`, 'streak');
+                                Toast.show(`Streak Daily Streak: ${result.streak} hari!`, 'streak');
                             }, 1600);
                         }
                     }, 2000);

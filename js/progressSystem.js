@@ -28,21 +28,21 @@ const ProgressSystem = (() => {
     const MEDAL_BASE = 'assets/kenney_medals/PNG';
 
     const ACHIEVEMENTS = [
-        { id: 'first_level', name: 'Langkah Pertama', desc: 'Selesaikan level pertamamu!', icon: '🎓', medal: `${MEDAL_BASE}/flatshadow_medal1.png`, condition: (s) => s.totalCompleted >= 1 },
-        { id: 'first_star3', name: 'Bintang Emas', desc: 'Dapat 3 bintang di satu level!', icon: '⭐', medal: `${MEDAL_BASE}/flatshadow_medal2.png`, condition: (s) => s.perfectLevels >= 1 },
-        { id: 'robot_master', name: 'Robot Whisperer', desc: 'Selesaikan semua level Robot!', icon: '🤖', medal: `${MEDAL_BASE}/flatshadow_medal3.png`, condition: (s) => s.robotCompleted >= 20 },
-        { id: 'network_master', name: 'Network Guru', desc: 'Selesaikan semua level Network!', icon: '🌐', medal: `${MEDAL_BASE}/flatshadow_medal4.png`, condition: (s) => s.networkCompleted >= 17 },
-        { id: 'computer_master', name: 'Master Builder', desc: 'Selesaikan semua level Computer!', icon: '🖥️', medal: `${MEDAL_BASE}/flatshadow_medal5.png`, condition: (s) => s.computerCompleted >= 15 },
-        { id: 'coding_master', name: 'Code Ninja', desc: 'Selesaikan semua level Coding!', icon: '🧩', medal: `${MEDAL_BASE}/flatshadow_medal6.png`, condition: (s) => s.codingCompleted >= 15 },
-        { id: 'five_streak', name: 'On Fire!', desc: 'Raih streak 5 level berturut-turut!', icon: '🔥', medal: `${MEDAL_BASE}/flatshadow_medal7.png`, condition: (s) => s.maxStreak >= 5 },
-        { id: 'ten_streak', name: 'Unstoppable!', desc: 'Raih streak 10 level berturut-turut!', icon: '🌋', medal: `${MEDAL_BASE}/flatshadow_medal8.png`, condition: (s) => s.maxStreak >= 10 },
-        { id: 'xp_500', name: 'XP Hunter', desc: 'Kumpulkan 500 XP!', icon: '💎', medal: `${MEDAL_BASE}/flatshadow_medal1.png`, condition: (s) => s.totalXP >= 500 },
-        { id: 'xp_2000', name: 'XP Maniac', desc: 'Kumpulkan 2000 XP!', icon: '💰', medal: `${MEDAL_BASE}/flatshadow_medal2.png`, condition: (s) => s.totalXP >= 2000 },
-        { id: 'all_modes', name: 'Explorer', desc: 'Coba semua 4 mode permainan!', icon: '🗺️', medal: `${MEDAL_BASE}/flatshadow_medal3.png`, condition: (s) => s.modesPlayed >= 4 },
-        { id: 'speed_demon', name: 'Speed Demon', desc: 'Selesaikan 3 level dalam 5 menit!', icon: '⚡', medal: `${MEDAL_BASE}/flatshadow_medal4.png`, condition: (s) => s.speedLevels >= 3 },
-        { id: 'no_hint', name: 'No Help Needed', desc: 'Selesaikan 5 level tanpa hint!', icon: '🧠', medal: `${MEDAL_BASE}/flatshadow_medal5.png`, condition: (s) => s.noHintLevels >= 5 },
-        { id: 'perfect_ten', name: 'Perfect 10', desc: '10 level dengan 3 bintang!', icon: '🏆', medal: `${MEDAL_BASE}/flatshadow_medal8.png`, condition: (s) => s.perfectLevels >= 10 },
-        { id: 'completionist', name: 'Completionist', desc: 'Selesaikan SEMUA level!', icon: '👑', medal: `${MEDAL_BASE}/flatshadow_medal9.png`, condition: (s) => s.totalCompleted >= 65 }
+        { id: 'first_level', name: 'Langkah Pertama', desc: 'Selesaikan level pertamamu!', icon: 'Belajar', medal: `${MEDAL_BASE}/flatshadow_medal1.png`, condition: (s) => s.totalCompleted >= 1 },
+        { id: 'first_star3', name: 'Bintang Emas', desc: 'Dapat 3 bintang di satu level!', icon: 'Bintang', medal: `${MEDAL_BASE}/flatshadow_medal2.png`, condition: (s) => s.perfectLevels >= 1 },
+        { id: 'robot_master', name: 'Robot Whisperer', desc: 'Selesaikan semua level Robot!', icon: 'Robot', medal: `${MEDAL_BASE}/flatshadow_medal3.png`, condition: (s) => s.robotCompleted >= 20 },
+        { id: 'network_master', name: 'Network Guru', desc: 'Selesaikan semua level Network!', icon: 'Network', medal: `${MEDAL_BASE}/flatshadow_medal4.png`, condition: (s) => s.networkCompleted >= 17 },
+        { id: 'computer_master', name: 'Master Builder', desc: 'Selesaikan semua level Computer!', icon: 'Computer', medal: `${MEDAL_BASE}/flatshadow_medal5.png`, condition: (s) => s.computerCompleted >= 15 },
+        { id: 'coding_master', name: 'Code Ninja', desc: 'Selesaikan semua level Coding!', icon: 'Puzzle', medal: `${MEDAL_BASE}/flatshadow_medal6.png`, condition: (s) => s.codingCompleted >= 15 },
+        { id: 'five_streak', name: 'On Fire!', desc: 'Raih streak 5 level berturut-turut!', icon: 'Streak', medal: `${MEDAL_BASE}/flatshadow_medal7.png`, condition: (s) => s.maxStreak >= 5 },
+        { id: 'ten_streak', name: 'Unstoppable!', desc: 'Raih streak 10 level berturut-turut!', icon: 'Maksimal', medal: `${MEDAL_BASE}/flatshadow_medal8.png`, condition: (s) => s.maxStreak >= 10 },
+        { id: 'xp_500', name: 'XP Hunter', desc: 'Kumpulkan 500 XP!', icon: 'XP', medal: `${MEDAL_BASE}/flatshadow_medal1.png`, condition: (s) => s.totalXP >= 500 },
+        { id: 'xp_2000', name: 'XP Maniac', desc: 'Kumpulkan 2000 XP!', icon: 'XP', medal: `${MEDAL_BASE}/flatshadow_medal2.png`, condition: (s) => s.totalXP >= 2000 },
+        { id: 'all_modes', name: 'Explorer', desc: 'Coba semua 4 mode permainan!', icon: 'Explorer', medal: `${MEDAL_BASE}/flatshadow_medal3.png`, condition: (s) => s.modesPlayed >= 4 },
+        { id: 'speed_demon', name: 'Speed Demon', desc: 'Selesaikan 3 level dalam 5 menit!', icon: 'Simulasi', medal: `${MEDAL_BASE}/flatshadow_medal4.png`, condition: (s) => s.speedLevels >= 3 },
+        { id: 'no_hint', name: 'No Help Needed', desc: 'Selesaikan 5 level tanpa hint!', icon: 'Algoritma', medal: `${MEDAL_BASE}/flatshadow_medal5.png`, condition: (s) => s.noHintLevels >= 5 },
+        { id: 'perfect_ten', name: 'Perfect 10', desc: '10 level dengan 3 bintang!', icon: 'Prestasi', medal: `${MEDAL_BASE}/flatshadow_medal8.png`, condition: (s) => s.perfectLevels >= 10 },
+        { id: 'completionist', name: 'Completionist', desc: 'Selesaikan SEMUA level!', icon: 'Master', medal: `${MEDAL_BASE}/flatshadow_medal9.png`, condition: (s) => s.totalCompleted >= 65 }
     ];
 
     // ============================================
