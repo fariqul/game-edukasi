@@ -56,6 +56,25 @@ Yang perlu kamu isi hanya anon key:
 
 `publishableKey` akan dipakai sebagai prioritas. `anonKey` tetap dipertahankan sebagai fallback.
 
+## Class Battle Guest (tanpa login)
+
+Skema `supabase/schema.sql` sekarang juga berisi tabel ephemeral untuk mode class battle tamu:
+- `public.guest_sessions`
+- `public.guest_participants`
+- `public.guest_submissions`
+
+Aturan utama:
+- Kapasitas peserta maksimal 30.
+- Ranking memakai `score DESC, time_ms ASC, submitted_at ASC`.
+- Submission hanya diterima saat sesi `in_progress` (via RLS).
+- Setelah sesi ditutup, set `cleanup_at = ended_at + 10 menit`.
+
+Untuk pembersihan data expired, jalankan fungsi berikut secara berkala (cron/scheduler):
+
+```sql
+select public.cleanup_expired_guest_sessions();
+```
+
 ## File env contoh
 
 Lihat `supabase/.env.example` untuk template:

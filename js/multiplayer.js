@@ -32,6 +32,13 @@ const Multiplayer = (() => {
     let opponentCompleted = false;
     let opponentTime = 0;
 
+    let classBattleBridge = null;
+    let classBattleSession = null;
+    let classBattleParticipant = null;
+    let classBattleRole = 'guest';
+    let classBattleActive = false;
+    let classBattleRoundStartedAt = 0;
+
     const CHAR_DATA = {
         maleAdventurer:   { name: 'Alex',  folder: 'Male adventurer',   prefix: 'character_maleAdventurer',   color: '#38bdf8' },
         femaleAdventurer: { name: 'Luna',  folder: 'Female adventurer', prefix: 'character_femaleAdventurer', color: '#f472b6' },
@@ -119,6 +126,218 @@ const Multiplayer = (() => {
         if (!guestMsg) return;
         const shouldShow = shouldShowGuestWaitingOverlay(currentScreen);
         guestMsg.classList.toggle('hidden', !shouldShow);
+    }
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function setClassCreateStatus(message, isError) {
+        const el = document.getElementById('class-create-status');
+        if (!el) return;
+        el.textContent = message || '';
+        el.className = `text-xs mt-2 min-h-[20px] ${isError ? 'text-red-400' : 'text-dark-300'}`;
+    }
+
+    function setClassJoinStatus(message, isError) {
+        const el = document.getElementById('class-join-status');
+        if (!el) return;
+        el.textContent = message || '';
+        el.className = `text-xs min-h-[20px] ${isError ? 'text-red-400' : 'text-dark-300'}`;
+    }
+
+    function setClassSessionStatus(message, isError) {
+        const el = document.getElementById('class-session-status');
+        if (!el) return;
+        el.textContent = message || '';
+        el.className = `text-sm ${isError ? 'text-red-400' : 'text-accent-300'}`;
+    }
+
+    function setClassCountdownLabel(left) {
+        const el = document.getElementById('class-countdown-label');
+        if (!el) return;
+        if (left === '-' || left === null || typeof left === 'undefined') {
+            el.textContent = 'Countdown: -';
+            return;
+        }
+        el.textContent = `Countdown: ${Math.max(0, Number(left) || 0)} detik`;
+    }
+
+    function setClassSessionCode(code) {
+        const el = document.getElementById('class-session-code');
+        if (!el) return;
+        el.textContent = code || '-';
+    }
+
+    function getClassBattleBridge() {
+        if (classBattleBridge) return classBattleBridge;
+        if (typeof ClassBattleBridge === 'undefined'
+            || typeof ClassBattleService === 'undefined'
+            || typeof ClassBattleService.createClassBattleService !== 'function'
+            || !window.GameSupabase
+            || !window.GameSupabase.enabled
+            || !window.GameSupabase.client) {
+            return null;
+        }
+
+        const service = ClassBattleService.createClassBattleService(window.GameSupabase.client, {
+            realtimeChannelPrefix: window.GameSupabase.config && window.GameSupabase.config.realtimeChannelPrefix
+        });
+
+        classBattleBridge = ClassBattleBridge.createBridge({
+            service,
+            onStartCountdown(seconds) {
+                setClassCountdownLabel(seconds);
+                setClassSessionStatus(`Countdown dimulai (${seconds} detik).`, false);
+            },
+            onCountdownTick(left) {
+                setClassCountdownLabel(left);
+            },
+            onSessionLocked() {
+                finishClassBattleSession('finished');
+            },
+            onRankingUpdated(ranking) {
+                renderClassBattleRanking(ranking);
+            },
+            onEvent(eventName, payload) {
+                handleClassBattleEvent(eventName, payload);
+            },
+            onError(error) {
+                const message = (error && error.message) || 'Terjadi error class battle.';
+                setClassJoinStatus(message, true);
+            }
+        });
+
+        return classBattleBridge;
+    }
+
+    function renderClassBattleRanking(rows) {
+        const list = document.getElementById('class-battle-ranking-list');
+        if (!list) return;
+
+        const rankedRows = Array.isArray(rows) ? rows : [];
+        if (rankedRows.length === 0) {
+            list.innerHTML = '<li class="text-xs text-dark-300">Belum ada submission.</li>';
+            return;
+        }
+
+        list.innerHTML = rankedRows.slice(0, 30).map((row, index) => {
+            const rank = Number(row.rank) || index + 1;
+            const name = escapeHtml(row.participantName || row.display_name || 'Peserta');
+            const score = Number(row.score) || 0;
+            const timeMs = Number(row.timeMs ?? row.time_ms) || 0;
+            return `
+                <li class="flex items-center justify-between gap-3 rounded-lg border border-dark-700 bg-dark-800/60 px-3 py-2">
+                    <span class="text-sm text-dark-100">#${rank} ${name}</span>
+                    <span class="text-xs font-mono text-accent-300">${score} pts • ${formatTime(timeMs)}</span>
+                </li>
+            `;
+        }).join('');
+    }
+
+    function showClassBattleResultModal() {
+        const modal = document.getElementById('mp-result-modal');
+        if (!modal) return;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        const title = document.getElementById('mp-result-title');
+        if (title) {
+            title.textContent = 'Ranking Class Battle';
+            title.className = 'font-display text-3xl font-bold text-accent-400 mb-2';
+        }
+
+        const detail = document.getElementById('mp-result-detail');
+        if (detail) {
+            detail.classList.add('hidden');
+            detail.innerHTML = '';
+        }
+
+        const classPanel = document.getElementById('class-battle-result-panel');
+        if (classPanel) classPanel.classList.remove('hidden');
+
+        const statusEl = document.getElementById('class-battle-result-status');
+        if (statusEl) {
+            const status = classBattleSession && classBattleSession.status
+                ? classBattleSession.status
+                : 'finished';
+            statusEl.textContent = `Status sesi: ${status}`;
+        }
+
+        const playAgainBtn = document.getElementById('mp-btn-play-again');
+        if (playAgainBtn) playAgainBtn.classList.add('hidden');
+    }
+
+    function hideClassBattleResultPanel() {
+        const panel = document.getElementById('class-battle-result-panel');
+        if (panel) panel.classList.add('hidden');
+
+        const detail = document.getElementById('mp-result-detail');
+        if (detail) detail.classList.remove('hidden');
+
+        const playAgainBtn = document.getElementById('mp-btn-play-again');
+        if (playAgainBtn) playAgainBtn.classList.remove('hidden');
+    }
+
+    async function finishClassBattleSession(status) {
+        const bridge = getClassBattleBridge();
+        if (!bridge || !classBattleSession || !classBattleSession.id) return;
+        if (classBattleSession.status === 'finished' || classBattleSession.status === 'cancelled') {
+            classBattleActive = false;
+            showClassBattleResultModal();
+            return;
+        }
+
+        const finalStatus = status || 'finished';
+        try {
+            const session = await bridge.service.finishSession({
+                sessionId: classBattleSession.id,
+                status: finalStatus
+            });
+            classBattleSession = session || classBattleSession;
+            await bridge.broadcast('session-finished', {
+                status: classBattleSession.status || finalStatus
+            });
+        } catch (error) {
+            setClassJoinStatus((error && error.message) || 'Gagal menutup sesi class battle.', true);
+        } finally {
+            classBattleActive = false;
+            setClassSessionStatus('Sesi class battle ditutup.', false);
+            await bridge.refreshRanking().catch(() => {});
+            showClassBattleResultModal();
+        }
+    }
+
+    function handleClassBattleEvent(eventName, payload) {
+        if (!eventName) return;
+
+        if (eventName === 'session-started') {
+            classBattleActive = true;
+            classBattleRoundStartedAt = Date.now();
+            const mode = (payload && payload.mode) || (classBattleSession && classBattleSession.mode);
+            if (mode && typeof navigateTo === 'function') {
+                navigateTo(mode);
+            }
+            setClassSessionStatus('Class battle sudah dimulai.', false);
+            return;
+        }
+
+        if (eventName === 'session-finished') {
+            classBattleActive = false;
+            if (classBattleSession) {
+                classBattleSession.status = (payload && payload.status) || 'finished';
+            }
+            setClassSessionStatus('Sesi selesai. Menampilkan ranking akhir.', false);
+            const bridge = getClassBattleBridge();
+            if (bridge) bridge.refreshRanking().catch(() => {});
+            showClassBattleResultModal();
+        }
     }
 
     // ============================================
@@ -213,6 +432,19 @@ const Multiplayer = (() => {
         if (createStatus) createStatus.textContent = '';
         const joinInput = document.getElementById('input-room-pin');
         if (joinInput) joinInput.value = '';
+
+        setClassCreateStatus('', false);
+        setClassJoinStatus('', false);
+        if (!classBattleSession) {
+            setClassSessionCode('-');
+            setClassSessionStatus('Belum terhubung', false);
+            setClassCountdownLabel('-');
+        }
+
+        const classStartBtn = document.getElementById('class-start-btn');
+        if (classStartBtn && classBattleRole !== 'host') {
+            classStartBtn.classList.add('hidden');
+        }
 
         // Animate
         if (typeof anime !== 'undefined') {
@@ -332,6 +564,241 @@ const Multiplayer = (() => {
                 }
             }
         }, 10000);
+    }
+
+    async function createClassBattleRoom() {
+        const bridge = getClassBattleBridge();
+        if (!bridge) {
+            setClassCreateStatus('Supabase belum siap untuk class battle.', true);
+            return;
+        }
+
+        const hostNameEl = document.getElementById('class-host-name');
+        const modeEl = document.getElementById('class-mode-select');
+        const targetEl = document.getElementById('class-target-level');
+
+        const hostName = (hostNameEl && hostNameEl.value.trim())
+            || (typeof CharacterSystem !== 'undefined' ? CharacterSystem.getPlayerName() : '')
+            || 'Host';
+        const mode = modeEl ? modeEl.value : 'coding';
+        const targetLevel = Math.max(1, Math.floor(Number(targetEl && targetEl.value) || 1));
+
+        setClassCreateStatus('Membuat sesi class battle...', false);
+        setClassJoinStatus('', false);
+
+        active = false;
+        if (conn) { try { conn.close(); } catch (e) {} conn = null; }
+        if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
+        showOpponentBar(false);
+
+        try {
+            const session = await bridge.service.createSession({
+                hostName,
+                mode,
+                targetLevel,
+                maxParticipants: 30
+            });
+
+            const joined = await bridge.service.joinSession({
+                sessionCode: session.session_code,
+                displayName: hostName,
+                playerToken: session.host_token,
+                isHost: true
+            });
+
+            classBattleSession = joined.session || session;
+            classBattleParticipant = joined.participant;
+            classBattleRole = 'host';
+            classBattleActive = false;
+            isHost = true;
+
+            bridge.resetFirstFinishLock();
+            bridge.syncSessionMeta({
+                session: classBattleSession,
+                participant: classBattleParticipant,
+                role: 'host'
+            });
+            await bridge.connectRealtime(classBattleSession.session_code);
+
+            setClassSessionCode(classBattleSession.session_code);
+            setClassSessionStatus('Sesi dibuat. Bagikan kode ke peserta.', false);
+            setClassCountdownLabel('-');
+            setClassCreateStatus('Sesi siap. Tekan "Mulai Class Battle" saat semua peserta sudah masuk.', false);
+
+            const startBtn = document.getElementById('class-start-btn');
+            if (startBtn) startBtn.classList.remove('hidden');
+
+            await bridge.refreshRanking().catch(() => {});
+        } catch (error) {
+            setClassCreateStatus((error && error.message) || 'Gagal membuat sesi class battle.', true);
+        }
+    }
+
+    async function joinClassBattleRoom() {
+        const bridge = getClassBattleBridge();
+        if (!bridge) {
+            setClassJoinStatus('Supabase belum siap untuk class battle.', true);
+            return;
+        }
+
+        const nameEl = document.getElementById('class-join-name');
+        const codeEl = document.getElementById('class-join-code');
+        const displayName = (nameEl && nameEl.value.trim()) || 'Peserta';
+        const sessionCode = (codeEl && codeEl.value.trim()) || '';
+
+        if (sessionCode.length !== 6 || isNaN(sessionCode)) {
+            setClassJoinStatus('Kode sesi harus 6 digit angka.', true);
+            return;
+        }
+
+        setClassJoinStatus('Menghubungkan ke sesi class battle...', false);
+        setClassCreateStatus('', false);
+
+        active = false;
+        if (conn) { try { conn.close(); } catch (e) {} conn = null; }
+        if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
+        showOpponentBar(false);
+
+        try {
+            const joined = await bridge.service.joinSession({
+                sessionCode,
+                displayName,
+                isHost: false
+            });
+
+            classBattleSession = joined.session;
+            classBattleParticipant = joined.participant;
+            classBattleRole = 'guest';
+            classBattleActive = false;
+            isHost = false;
+
+            bridge.resetFirstFinishLock();
+            bridge.syncSessionMeta({
+                session: classBattleSession,
+                participant: classBattleParticipant,
+                role: 'guest'
+            });
+            await bridge.connectRealtime(classBattleSession.session_code);
+
+            setClassSessionCode(classBattleSession.session_code);
+            setClassSessionStatus('Berhasil bergabung. Menunggu host memulai.', false);
+            setClassCountdownLabel('-');
+            setClassJoinStatus(`Bergabung sebagai ${classBattleParticipant.display_name}.`, false);
+
+            const startBtn = document.getElementById('class-start-btn');
+            if (startBtn) startBtn.classList.add('hidden');
+
+            await bridge.refreshRanking().catch(() => {});
+
+            if (classBattleSession.status === 'in_progress') {
+                handleClassBattleEvent('session-started', {
+                    mode: classBattleSession.mode,
+                    targetLevel: classBattleSession.target_level
+                });
+            }
+        } catch (error) {
+            setClassJoinStatus((error && error.message) || 'Gagal bergabung ke class battle.', true);
+        }
+    }
+
+    async function startClassBattle() {
+        const bridge = getClassBattleBridge();
+        if (!bridge || !classBattleSession || classBattleRole !== 'host') {
+            setClassCreateStatus('Hanya host yang bisa memulai class battle.', true);
+            return;
+        }
+
+        setClassCreateStatus('Memulai class battle...', false);
+
+        try {
+            const started = await bridge.service.startSession({
+                sessionId: classBattleSession.id,
+                hostToken: classBattleSession.host_token
+            });
+
+            classBattleSession = started || classBattleSession;
+            classBattleActive = true;
+            classBattleRoundStartedAt = Date.now();
+
+            bridge.resetFirstFinishLock();
+            bridge.syncSessionMeta({
+                session: classBattleSession,
+                participant: classBattleParticipant,
+                role: 'host'
+            });
+
+            await bridge.broadcast('session-started', {
+                mode: classBattleSession.mode,
+                targetLevel: classBattleSession.target_level
+            });
+
+            setClassSessionStatus('Class battle dimulai.', false);
+            if (typeof navigateTo === 'function') {
+                await navigateTo(classBattleSession.mode);
+            }
+        } catch (error) {
+            setClassCreateStatus((error && error.message) || 'Gagal memulai class battle.', true);
+        }
+    }
+
+    async function onClassBattleComplete(mode, payload) {
+        if (!classBattleActive) return;
+
+        const bridge = getClassBattleBridge();
+        if (!bridge || !classBattleSession || !classBattleParticipant) return;
+        if (mode !== classBattleSession.mode) return;
+
+        try {
+            bridge.service.assertSessionOpen(classBattleSession);
+        } catch (error) {
+            setClassJoinStatus((error && error.message) || 'Sesi class battle sudah ditutup.', true);
+            classBattleActive = false;
+            return;
+        }
+
+        const reachedLevel = Math.max(
+            1,
+            Math.floor(Number(payload && payload.reachedLevel) || (GameState.currentLevel[mode] || 1))
+        );
+        const elapsedMs = Math.max(0, Date.now() - classBattleRoundStartedAt);
+
+        try {
+            await bridge.submitCompletion({
+                reachedLevel,
+                targetLevel: classBattleSession.target_level,
+                elapsedMs,
+                participantId: classBattleParticipant.id
+            });
+
+            await bridge.refreshRanking();
+            await bridge.broadcast('ranking-updated', {
+                participantId: classBattleParticipant.id
+            });
+
+            const countdownSession = await bridge.service.startFirstFinishWindow({
+                sessionId: classBattleSession.id,
+                countdownSeconds: 10
+            });
+
+            if (countdownSession && countdownSession.first_finish_started_at) {
+                classBattleSession = {
+                    ...classBattleSession,
+                    ...countdownSession
+                };
+                bridge.applyCountdownFromServer(
+                    countdownSession.first_finish_started_at,
+                    countdownSession.finish_countdown_seconds
+                );
+                await bridge.broadcast('first-finish-window-started', {
+                    startedAt: countdownSession.first_finish_started_at,
+                    seconds: countdownSession.finish_countdown_seconds
+                });
+            }
+
+            setClassSessionStatus('Hasil terkirim. Menunggu ranking akhir...', false);
+        } catch (error) {
+            setClassJoinStatus((error && error.message) || 'Gagal mengirim hasil class battle.', true);
+        }
     }
 
     // ============================================
@@ -594,6 +1061,8 @@ const Multiplayer = (() => {
         const modal = document.getElementById('mp-result-modal');
         if (!modal) return;
 
+        hideClassBattleResultPanel();
+
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
@@ -653,11 +1122,23 @@ const Multiplayer = (() => {
         hideResult();
         stopTimer();
         showOpponentBar(false);
+
+        if (classBattleSession) {
+            showLobbyScreen();
+            return;
+        }
+
         goToDashboardMultiplayer();
     }
 
     function resultPlayAgain() {
         hideResult();
+
+        if (classBattleSession) {
+            showLobbyScreen();
+            return;
+        }
+
         // Restart same mode
         const mode = GameState.currentScreen;
         if (mode && mode !== 'dashboard') {
@@ -727,6 +1208,22 @@ const Multiplayer = (() => {
         if (reconnectTimer) clearTimeout(reconnectTimer);
         if (conn) { try { conn.close(); } catch(e) {} conn = null; }
         if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+
+        if (classBattleBridge && typeof classBattleBridge.dispose === 'function') {
+            classBattleBridge.dispose().catch(() => {});
+        }
+        classBattleBridge = null;
+        classBattleSession = null;
+        classBattleParticipant = null;
+        classBattleRole = 'guest';
+        classBattleActive = false;
+        classBattleRoundStartedAt = 0;
+
+        setClassSessionCode('-');
+        setClassSessionStatus('Belum terhubung', false);
+        setClassCountdownLabel('-');
+        hideClassBattleResultPanel();
+
         showOpponentBar(false);
     }
 
@@ -745,16 +1242,21 @@ const Multiplayer = (() => {
         goMultiplayer,
         createRoom,
         joinRoom,
+        createClassBattleRoom,
+        joinClassBattleRoom,
+        startClassBattle,
         vsStart,
         backFromLobby,
         startMultiplayerMode,
         onMyComplete,
+        onClassBattleComplete,
         resultBackToMenu,
         resultPlayAgain,
         hideResult,
         showOpponentBar,
         disconnect,
         isActive: () => active,
+        isClassBattleActive: () => classBattleActive,
         isHostPlayer: () => isHost,
         charImgPath
     };

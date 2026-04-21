@@ -1898,6 +1898,77 @@
             </div>
         </div>
 
+        <div class="lobby-panel max-w-4xl w-full mb-6">
+            <div class="text-center mb-4">
+                <h3 class="font-display text-2xl font-bold text-accent-400">Class Battle Tamu</h3>
+                <p class="text-sm text-dark-200">Mode kelas tanpa login, maksimal 30 peserta.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="rounded-2xl border border-dark-600 bg-dark-800/40 p-4">
+                    <p class="font-semibold text-primary-300 mb-3">Host Kelas</p>
+                    <label class="block text-xs text-dark-300 mb-1" for="class-host-name">Nama Host</label>
+                    <input id="class-host-name" type="text" maxlength="24" placeholder="Nama guru"
+                        class="w-full mb-3 bg-dark-700 border border-dark-600 rounded-xl px-3 py-2 text-sm text-white placeholder-dark-300 focus:border-primary-400 focus:outline-none transition-colors">
+
+                    <label class="block text-xs text-dark-300 mb-1" for="class-mode-select">Mode</label>
+                    <select id="class-mode-select"
+                        class="w-full mb-3 bg-dark-700 border border-dark-600 rounded-xl px-3 py-2 text-sm text-white focus:border-primary-400 focus:outline-none transition-colors">
+                        <option value="robot">Robot</option>
+                        <option value="network">Network</option>
+                        <option value="computer">Computer</option>
+                        <option value="coding" selected>Coding</option>
+                        <option value="circuit">Circuit</option>
+                    </select>
+
+                    <label class="block text-xs text-dark-300 mb-1" for="class-target-level">Target Level</label>
+                    <input id="class-target-level" type="number" min="1" max="20" value="5"
+                        class="w-full mb-3 bg-dark-700 border border-dark-600 rounded-xl px-3 py-2 text-sm text-white focus:border-primary-400 focus:outline-none transition-colors">
+
+                    <button onclick="Multiplayer.createClassBattleRoom()"
+                        class="btn-primary px-4 py-2 rounded-xl font-bold text-white w-full mb-3">
+                        Buat Sesi Class Battle
+                    </button>
+
+                    <div class="mb-3 p-3 rounded-xl bg-dark-900/50 border border-dark-600">
+                        <p class="text-xs text-dark-300 mb-1">Kode Sesi:</p>
+                        <p id="class-session-code" class="text-lg font-mono text-accent-300 tracking-widest">-</p>
+                    </div>
+
+                    <button id="class-start-btn" onclick="Multiplayer.startClassBattle()"
+                        class="hidden btn-success px-4 py-2 rounded-xl font-bold text-white w-full">
+                        Mulai Class Battle
+                    </button>
+                    <p id="class-create-status" class="text-xs text-dark-300 mt-2 min-h-[20px]"></p>
+                </div>
+
+                <div class="rounded-2xl border border-dark-600 bg-dark-800/40 p-4">
+                    <p class="font-semibold text-secondary-300 mb-3">Peserta Kelas</p>
+                    <label class="block text-xs text-dark-300 mb-1" for="class-join-name">Nama Peserta</label>
+                    <input id="class-join-name" type="text" maxlength="24" placeholder="Nama peserta"
+                        class="w-full mb-3 bg-dark-700 border border-dark-600 rounded-xl px-3 py-2 text-sm text-white placeholder-dark-300 focus:border-secondary-400 focus:outline-none transition-colors">
+
+                    <label class="block text-xs text-dark-300 mb-1" for="class-join-code">Kode Sesi</label>
+                    <input id="class-join-code" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                        placeholder="6 digit kode"
+                        class="w-full mb-3 bg-dark-700 border border-dark-600 rounded-xl px-3 py-2 text-sm text-white placeholder-dark-300 focus:border-secondary-400 focus:outline-none transition-colors">
+
+                    <button onclick="Multiplayer.joinClassBattleRoom()"
+                        class="btn-success px-4 py-2 rounded-xl font-bold text-white w-full mb-3">
+                        Gabung Class Battle
+                    </button>
+
+                    <div class="p-3 rounded-xl bg-dark-900/50 border border-dark-600 mb-3">
+                        <p class="text-xs text-dark-300 mb-1">Status Sesi:</p>
+                        <p id="class-session-status" class="text-sm text-accent-300">Belum terhubung</p>
+                        <p id="class-countdown-label" class="text-xs text-dark-300 mt-1">Countdown: -</p>
+                    </div>
+
+                    <p id="class-join-status" class="text-xs text-dark-300 min-h-[20px]"></p>
+                </div>
+            </div>
+        </div>
+
         <button onclick="Multiplayer.backFromLobby()"
             class="text-sm text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2">
             ← Kembali
@@ -1976,16 +2047,20 @@
                 </svg>
             </div>
             <h2 id="mp-result-title" class="font-display text-3xl font-bold text-accent-400 mb-2">Hasil</h2>
+            <div id="class-battle-result-panel" class="hidden mb-4 text-left">
+                <p id="class-battle-result-status" class="text-sm text-dark-200 mb-2">Ranking akhir class battle</p>
+                <ol id="class-battle-ranking-list" class="space-y-2 max-h-56 overflow-y-auto rounded-xl border border-dark-600 bg-dark-900/50 p-3"></ol>
+            </div>
             <div id="mp-result-detail" class="mb-6"></div>
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <button onclick="Multiplayer.resultPlayAgain()"
+                <button id="mp-btn-play-again" onclick="Multiplayer.resultPlayAgain()"
                     class="btn-success px-6 py-3 rounded-xl font-bold text-white">
                     <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg> Main Lagi
                 </button>
-                <button onclick="Multiplayer.resultBackToMenu()"
+                <button id="mp-btn-back-menu" onclick="Multiplayer.resultBackToMenu()"
                     class="px-6 py-3 rounded-xl font-bold text-dark-200 bg-dark-700 hover:bg-dark-600 transition-colors">
                     <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -3276,6 +3351,10 @@
     <script src="js/supabaseConfig.js"></script>
     <script src="js/supabaseRuntime.js"></script>
     <script src="js/supabaseClient.js"></script>
+    <script src="js/classBattleRules.js"></script>
+    <script src="js/classBattleState.js"></script>
+    <script src="js/classBattleService.js"></script>
+    <script src="js/classBattleBridge.js"></script>
     <script src="js/codingTapRules.js"></script>
     <script src="js/multiplayerConfig.js"></script>
     <script src="js/runtimeConfig.js"></script>

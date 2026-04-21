@@ -415,3 +415,147 @@ with check (public.is_session_teacher(session_id));
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on all tables in schema public to authenticated;
 grant usage, select on all sequences in schema public to authenticated;
+
+-- ============================================
+-- GUEST CLASS BATTLE (NO LOGIN)
+-- ============================================
+create table if not exists public.guest_sessions (
+    id uuid primary key default gen_random_uuid(),
+    session_code text not null unique,
+    host_name text not null,
+    host_token text not null,
+    mode text not null,
+    target_level integer not null check (target_level > 0),
+    max_participants integer not null default 30 check (max_participants between 2 and 30),
+    status text not null default 'waiting' check (status in ('waiting', 'in_progress', 'finished', 'cancelled')),
+    first_finish_started_at timestamptz,
+    finish_countdown_seconds integer not null default 10 check (finish_countdown_seconds between 1 and 60),
+    started_at timestamptz,
+    ended_at timestamptz,
+    cleanup_at timestamptz,
+    created_at timestamptz not null default now()
+);
+
+create table if not exists public.guest_participants (
+    id uuid primary key default gen_random_uuid(),
+    session_id uuid not null references public.guest_sessions(id) on delete cascade,
+    display_name text not null,
+    normalized_name text not null,
+    name_suffix integer not null default 1 check (name_suffix > 0),
+    player_token text not null,
+    is_host boolean not null default false,
+    joined_at timestamptz not null default now(),
+    unique (session_id, normalized_name, name_suffix)
+);
+
+create table if not exists public.guest_submissions (
+    id uuid primary key default gen_random_uuid(),
+    session_id uuid not null references public.guest_sessions(id) on delete cascade,
+    participant_id uuid not null references public.guest_participants(id) on delete cascade,
+    reached_level integer not null check (reached_level > 0),
+    score integer not null default 0,
+    time_ms integer not null check (time_ms >= 0),
+    submitted_at timestamptz not null default now(),
+    unique (session_id, participant_id)
+);
+
+create index if not exists idx_guest_sessions_code on public.guest_sessions(session_code);
+create index if not exists idx_guest_sessions_status on public.guest_sessions(status);
+create index if not exists idx_guest_sessions_cleanup on public.guest_sessions(cleanup_at);
+create index if not exists idx_guest_participants_session on public.guest_participants(session_id);
+create index if not exists idx_guest_submissions_session on public.guest_submissions(session_id);
+
+alter table public.guest_sessions enable row level security;
+alter table public.guest_participants enable row level security;
+alter table public.guest_submissions enable row level security;
+
+drop policy if exists guest_sessions_select_open on public.guest_sessions;
+create policy guest_sessions_select_open
+on public.guest_sessions
+for select
+using (true);
+
+drop policy if exists guest_sessions_insert_waiting on public.guest_sessions;
+create policy guest_sessions_insert_waiting
+on public.guest_sessions
+for insert
+with check (status = 'waiting');
+
+drop policy if exists guest_sessions_update_open on public.guest_sessions;
+create policy guest_sessions_update_open
+on public.guest_sessions
+for update
+using (true)
+with check (status in ('waiting', 'in_progress', 'finished', 'cancelled'));
+
+drop policy if exists guest_participants_select_open on public.guest_participants;
+create policy guest_participants_select_open
+on public.guest_participants
+for select
+using (true);
+
+drop policy if exists guest_participants_insert_open on public.guest_participants;
+create policy guest_participants_insert_open
+on public.guest_participants
+for insert
+with check (
+    length(display_name) > 0
+    and length(normalized_name) > 0
+);
+
+drop policy if exists guest_submissions_select_open on public.guest_submissions;
+create policy guest_submissions_select_open
+on public.guest_submissions
+for select
+using (true);
+
+drop policy if exists guest_submissions_insert_open on public.guest_submissions;
+create policy guest_submissions_insert_open
+on public.guest_submissions
+for insert
+with check (
+    exists (
+        select 1
+        from public.guest_sessions gs
+        where gs.id = session_id
+          and gs.status = 'in_progress'
+    )
+);
+
+drop policy if exists guest_submissions_update_open on public.guest_submissions;
+create policy guest_submissions_update_open
+on public.guest_submissions
+for update
+using (true)
+with check (
+    exists (
+        select 1
+        from public.guest_sessions gs
+        where gs.id = session_id
+          and gs.status = 'in_progress'
+    )
+);
+
+create or replace function public.cleanup_expired_guest_sessions()
+returns bigint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    deleted_count bigint;
+begin
+    delete from public.guest_sessions
+    where cleanup_at is not null
+      and cleanup_at <= now();
+
+    get diagnostics deleted_count = row_count;
+    return deleted_count;
+end;
+$$;
+
+grant usage on schema public to anon;
+grant select, insert, update on public.guest_sessions to anon;
+grant select, insert on public.guest_participants to anon;
+grant select, insert, update on public.guest_submissions to anon;
+grant execute on function public.cleanup_expired_guest_sessions() to anon, authenticated;

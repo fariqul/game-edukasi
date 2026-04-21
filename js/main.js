@@ -446,6 +446,8 @@ function updateProgressDisplay() {
 }
 
 function completeLevel(mode, options) {
+    const safeOptions = options || {};
+
     if (GameState.currentLevel[mode] > GameState.progress[mode].completed) {
         GameState.progress[mode].completed = GameState.currentLevel[mode];
     }
@@ -455,15 +457,15 @@ function completeLevel(mode, options) {
     if (typeof StatsDashboard !== 'undefined') {
         StatsDashboard.recordLevelComplete(
             mode,
-            options.timeTaken || 0,
-            options.errorsOccurred || 0,
-            options.hintsUsed || 0
+            safeOptions.timeTaken || 0,
+            safeOptions.errorsOccurred || 0,
+            safeOptions.hintsUsed || 0
         );
     }
 
     // Check daily challenge completion
     if (typeof DailyChallenge !== 'undefined') {
-        DailyChallenge.checkDailyChallengeCompletion(mode, options);
+        DailyChallenge.checkDailyChallengeCompletion(mode, safeOptions);
     }
 
     // Reset adaptive hints attempts for this level (completed successfully)
@@ -474,7 +476,7 @@ function completeLevel(mode, options) {
     // Show enhanced modal with stars, XP, achievements
     const levelNum = GameState.currentLevel[mode];
     if (typeof ProgressSystem !== 'undefined') {
-        showEnhancedModal(mode, levelNum, options || {});
+        showEnhancedModal(mode, levelNum, safeOptions);
     } else {
         showModal('Kamu berhasil menyelesaikan tantangan!');
     }
@@ -482,6 +484,16 @@ function completeLevel(mode, options) {
     // Notify multiplayer opponent
     if (typeof Multiplayer !== 'undefined' && Multiplayer.isActive()) {
         Multiplayer.onMyComplete();
+    }
+
+    if (typeof Multiplayer !== 'undefined'
+        && typeof Multiplayer.isClassBattleActive === 'function'
+        && Multiplayer.isClassBattleActive()
+        && typeof Multiplayer.onClassBattleComplete === 'function') {
+        Multiplayer.onClassBattleComplete(mode, {
+            ...safeOptions,
+            reachedLevel: levelNum
+        });
     }
 }
 
