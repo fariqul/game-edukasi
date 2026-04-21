@@ -103,11 +103,30 @@ const Multiplayer = (() => {
         }, 2000);
     }
 
+    function shouldShowGuestWaitingOverlay(currentScreen) {
+        if (typeof MultiplayerUiRules !== 'undefined' && typeof MultiplayerUiRules.shouldShowGuestWaitingOverlay === 'function') {
+            return MultiplayerUiRules.shouldShowGuestWaitingOverlay({
+                active,
+                isHost,
+                currentScreen
+            });
+        }
+        return active && !isHost && currentScreen === 'dashboard';
+    }
+
+    function syncGuestWaitingOverlay(currentScreen) {
+        const guestMsg = document.getElementById('mp-guest-waiting');
+        if (!guestMsg) return;
+        const shouldShow = shouldShowGuestWaitingOverlay(currentScreen);
+        guestMsg.classList.toggle('hidden', !shouldShow);
+    }
+
     // ============================================
     // PLAY MODE SCREEN
     // ============================================
 
     function showPlayModeScreen() {
+        syncGuestWaitingOverlay('play-mode-screen');
         showScreen('play-mode-screen');
 
         // Show selected character
@@ -454,23 +473,21 @@ const Multiplayer = (() => {
         showOpponentBar(true);
         updateOpponentBarStatus('Menunggu host memilih mode...');
 
-        // If guest, disable mode cards clicking and overlay message
+        // If guest, disable mode cards clicking and show wait overlay on dashboard only
         if (!isHost) {
             document.querySelectorAll('.mode-card').forEach(card => {
                 card.style.pointerEvents = 'none';
                 card.style.opacity = '0.6';
             });
-            const guestMsg = document.getElementById('mp-guest-waiting');
-            if (guestMsg) guestMsg.classList.remove('hidden');
         } else {
             // Host: mode cards trigger multiplayer game start
             document.querySelectorAll('.mode-card').forEach(card => {
                 card.style.pointerEvents = '';
                 card.style.opacity = '';
             });
-            const guestMsg = document.getElementById('mp-guest-waiting');
-            if (guestMsg) guestMsg.classList.add('hidden');
         }
+
+        syncGuestWaitingOverlay('dashboard');
 
         if (typeof animateDashboardEntrance === 'function') animateDashboardEntrance();
     }
@@ -497,6 +514,7 @@ const Multiplayer = (() => {
         opponentCompleted = false;
         opponentTime = 0;
         gameStartTime = Date.now();
+        syncGuestWaitingOverlay(mode);
 
         // Navigate to the mode
         if (typeof navigateTo === 'function') {
@@ -683,6 +701,7 @@ const Multiplayer = (() => {
     // ============================================
 
     function showDisconnectNotice() {
+        syncGuestWaitingOverlay('disconnected');
         showOpponentBar(false);
         stopTimer();
         const bar = document.getElementById('mp-opponent-bar');
@@ -703,6 +722,7 @@ const Multiplayer = (() => {
 
     function disconnect() {
         active = false;
+        syncGuestWaitingOverlay('disconnected');
         if (timerInterval) clearInterval(timerInterval);
         if (reconnectTimer) clearTimeout(reconnectTimer);
         if (conn) { try { conn.close(); } catch(e) {} conn = null; }

@@ -268,6 +268,8 @@ const CodingGame = (() => {
     let selectedChoice = null;
     let dragDropInitialized = false;
     let codingErrors = 0;
+    let selectedBlockValue = null;
+    let selectedBlockKey = null;
 
     // ============================================
     // INITIALIZATION
@@ -279,6 +281,8 @@ const CodingGame = (() => {
         sortedCode = [];
         selectedChoice = null;
         codingErrors = 0;
+        selectedBlockValue = null;
+        selectedBlockKey = null;
 
         document.getElementById('coding-level').textContent = levelNum;
         document.getElementById('coding-mission').textContent = currentPuzzle.mission;
@@ -410,6 +414,7 @@ const CodingGame = (() => {
                 slot.className = 'code-slot inline-flex items-center justify-center min-w-[80px] h-7';
                 slot.dataset.answer = line.answer;
                 slot.dataset.index = idx;
+                slot.dataset.codingType = 'fill';
 
                 slot.addEventListener('dragover', (e) => {
                     e.preventDefault();
@@ -417,6 +422,7 @@ const CodingGame = (() => {
                 });
                 slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
                 slot.addEventListener('drop', (e) => handleSlotDrop(e, slot));
+                slot.addEventListener('click', () => handleSlotTap(slot, 'fill'));
 
                 lineEl.appendChild(slot);
             }
@@ -444,6 +450,7 @@ const CodingGame = (() => {
         });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
         dropZone.addEventListener('drop', (e) => handleSortDrop(e, dropZone));
+        dropZone.addEventListener('click', () => handleSortTap(dropZone));
 
         container.appendChild(dropZone);
     }
@@ -505,6 +512,7 @@ const CodingGame = (() => {
                 slot.innerHTML = `<span class="text-red-400 line-through">${line.text}</span>`;
                 slot.dataset.correct = line.correct;
                 slot.dataset.index = idx;
+                slot.dataset.codingType = 'debug';
 
                 slot.addEventListener('dragover', (e) => {
                     e.preventDefault();
@@ -512,6 +520,7 @@ const CodingGame = (() => {
                 });
                 slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
                 slot.addEventListener('drop', (e) => handleDebugDrop(e, slot));
+                slot.addEventListener('click', () => handleSlotTap(slot, 'debug'));
 
                 lineEl.appendChild(slot);
             } else {
@@ -546,14 +555,17 @@ const CodingGame = (() => {
             blockEl.draggable = true;
             blockEl.dataset.value = block;
             blockEl.dataset.index = idx;
+            blockEl.dataset.blockKey = String(idx);
             blockEl.textContent = block;
 
             blockEl.addEventListener('dragstart', (e) => {
                 e.dataTransfer.setData('text/plain', block);
                 e.dataTransfer.setData('index', idx.toString());
+                e.dataTransfer.setData('blockKey', String(idx));
                 blockEl.classList.add('dragging');
             });
             blockEl.addEventListener('dragend', () => blockEl.classList.remove('dragging'));
+            blockEl.addEventListener('click', () => handleBlockTap(blockEl));
 
             blocksArea.appendChild(blockEl);
         });
@@ -563,40 +575,66 @@ const CodingGame = (() => {
     // DROP HANDLERS
     // ============================================
 
-    function handleSlotDrop(e, slot) {
-        e.preventDefault();
-        slot.classList.remove('drag-over');
+    function clearSelectedBlock() {
+        const selected = document.querySelector('.code-block.selected');
+        if (selected) selected.classList.remove('selected');
+        selectedBlockValue = null;
+        selectedBlockKey = null;
+    }
 
-        const value = e.dataTransfer.getData('text/plain');
-        const answer = slot.dataset.answer;
+    function setSelectedBlock(blockEl) {
+        clearSelectedBlock();
+        blockEl.classList.add('selected');
+        selectedBlockValue = blockEl.dataset.value;
+        selectedBlockKey = blockEl.dataset.blockKey;
+    }
+
+    function findFirstEmptySlotElement(slotSelector) {
+        const slots = Array.from(document.querySelectorAll(slotSelector));
+        const slotIndexes = slots.map((slot) => slot.dataset.index);
+        const emptyIndex = (typeof CodingTapRules !== 'undefined' && typeof CodingTapRules.findFirstEmptySlotIndex === 'function')
+            ? CodingTapRules.findFirstEmptySlotIndex(slotIndexes, userAnswers)
+            : slotIndexes.find((idx) => !userAnswers[idx]) ?? null;
+
+        if (emptyIndex === null) return null;
+        return slots.find((slot) => slot.dataset.index === String(emptyIndex)) || null;
+    }
+
+    function resolveDraggedBlock(value, blockKey) {
+        if (blockKey !== '') {
+            const byKey = document.querySelector(`.code-block[data-block-key="${blockKey}"]`);
+            if (byKey) return byKey;
+        }
+        return Array.from(document.querySelectorAll('.code-block')).find(
+            (blockEl) => blockEl.dataset.value === value && !blockEl.classList.contains('used')
+        ) || null;
+    }
+
+    function markBlockUsed(blockEl) {
+        if (!blockEl) return;
+        blockEl.classList.add('used');
+        blockEl.draggable = false;
+        if (selectedBlockKey === blockEl.dataset.blockKey) {
+            clearSelectedBlock();
+        }
+    }
+
+    function placeFillValue(slot, value, blockEl) {
+        if (!slot || !value || slot.classList.contains('filled')) return;
 
         slot.innerHTML = `<span class="text-accent-400 font-mono">${value}</span>`;
         slot.classList.add('filled');
         userAnswers[slot.dataset.index] = value;
-
         animateBlockPlacement(slot);
-
-        // Disable the dragged block
-        const blocks = document.querySelectorAll('.code-block');
-        blocks.forEach(b => {
-            if (b.dataset.value === value) {
-                b.classList.add('used');
-                b.draggable = false;
-            }
-        });
+        markBlockUsed(blockEl);
     }
 
-    function handleSortDrop(e, dropZone) {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
+    function placeSortValue(dropZone, value, blockEl) {
+        if (!dropZone || !value) return;
 
-        const value = e.dataTransfer.getData('text/plain');
-
-        // Remove placeholder text
         const placeholder = dropZone.querySelector('p');
         if (placeholder) placeholder.remove();
 
-        // Add to sorted list
         sortedCode.push(value);
 
         const lineEl = document.createElement('div');
@@ -614,24 +652,13 @@ const CodingGame = (() => {
 
         dropZone.appendChild(lineEl);
         animateBlockPlacement(lineEl);
-
-        // Disable the dragged block
-        const blocks = document.querySelectorAll('.code-block');
-        blocks.forEach(b => {
-            if (b.dataset.value === value && !b.classList.contains('used')) {
-                b.classList.add('used');
-                b.draggable = false;
-            }
-        });
+        markBlockUsed(blockEl);
     }
 
-    function handleDebugDrop(e, slot) {
-        e.preventDefault();
-        slot.classList.remove('drag-over');
+    function placeDebugValue(slot, value, blockEl) {
+        if (!slot || !value || slot.classList.contains('filled')) return;
 
-        const value = e.dataTransfer.getData('text/plain');
         const correct = slot.dataset.correct;
-
         slot.innerHTML = `<span class="text-green-400 font-mono">${value}</span>`;
         slot.classList.add('filled');
         slot.classList.remove('border-red-500', 'bg-red-500/20');
@@ -642,15 +669,92 @@ const CodingGame = (() => {
 
         userAnswers[slot.dataset.index] = value;
         animateBlockPlacement(slot);
+        markBlockUsed(blockEl);
+    }
 
-        // Disable the dragged block
-        const blocks = document.querySelectorAll('.code-block');
-        blocks.forEach(b => {
-            if (b.dataset.value === value) {
-                b.classList.add('used');
-                b.draggable = false;
+    function handleBlockTap(blockEl) {
+        if (!blockEl || blockEl.classList.contains('used')) return;
+        const value = blockEl.dataset.value;
+
+        if (currentPuzzle.type === 'sort') {
+            const dropZone = document.getElementById('sort-drop-zone');
+            placeSortValue(dropZone, value, blockEl);
+            return;
+        }
+
+        const slotSelector = currentPuzzle.type === 'debug'
+            ? '.code-slot[data-coding-type="debug"]'
+            : '.code-slot[data-coding-type="fill"]';
+        const emptySlots = Array.from(document.querySelectorAll(slotSelector))
+            .filter((slot) => !slot.classList.contains('filled'));
+
+        if (emptySlots.length === 1) {
+            const onlySlot = findFirstEmptySlotElement(slotSelector);
+            if (currentPuzzle.type === 'debug') {
+                placeDebugValue(onlySlot, value, blockEl);
+            } else {
+                placeFillValue(onlySlot, value, blockEl);
             }
-        });
+            return;
+        }
+
+        if (selectedBlockKey === blockEl.dataset.blockKey) {
+            clearSelectedBlock();
+            return;
+        }
+        setSelectedBlock(blockEl);
+    }
+
+    function handleSlotTap(slot, kind) {
+        if (!selectedBlockValue || !selectedBlockKey) return;
+        const blockEl = resolveDraggedBlock(selectedBlockValue, selectedBlockKey);
+        if (!blockEl) {
+            clearSelectedBlock();
+            return;
+        }
+
+        if (kind === 'debug') {
+            placeDebugValue(slot, selectedBlockValue, blockEl);
+            return;
+        }
+        placeFillValue(slot, selectedBlockValue, blockEl);
+    }
+
+    function handleSortTap(dropZone) {
+        if (!selectedBlockValue || !selectedBlockKey) return;
+        const blockEl = resolveDraggedBlock(selectedBlockValue, selectedBlockKey);
+        if (!blockEl) {
+            clearSelectedBlock();
+            return;
+        }
+        placeSortValue(dropZone, selectedBlockValue, blockEl);
+    }
+
+    function handleSlotDrop(e, slot) {
+        e.preventDefault();
+        slot.classList.remove('drag-over');
+        const blockKey = e.dataTransfer.getData('blockKey');
+        const value = e.dataTransfer.getData('text/plain');
+        const blockEl = resolveDraggedBlock(value, blockKey);
+        placeFillValue(slot, value, blockEl);
+    }
+
+    function handleSortDrop(e, dropZone) {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const blockKey = e.dataTransfer.getData('blockKey');
+        const value = e.dataTransfer.getData('text/plain');
+        const blockEl = resolveDraggedBlock(value, blockKey);
+        placeSortValue(dropZone, value, blockEl);
+    }
+
+    function handleDebugDrop(e, slot) {
+        e.preventDefault();
+        slot.classList.remove('drag-over');
+        const blockKey = e.dataTransfer.getData('blockKey');
+        const value = e.dataTransfer.getData('text/plain');
+        const blockEl = resolveDraggedBlock(value, blockKey);
+        placeDebugValue(slot, value, blockEl);
     }
 
     function selectChoice(btn, choice) {
@@ -699,6 +803,7 @@ const CodingGame = (() => {
         userAnswers = {};
         sortedCode = [];
         selectedChoice = null;
+        clearSelectedBlock();
         renderPuzzle();
         renderBlocks();
         clearOutput();
