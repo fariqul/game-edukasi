@@ -19,18 +19,46 @@ Folder ini berisi fondasi backend Supabase untuk mode mabar kelas dengan ranking
    - Database > Tables
    - Authentication > Policies
 
-## Konfigurasi frontend (nanti dipakai saat integrasi client)
+## Connection string Postgres (server-side only)
 
-Tambahkan runtime config global sebelum script utama:
+Connection string yang benar untuk project kamu:
+
+```text
+postgresql://postgres.ngcioiearbemwqzavcfp:YOUR_DB_PASSWORD@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require
+```
+
+Penting:
+- Jangan taruh connection string ini di frontend/browser.
+- Pakai hanya di server/tooling (migration, worker, backend admin).
+
+## Konfigurasi frontend (sudah disiapkan file runtime)
+
+Frontend sekarang membaca:
+- `js/supabaseConfig.js`
+- `js/supabaseRuntime.js`
+- `js/supabaseClient.js`
+
+Default URL project sudah terisi ke:
+`https://ngcioiearbemwqzavcfp.supabase.co`
+
+Yang perlu kamu isi hanya anon key:
 
 ```html
 <script>
   window.GAME_EDUKASI_SUPABASE = {
-    url: "https://YOUR_PROJECT_REF.supabase.co",
+    url: "https://ngcioiearbemwqzavcfp.supabase.co",
+    publishableKey: "YOUR_SUPABASE_PUBLISHABLE_KEY",
     anonKey: "YOUR_SUPABASE_ANON_KEY",
     realtimeChannelPrefix: "kelas-room"
   };
 </script>
 ```
 
-Untuk helper parsing config, gunakan `js/supabaseConfig.js`.
+`publishableKey` akan dipakai sebagai prioritas. `anonKey` tetap dipertahankan sebagai fallback.
+
+## File env contoh
+
+Lihat `supabase/.env.example` untuk template:
+- `SUPABASE_DB_URL`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`

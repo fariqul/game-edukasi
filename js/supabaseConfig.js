@@ -25,16 +25,20 @@
     function getSupabaseConfig(rawConfig) {
         const config = rawConfig && typeof rawConfig === 'object' ? rawConfig : {};
         const url = cleanString(config.url);
+        const publishableKey = cleanString(config.publishableKey);
         const anonKey = cleanString(config.anonKey);
+        const clientKey = !isPlaceholder(publishableKey) ? publishableKey : anonKey;
         const realtimeChannelPrefix = cleanString(config.realtimeChannelPrefix) || 'kelas-room';
         const tables = { ...DEFAULT_TABLES, ...(config.tables || {}) };
 
         return {
             url,
+            publishableKey,
             anonKey,
+            clientKey,
             realtimeChannelPrefix,
             tables,
-            enabled: !isPlaceholder(url) && !isPlaceholder(anonKey)
+            enabled: !isPlaceholder(url) && !isPlaceholder(clientKey)
         };
     }
 
