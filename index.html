@@ -1939,6 +1939,7 @@
                         class="hidden btn-success px-4 py-2 rounded-xl font-bold text-white w-full">
                         Mulai Class Battle
                     </button>
+                    <p class="text-[11px] text-dark-300 mt-2">Host hanya memantau progres peserta dan tidak ikut bermain.</p>
                     <p id="class-create-status" class="text-xs text-dark-300 mt-2 min-h-[20px]"></p>
                 </div>
 
@@ -1967,10 +1968,21 @@
                     <p id="class-join-status" class="text-xs text-dark-300 min-h-[20px]"></p>
                 </div>
             </div>
+
+            <div class="mt-4 rounded-2xl border border-dark-600 bg-dark-900/50 p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="font-semibold text-accent-300">Progres Peserta (Live)</p>
+                    <p class="text-xs text-dark-300">Urut: skor tertinggi, waktu tercepat</p>
+                </div>
+                <ol id="class-live-progress-list"
+                    class="space-y-2 max-h-48 overflow-y-auto rounded-xl border border-dark-700 bg-dark-800/40 p-3">
+                    <li class="text-xs text-dark-300">Belum ada submission.</li>
+                </ol>
+            </div>
         </div>
 
-        <button onclick="Multiplayer.backFromLobby()"
-            class="text-sm text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2">
+        <button id="lobby-back-btn" onclick="Multiplayer.backFromLobby()"
+            class="text-sm text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2 disabled:opacity-40 disabled:cursor-not-allowed">
             ← Kembali
         </button>
     </div>
