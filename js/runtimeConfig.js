@@ -1,6 +1,7 @@
 /**
  * Konfigurasi runtime untuk deploy publik.
- * Isi host Render + TURN credentials di sini (atau inject dari script lain sebelum file ini).
+ * Isi host signaling (Fly/Render/dll) + TURN credentials di sini
+ * (atau inject dari script lain sebelum file ini).
  */
 (function (globalScope) {
     const current = globalScope.GAME_EDUKASI_CONFIG || {};
@@ -15,7 +16,7 @@
                 ? currentMultiplayer.prefix.trim()
                 : 'infolab_',
             signaling: {
-                // Contoh: game-edukasi-peer.onrender.com
+                // Contoh: game-edukasi-peer.fly.dev
                 host: typeof currentSignaling.host === 'string' ? currentSignaling.host : '',
                 path: typeof currentSignaling.path === 'string' && currentSignaling.path.trim()
                     ? currentSignaling.path
