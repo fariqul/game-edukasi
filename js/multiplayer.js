@@ -8,7 +8,12 @@ const Multiplayer = (() => {
     // ============================================
     // STATE
     // ============================================
-    const PREFIX = 'infolab_';
+    const runtimeConfig = (typeof MultiplayerConfig !== 'undefined' && typeof MultiplayerConfig.getConfig === 'function')
+        ? MultiplayerConfig.getConfig((window.GAME_EDUKASI_CONFIG && window.GAME_EDUKASI_CONFIG.multiplayer) || {})
+        : { prefix: 'infolab_', peerOptions: { debug: 0, config: { iceServers: [] } } };
+
+    const PREFIX = runtimeConfig.prefix;
+    const PEER_OPTIONS = runtimeConfig.peerOptions;
 
     let peer = null;
     let conn = null;
@@ -42,6 +47,13 @@ const Multiplayer = (() => {
 
     function generatePin() {
         return String(Math.floor(100000 + Math.random() * 900000));
+    }
+
+    function createPeer(peerId) {
+        if (typeof peerId === 'string') {
+            return new Peer(peerId, PEER_OPTIONS);
+        }
+        return new Peer(undefined, PEER_OPTIONS);
     }
 
     function charImgPath(charId, pose) {
@@ -206,7 +218,7 @@ const Multiplayer = (() => {
         // Destroy existing peer if any
         if (peer) { try { peer.destroy(); } catch(e) {} }
 
-        peer = new Peer(PREFIX + roomPin, { debug: 0 });
+        peer = createPeer(PREFIX + roomPin);
 
         peer.on('open', () => {
             // Show PIN
@@ -264,7 +276,7 @@ const Multiplayer = (() => {
 
         if (peer) { try { peer.destroy(); } catch(e) {} }
 
-        peer = new Peer(undefined, { debug: 0 });
+        peer = createPeer();
 
         peer.on('open', () => {
             conn = peer.connect(PREFIX + pin, { reliable: true });
