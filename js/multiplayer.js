@@ -192,6 +192,12 @@ const Multiplayer = (() => {
         el.textContent = code || '-';
     }
 
+    function setClassSessionPanelVisible(visible) {
+        const panel = document.getElementById('class-session-panel');
+        if (!panel) return;
+        panel.classList.toggle('hidden', !visible);
+    }
+
     function isHostLobbyLockedInClassBattle() {
         return Boolean(classBattleActive)
             && classBattleRole === 'host'
@@ -515,10 +521,14 @@ const Multiplayer = (() => {
             setClassCountdownLabel('-');
             renderClassBattleRanking([]);
         }
+        setClassSessionPanelVisible(Boolean(classBattleSession));
 
         const classStartBtn = document.getElementById('class-start-btn');
-        if (classStartBtn && classBattleRole !== 'host') {
-            classStartBtn.classList.add('hidden');
+        if (classStartBtn) {
+            const canStartAsHost = classBattleRole === 'host'
+                && Boolean(classBattleSession)
+                && classBattleSession.status === 'waiting';
+            classStartBtn.classList.toggle('hidden', !canStartAsHost);
         }
 
         syncLobbyBackButtonState();
@@ -690,6 +700,13 @@ const Multiplayer = (() => {
             classBattleStartLevel = 1;
             isHost = true;
 
+            const resolvedSessionCode = classBattleSession && classBattleSession.session_code
+                ? classBattleSession.session_code
+                : (session && session.session_code);
+            if (resolvedSessionCode && classBattleSession && !classBattleSession.session_code) {
+                classBattleSession = { ...classBattleSession, session_code: resolvedSessionCode };
+            }
+
             bridge.resetFirstFinishLock();
             bridge.syncSessionMeta({
                 session: classBattleSession,
@@ -698,7 +715,8 @@ const Multiplayer = (() => {
             });
             await bridge.connectRealtime(classBattleSession.session_code);
 
-            setClassSessionCode(classBattleSession.session_code);
+            setClassSessionPanelVisible(true);
+            setClassSessionCode(resolvedSessionCode || '-');
             setClassSessionStatus('Sesi dibuat. Bagikan kode ke peserta.', false);
             setClassCountdownLabel('-');
             setClassCreateStatus('Sesi siap. Tekan "Mulai Class Battle" saat semua peserta sudah masuk.', false);
@@ -751,6 +769,13 @@ const Multiplayer = (() => {
             classBattleStartLevel = 1;
             isHost = false;
 
+            const resolvedSessionCode = classBattleSession && classBattleSession.session_code
+                ? classBattleSession.session_code
+                : sessionCode;
+            if (resolvedSessionCode && classBattleSession && !classBattleSession.session_code) {
+                classBattleSession = { ...classBattleSession, session_code: resolvedSessionCode };
+            }
+
             bridge.resetFirstFinishLock();
             bridge.syncSessionMeta({
                 session: classBattleSession,
@@ -759,7 +784,8 @@ const Multiplayer = (() => {
             });
             await bridge.connectRealtime(classBattleSession.session_code);
 
-            setClassSessionCode(classBattleSession.session_code);
+            setClassSessionPanelVisible(true);
+            setClassSessionCode(resolvedSessionCode || '-');
             setClassSessionStatus('Berhasil bergabung. Menunggu host memulai.', false);
             setClassCountdownLabel('-');
             setClassJoinStatus(`Bergabung sebagai ${classBattleParticipant.display_name}.`, false);
@@ -1398,6 +1424,7 @@ const Multiplayer = (() => {
         classBattleRoundStartedAt = 0;
         classBattleStartLevel = 1;
 
+        setClassSessionPanelVisible(false);
         setClassSessionCode('-');
         setClassSessionStatus('Belum terhubung', false);
         setClassCountdownLabel('-');
