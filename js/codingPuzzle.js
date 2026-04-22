@@ -16,7 +16,7 @@ const CodingGame = (() => {
             id: 1,
             type: 'fill',
             typeName: 'Fill the Gap',
-            mission: 'Level 1: Hello World! 👋',
+            mission: 'Level 1: Hello World! Halo',
             hint: 'Gunakan tanda kutip untuk teks.',
             concept: 'Print Statement',
             code: [
@@ -29,7 +29,7 @@ const CodingGame = (() => {
             id: 2,
             type: 'fill',
             typeName: 'Fill the Gap',
-            mission: 'Level 2: Buat Variabel! 📦',
+            mission: 'Level 2: Buat Variabel! Fungsi',
             hint: 'Variabel menyimpan nilai angka atau teks.',
             concept: 'Variables',
             code: [
@@ -43,7 +43,7 @@ const CodingGame = (() => {
             id: 3,
             type: 'guess',
             typeName: 'Tebak Output',
-            mission: 'Level 3: Tebak Hasil! 🎯',
+            mission: 'Level 3: Tebak Hasil! Target',
             hint: 'Operator + menjumlahkan dua angka.',
             concept: 'Arithmetic',
             code: [
@@ -61,7 +61,7 @@ const CodingGame = (() => {
             id: 4,
             type: 'fill',
             typeName: 'Fill the Gap',
-            mission: 'Level 4: Logika Kondisi! 🔀',
+            mission: 'Level 4: Logika Kondisi! Percabangan',
             hint: 'Operator perbandingan: >= artinya "lebih besar atau sama dengan". Kalau nilai 80 >= 75, hasilnya True!',
             concept: 'If Statement',
             code: [
@@ -76,7 +76,7 @@ const CodingGame = (() => {
             id: 5,
             type: 'sort',
             typeName: 'Susun Urutan',
-            mission: 'Level 5: Menghitung Luas! 📐',
+            mission: 'Level 5: Menghitung Luas! Geometri',
             hint: 'Definisikan variabel sebelum digunakan.',
             concept: 'Sequence',
             correctOrder: [
@@ -93,7 +93,7 @@ const CodingGame = (() => {
             id: 6,
             type: 'fill',
             typeName: 'Fill the Gap',
-            mission: 'Level 6: Kekuatan Loop! 🔁',
+            mission: 'Level 6: Kekuatan Loop! Loop',
             hint: 'range(start, stop) menghasilkan angka dari start sampai stop-1. Jadi range(1, 4) = [1, 2, 3].',
             concept: 'For Loop',
             code: [
@@ -107,7 +107,7 @@ const CodingGame = (() => {
             id: 7,
             type: 'guess',
             typeName: 'Tebak Output',
-            mission: 'Level 7: Hasil Loop! 🔢',
+            mission: 'Level 7: Hasil Loop! Angka',
             hint: 'Loop menjalankan print() berulang kali.',
             concept: 'Loop Output',
             code: [
@@ -126,7 +126,7 @@ const CodingGame = (() => {
             id: 8,
             type: 'debug',
             typeName: 'Debug Mode',
-            mission: 'Level 8: Temukan Bug! 🐛',
+            mission: 'Level 8: Temukan Bug! Bug',
             hint: 'Bug hunting! Python case-sensitive: "nama" dan "Nama" adalah variabel BERBEDA. Cek huruf besar/kecilnya!',
             concept: 'Debugging',
             buggyCode: [
@@ -140,7 +140,7 @@ const CodingGame = (() => {
             id: 9,
             type: 'sort',
             typeName: 'Susun Urutan',
-            mission: 'Level 9: Program Genap/Ganjil! 🎲',
+            mission: 'Level 9: Program Genap/Ganjil! Logika',
             hint: 'Operator modulo (%) untuk sisa bagi.',
             concept: 'Modulo Operation',
             correctOrder: [
@@ -157,7 +157,7 @@ const CodingGame = (() => {
             id: 10,
             type: 'fill',
             typeName: 'Fill the Gap',
-            mission: 'Level 10: Master Challenge! 🏆',
+            mission: 'Level 10: Master Challenge! Prestasi',
             hint: 'Modulo (%) menghitung sisa bagi. Genap: sisa 0 saat dibagi 2. Gunakan i % 2 == 0 untuk mengecek!',
             concept: 'Loop + Condition',
             code: [
@@ -174,7 +174,7 @@ const CodingGame = (() => {
             id: 11,
             type: 'fill',
             typeName: 'Fill the Gap',
-            mission: 'Level 11: Definisi Fungsi 📦',
+            mission: 'Level 11: Definisi Fungsi Fungsi',
             hint: 'Fungsi membungkus kode yang bisa dipanggil berulang dengan def!',
             concept: 'Function Definition',
             code: [
@@ -190,7 +190,7 @@ const CodingGame = (() => {
             id: 12,
             type: 'guess',
             typeName: 'Tebak Output',
-            mission: 'Level 12: Array/List 📋',
+            mission: 'Level 12: Array/List Daftar',
             hint: 'List menggunakan index mulai dari 0!',
             concept: 'Array/List - Index',
             code: [
@@ -205,7 +205,7 @@ const CodingGame = (() => {
             id: 13,
             type: 'fill',
             typeName: 'Fill the Gap',
-            mission: 'Level 13: While Loop 🔁',
+            mission: 'Level 13: While Loop',
             hint: 'While loop berjalan selama kondisi True!',
             concept: 'While Loop',
             code: [
@@ -221,7 +221,7 @@ const CodingGame = (() => {
             id: 14,
             type: 'sort',
             typeName: 'Susun Urutan',
-            mission: 'Level 14: Nested If-Else 🔀🔀',
+            mission: 'Level 14: Nested If-Else PercabanganPercabangan',
             hint: 'Nested If: cek kondisi di dalam kondisi. Pertama cek >= 80, kalau True baru cek >= 90 di dalamnya.',
             concept: 'Nested Conditions',
             correctOrder: [
@@ -246,7 +246,7 @@ const CodingGame = (() => {
             id: 15,
             type: 'fill',
             typeName: 'Fill the Gap',
-            mission: 'Level 15: String Manipulation 📝',
+            mission: 'Level 15: String Manipulation Panduan',
             hint: 'String punya method seperti upper(), lower(), len()!',
             concept: 'String Methods',
             code: [
@@ -268,6 +268,8 @@ const CodingGame = (() => {
     let selectedChoice = null;
     let dragDropInitialized = false;
     let codingErrors = 0;
+    let selectedBlockValue = null;
+    let selectedBlockKey = null;
 
     // ============================================
     // INITIALIZATION
@@ -279,6 +281,8 @@ const CodingGame = (() => {
         sortedCode = [];
         selectedChoice = null;
         codingErrors = 0;
+        selectedBlockValue = null;
+        selectedBlockKey = null;
 
         document.getElementById('coding-level').textContent = levelNum;
         document.getElementById('coding-mission').textContent = currentPuzzle.mission;
@@ -419,6 +423,7 @@ const CodingGame = (() => {
                 slot.className = 'code-slot inline-flex items-center justify-center min-w-[80px] h-7';
                 slot.dataset.answer = line.answer;
                 slot.dataset.index = idx;
+                slot.dataset.codingType = 'fill';
 
                 slot.addEventListener('dragover', (e) => {
                     e.preventDefault();
@@ -426,6 +431,7 @@ const CodingGame = (() => {
                 });
                 slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
                 slot.addEventListener('drop', (e) => handleSlotDrop(e, slot));
+                slot.addEventListener('click', () => handleSlotTap(slot, 'fill'));
 
                 lineEl.appendChild(slot);
             }
@@ -453,6 +459,7 @@ const CodingGame = (() => {
         });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
         dropZone.addEventListener('drop', (e) => handleSortDrop(e, dropZone));
+        dropZone.addEventListener('click', () => handleSortTap(dropZone));
 
         container.appendChild(dropZone);
     }
@@ -518,6 +525,7 @@ const CodingGame = (() => {
                 slot.innerHTML = `<span class="text-red-400 line-through">${line.text}</span>`;
                 slot.dataset.correct = line.correct;
                 slot.dataset.index = idx;
+                slot.dataset.codingType = 'debug';
 
                 slot.addEventListener('dragover', (e) => {
                     e.preventDefault();
@@ -525,6 +533,7 @@ const CodingGame = (() => {
                 });
                 slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
                 slot.addEventListener('drop', (e) => handleDebugDrop(e, slot));
+                slot.addEventListener('click', () => handleSlotTap(slot, 'debug'));
 
                 lineEl.appendChild(slot);
             } else {
@@ -544,7 +553,7 @@ const CodingGame = (() => {
 
     function renderBlocks() {
         const blocksArea = document.getElementById('blocks-area');
-        blocksArea.innerHTML = '<h4 class="font-display font-bold text-dark-100 mb-3">🧩 Blok Kode</h4>';
+        blocksArea.innerHTML = '<h4 class="font-display font-bold text-dark-100 mb-3">Puzzle Blok Kode</h4>';
 
         let blocks = [];
         if (currentPuzzle.type === 'fill' || currentPuzzle.type === 'debug') {
@@ -559,14 +568,17 @@ const CodingGame = (() => {
             blockEl.draggable = true;
             blockEl.dataset.value = block;
             blockEl.dataset.index = idx;
+            blockEl.dataset.blockKey = String(idx);
             blockEl.textContent = block;
 
             blockEl.addEventListener('dragstart', (e) => {
                 e.dataTransfer.setData('text/plain', block);
                 e.dataTransfer.setData('index', idx.toString());
+                e.dataTransfer.setData('blockKey', String(idx));
                 blockEl.classList.add('dragging');
             });
             blockEl.addEventListener('dragend', () => blockEl.classList.remove('dragging'));
+            blockEl.addEventListener('click', () => handleBlockTap(blockEl));
 
             blocksArea.appendChild(blockEl);
         });
@@ -576,40 +588,66 @@ const CodingGame = (() => {
     // DROP HANDLERS
     // ============================================
 
-    function handleSlotDrop(e, slot) {
-        e.preventDefault();
-        slot.classList.remove('drag-over');
+    function clearSelectedBlock() {
+        const selected = document.querySelector('.code-block.selected');
+        if (selected) selected.classList.remove('selected');
+        selectedBlockValue = null;
+        selectedBlockKey = null;
+    }
 
-        const value = e.dataTransfer.getData('text/plain');
-        const answer = slot.dataset.answer;
+    function setSelectedBlock(blockEl) {
+        clearSelectedBlock();
+        blockEl.classList.add('selected');
+        selectedBlockValue = blockEl.dataset.value;
+        selectedBlockKey = blockEl.dataset.blockKey;
+    }
+
+    function findFirstEmptySlotElement(slotSelector) {
+        const slots = Array.from(document.querySelectorAll(slotSelector));
+        const slotIndexes = slots.map((slot) => slot.dataset.index);
+        const emptyIndex = (typeof CodingTapRules !== 'undefined' && typeof CodingTapRules.findFirstEmptySlotIndex === 'function')
+            ? CodingTapRules.findFirstEmptySlotIndex(slotIndexes, userAnswers)
+            : slotIndexes.find((idx) => !userAnswers[idx]) ?? null;
+
+        if (emptyIndex === null) return null;
+        return slots.find((slot) => slot.dataset.index === String(emptyIndex)) || null;
+    }
+
+    function resolveDraggedBlock(value, blockKey) {
+        if (blockKey !== '') {
+            const byKey = document.querySelector(`.code-block[data-block-key="${blockKey}"]`);
+            if (byKey) return byKey;
+        }
+        return Array.from(document.querySelectorAll('.code-block')).find(
+            (blockEl) => blockEl.dataset.value === value && !blockEl.classList.contains('used')
+        ) || null;
+    }
+
+    function markBlockUsed(blockEl) {
+        if (!blockEl) return;
+        blockEl.classList.add('used');
+        blockEl.draggable = false;
+        if (selectedBlockKey === blockEl.dataset.blockKey) {
+            clearSelectedBlock();
+        }
+    }
+
+    function placeFillValue(slot, value, blockEl) {
+        if (!slot || !value || slot.classList.contains('filled')) return;
 
         slot.innerHTML = `<span class="text-accent-400 font-mono">${value}</span>`;
         slot.classList.add('filled');
         userAnswers[slot.dataset.index] = value;
-
         animateBlockPlacement(slot);
-
-        // Disable the dragged block
-        const blocks = document.querySelectorAll('.code-block');
-        blocks.forEach(b => {
-            if (b.dataset.value === value) {
-                b.classList.add('used');
-                b.draggable = false;
-            }
-        });
+        markBlockUsed(blockEl);
     }
 
-    function handleSortDrop(e, dropZone) {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
+    function placeSortValue(dropZone, value, blockEl) {
+        if (!dropZone || !value) return;
 
-        const value = e.dataTransfer.getData('text/plain');
-
-        // Remove placeholder text
         const placeholder = dropZone.querySelector('p');
         if (placeholder) placeholder.remove();
 
-        // Add to sorted list
         sortedCode.push(value);
 
         const lineEl = document.createElement('div');
@@ -627,24 +665,13 @@ const CodingGame = (() => {
 
         dropZone.appendChild(lineEl);
         animateBlockPlacement(lineEl);
-
-        // Disable the dragged block
-        const blocks = document.querySelectorAll('.code-block');
-        blocks.forEach(b => {
-            if (b.dataset.value === value && !b.classList.contains('used')) {
-                b.classList.add('used');
-                b.draggable = false;
-            }
-        });
+        markBlockUsed(blockEl);
     }
 
-    function handleDebugDrop(e, slot) {
-        e.preventDefault();
-        slot.classList.remove('drag-over');
+    function placeDebugValue(slot, value, blockEl) {
+        if (!slot || !value || slot.classList.contains('filled')) return;
 
-        const value = e.dataTransfer.getData('text/plain');
         const correct = slot.dataset.correct;
-
         slot.innerHTML = `<span class="text-green-400 font-mono">${value}</span>`;
         slot.classList.add('filled');
         slot.classList.remove('border-red-500', 'bg-red-500/20');
@@ -655,15 +682,92 @@ const CodingGame = (() => {
 
         userAnswers[slot.dataset.index] = value;
         animateBlockPlacement(slot);
+        markBlockUsed(blockEl);
+    }
 
-        // Disable the dragged block
-        const blocks = document.querySelectorAll('.code-block');
-        blocks.forEach(b => {
-            if (b.dataset.value === value) {
-                b.classList.add('used');
-                b.draggable = false;
+    function handleBlockTap(blockEl) {
+        if (!blockEl || blockEl.classList.contains('used')) return;
+        const value = blockEl.dataset.value;
+
+        if (currentPuzzle.type === 'sort') {
+            const dropZone = document.getElementById('sort-drop-zone');
+            placeSortValue(dropZone, value, blockEl);
+            return;
+        }
+
+        const slotSelector = currentPuzzle.type === 'debug'
+            ? '.code-slot[data-coding-type="debug"]'
+            : '.code-slot[data-coding-type="fill"]';
+        const emptySlots = Array.from(document.querySelectorAll(slotSelector))
+            .filter((slot) => !slot.classList.contains('filled'));
+
+        if (emptySlots.length === 1) {
+            const onlySlot = findFirstEmptySlotElement(slotSelector);
+            if (currentPuzzle.type === 'debug') {
+                placeDebugValue(onlySlot, value, blockEl);
+            } else {
+                placeFillValue(onlySlot, value, blockEl);
             }
-        });
+            return;
+        }
+
+        if (selectedBlockKey === blockEl.dataset.blockKey) {
+            clearSelectedBlock();
+            return;
+        }
+        setSelectedBlock(blockEl);
+    }
+
+    function handleSlotTap(slot, kind) {
+        if (!selectedBlockValue || !selectedBlockKey) return;
+        const blockEl = resolveDraggedBlock(selectedBlockValue, selectedBlockKey);
+        if (!blockEl) {
+            clearSelectedBlock();
+            return;
+        }
+
+        if (kind === 'debug') {
+            placeDebugValue(slot, selectedBlockValue, blockEl);
+            return;
+        }
+        placeFillValue(slot, selectedBlockValue, blockEl);
+    }
+
+    function handleSortTap(dropZone) {
+        if (!selectedBlockValue || !selectedBlockKey) return;
+        const blockEl = resolveDraggedBlock(selectedBlockValue, selectedBlockKey);
+        if (!blockEl) {
+            clearSelectedBlock();
+            return;
+        }
+        placeSortValue(dropZone, selectedBlockValue, blockEl);
+    }
+
+    function handleSlotDrop(e, slot) {
+        e.preventDefault();
+        slot.classList.remove('drag-over');
+        const blockKey = e.dataTransfer.getData('blockKey');
+        const value = e.dataTransfer.getData('text/plain');
+        const blockEl = resolveDraggedBlock(value, blockKey);
+        placeFillValue(slot, value, blockEl);
+    }
+
+    function handleSortDrop(e, dropZone) {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const blockKey = e.dataTransfer.getData('blockKey');
+        const value = e.dataTransfer.getData('text/plain');
+        const blockEl = resolveDraggedBlock(value, blockKey);
+        placeSortValue(dropZone, value, blockEl);
+    }
+
+    function handleDebugDrop(e, slot) {
+        e.preventDefault();
+        slot.classList.remove('drag-over');
+        const blockKey = e.dataTransfer.getData('blockKey');
+        const value = e.dataTransfer.getData('text/plain');
+        const blockEl = resolveDraggedBlock(value, blockKey);
+        placeDebugValue(slot, value, blockEl);
     }
 
     function selectChoice(btn, choice) {
@@ -712,6 +816,7 @@ const CodingGame = (() => {
         userAnswers = {};
         sortedCode = [];
         selectedChoice = null;
+        clearSelectedBlock();
         renderPuzzle();
         renderBlocks();
         clearOutput();
@@ -739,16 +844,15 @@ const CodingGame = (() => {
     function updateExpectedOutput() {
         const el = document.getElementById('expected-output-display');
         if (!el || !currentPuzzle) return;
-        const expected = currentPuzzle.expectedOutput || '';
-        const lines = expected.split('\n');
-        el.innerHTML = lines.map(line => 
-            `<div class="text-accent-400">${line || '&nbsp;'}</div>`
-        ).join('');
-    }
 
-    function updateExpectedOutput() {
-        const el = document.getElementById('expected-output-display');
-        if (!el || !currentPuzzle) return;
+        const revealExpected = typeof GameLogicRules !== 'undefined'
+            ? GameLogicRules.shouldShowExpectedOutput(currentPuzzle.type)
+            : currentPuzzle.type !== 'guess';
+        if (!revealExpected) {
+            el.innerHTML = '<div class="text-dark-300 italic">Output disembunyikan untuk mode tebak output.</div>';
+            return;
+        }
+
         const expected = currentPuzzle.expectedOutput || '';
         const lines = expected.split('\n');
         el.innerHTML = lines.map(line => 
@@ -761,21 +865,22 @@ const CodingGame = (() => {
     // ============================================
 
     function runCode() {
-        let isCorrect = false;
+        let result = { ok: false, message: 'Belum benar. Periksa kembali kode kamu!' };
 
         if (currentPuzzle.type === 'fill') {
-            isCorrect = validateFill();
+            result = validateFill();
         } else if (currentPuzzle.type === 'sort') {
-            isCorrect = validateSort();
+            result = validateSort();
         } else if (currentPuzzle.type === 'guess') {
-            isCorrect = validateGuess();
+            result = validateGuess();
         } else if (currentPuzzle.type === 'debug') {
-            isCorrect = validateDebug();
+            result = validateDebug();
         }
 
-        if (isCorrect) {
+        if (result.ok) {
             displayOutput(currentPuzzle.expectedOutput);
-            showFeedback('coding-feedback', '✅ Benar! Kode berhasil dijalankan!', true);
+            const lesson = currentPuzzle.concept ? `<br><span class="text-xs text-dark-200">Konsep Konsep: ${currentPuzzle.concept}</span>` : '';
+            showFeedback('coding-feedback', `Benar! Kode berhasil dijalankan!${lesson}`, true);
             if (typeof SoundManager !== 'undefined') SoundManager.play('success');
             animateSuccess();
 
@@ -788,43 +893,65 @@ const CodingGame = (() => {
             }, 1000);
         } else {
             codingErrors++;
-            showFeedback('coding-feedback', '❌ Belum benar. Periksa kembali kode kamu!', false);
+            showFeedback('coding-feedback', result.message || 'Belum benar. Periksa kembali kode kamu!', false);
             if (typeof SoundManager !== 'undefined') SoundManager.play('error');
             animateError();
         }
     }
 
     function validateFill() {
-        for (const line of currentPuzzle.code) {
-            if (line.slot) {
-                const idx = currentPuzzle.code.indexOf(line);
-                if (userAnswers[idx] !== line.answer) {
-                    return false;
-                }
-            }
+        const normalize = typeof GameLogicRules !== 'undefined'
+            ? GameLogicRules.normalizeComparableText
+            : (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
+        const evaluator = typeof LearningRules !== 'undefined'
+            ? LearningRules.evaluateFillAnswers
+            : null;
+
+        const outcome = evaluator
+            ? evaluator(currentPuzzle.code, userAnswers, normalize)
+            : { ok: true };
+
+        if (!outcome.ok) {
+            return { ok: false, message: `Cek baris ${outcome.firstWrongLine}. Susunan blok belum tepat.` };
         }
-        return true;
+        return { ok: true };
     }
 
     function validateSort() {
-        if (sortedCode.length !== currentPuzzle.correctOrder.length) return false;
-        return sortedCode.every((code, idx) => code === currentPuzzle.correctOrder[idx]);
+        const evaluator = typeof LearningRules !== 'undefined'
+            ? LearningRules.evaluateSortAnswers
+            : null;
+        const outcome = evaluator
+            ? evaluator(sortedCode, currentPuzzle.correctOrder)
+            : { ok: sortedCode.length === currentPuzzle.correctOrder.length && sortedCode.every((code, idx) => code === currentPuzzle.correctOrder[idx]) };
+
+        if (!outcome.ok) {
+            return { ok: false, message: `Urutan belum tepat. Cek langkah ke-${outcome.firstWrongIndex}.` };
+        }
+        return { ok: true };
     }
 
     function validateGuess() {
-        return selectedChoice === currentPuzzle.answer;
+        if (selectedChoice === currentPuzzle.answer) return { ok: true };
+        const msg = typeof ModeFeedbackRules !== 'undefined'
+            ? ModeFeedbackRules.getCodingGuessMessage(selectedChoice, currentPuzzle.concept)
+            : `Jawaban belum tepat. Fokus pada konsep: ${currentPuzzle.concept}.`;
+        return { ok: false, message: msg };
     }
 
     function validateDebug() {
-        for (const line of currentPuzzle.buggyCode) {
-            if (line.hasError) {
-                const idx = currentPuzzle.buggyCode.indexOf(line);
-                if (userAnswers[idx] !== line.correct) {
-                    return false;
-                }
+        const normalize = typeof GameLogicRules !== 'undefined'
+            ? GameLogicRules.normalizeComparableText
+            : (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
+
+        for (let i = 0; i < currentPuzzle.buggyCode.length; i++) {
+            const line = currentPuzzle.buggyCode[i];
+            if (!line.hasError) continue;
+            if (normalize(userAnswers[i]) !== normalize(line.correct)) {
+                return { ok: false, message: `Perbaikan di baris ${i + 1} belum tepat.` };
             }
         }
-        return true;
+        return { ok: true };
     }
 
     function displayOutput(output) {

@@ -131,7 +131,13 @@ const StatsDashboard = (() => {
         const avgStars = getAverageStars();
         const ps = typeof ProgressSystem !== 'undefined' ? ProgressSystem.getState() : {};
 
-        const modeNames = { robot: '🤖 Robot', network: '🌐 Network', computer: '🖥️ Computer', coding: '🧩 Coding' };
+        const modeNames = { robot: 'Robot Logic', network: 'Network Mission', computer: 'Build Computer', coding: 'Coding Puzzle' };
+        const modeIcons = {
+            robot: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="8" width="10" height="8" rx="2"/><path d="M12 4v3M9 12h.01M15 12h.01"/></svg>',
+            network: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M12 7v5m0 0-7 4m7-4 7 4"/></svg>',
+            computer: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+            coding: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 8-4 4 4 4m8-8 4 4-4 4"/></svg>'
+        };
         const modeColors = { robot: '#0ea5e9', network: '#22c55e', computer: '#8b5cf6', coding: '#f59e0b' };
 
         // Per-mode star stats
@@ -149,7 +155,7 @@ const StatsDashboard = (() => {
 
         container.innerHTML = `
             <div class="flex items-center justify-between mb-4">
-                <h3 class="font-display text-lg font-bold text-white flex items-center gap-2">📊 Statistik Perjalanan</h3>
+                <h3 class="font-display text-lg font-bold text-white flex items-center gap-2">Statistik Perjalanan</h3>
                 <span class="text-xs text-dark-400">${s.sessions} sesi</span>
             </div>
 
@@ -164,7 +170,7 @@ const StatsDashboard = (() => {
                     <p class="text-[10px] text-dark-300 mt-1">Akurasi</p>
                 </div>
                 <div class="rounded-xl bg-dark-800/60 p-3 text-center border border-dark-700">
-                    <p class="text-2xl font-bold text-yellow-400">⭐ ${avgStars}</p>
+                    <p class="text-2xl font-bold text-yellow-400">Bintang ${avgStars}</p>
                     <p class="text-[10px] text-dark-300 mt-1">Rata-rata Bintang</p>
                 </div>
                 <div class="rounded-xl bg-dark-800/60 p-3 text-center border border-dark-700">
@@ -177,11 +183,11 @@ const StatsDashboard = (() => {
             <div class="space-y-2 mb-4">
                 ${modeStats.map(m => `
                     <div class="flex items-center gap-3 p-2 rounded-lg bg-dark-800/40">
-                        <span class="text-lg w-8">${m.name.split(' ')[0]}</span>
+                        <span class="text-lg w-8" aria-hidden="true" style="color:${m.color}">${modeIcons[m.mode]}</span>
                         <div class="flex-1">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="text-xs font-medium text-dark-200">${m.name.split(' ')[1]}</span>
-                                <span class="text-xs text-dark-400">${m.completed}/${m.totalLevels} · ⭐${m.stars}/${m.maxStars}</span>
+                                <span class="text-xs font-medium text-dark-200">${m.name}</span>
+                                <span class="text-xs text-dark-400">${m.completed}/${m.totalLevels} · Bintang ${m.stars}/${m.maxStars}</span>
                             </div>
                             <div class="w-full h-1.5 rounded-full bg-dark-700 overflow-hidden">
                                 <div class="h-full rounded-full transition-all duration-700" style="width: ${m.pct}%; background: ${m.color};"></div>
@@ -194,9 +200,9 @@ const StatsDashboard = (() => {
             <!-- Fun Facts -->
             <div class="flex flex-wrap gap-2 justify-center text-xs">
                 ${favMode ? `<span class="px-3 py-1 rounded-full bg-dark-800/60 border border-dark-600 text-dark-200">Mode Favorit: ${modeNames[favMode] || '?'}</span>` : ''}
-                ${s.fastestLevel ? `<span class="px-3 py-1 rounded-full bg-dark-800/60 border border-dark-600 text-dark-200">⚡ Tercepat: ${s.fastestLevel.time}d</span>` : ''}
-                ${(ps.maxStreak || 0) > 0 ? `<span class="px-3 py-1 rounded-full bg-dark-800/60 border border-dark-600 text-dark-200">🔥 Best Streak: ${ps.maxStreak}</span>` : ''}
-                <span class="px-3 py-1 rounded-full bg-dark-800/60 border border-dark-600 text-dark-200">💡 Hint: ${s.totalHints}x</span>
+                ${s.fastestLevel ? `<span class="px-3 py-1 rounded-full bg-dark-800/60 border border-dark-600 text-dark-200">Tercepat: ${s.fastestLevel.time}d</span>` : ''}
+                ${(ps.maxStreak || 0) > 0 ? `<span class="px-3 py-1 rounded-full bg-dark-800/60 border border-dark-600 text-dark-200">Best Streak: ${ps.maxStreak}</span>` : ''}
+                <span class="px-3 py-1 rounded-full bg-dark-800/60 border border-dark-600 text-dark-200">Hint: ${s.totalHints}x</span>
             </div>
         `;
 

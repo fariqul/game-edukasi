@@ -513,12 +513,14 @@ const LottieManager = (() => {
     function init() {
         if (typeof lottie !== 'undefined') {
             lottieReady = true;
+            lottie.setQuality(prefersReducedMotion() ? 'low' : 'medium');
             _processPendingQueue();
         } else {
             // Wait for lottie-web to load
             const checkInterval = setInterval(() => {
                 if (typeof lottie !== 'undefined') {
                     lottieReady = true;
+                    lottie.setQuality(prefersReducedMotion() ? 'low' : 'medium');
                     _processPendingQueue();
                     clearInterval(checkInterval);
                 }
@@ -529,6 +531,11 @@ const LottieManager = (() => {
         }
 
         watchReducedMotion();
+        document.addEventListener('visibilitychange', () => {
+            if (typeof lottie === 'undefined') return;
+            if (document.hidden) lottie.freeze();
+            else lottie.unfreeze();
+        });
         console.log('[LottieManager] Initialized');
     }
 

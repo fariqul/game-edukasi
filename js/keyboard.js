@@ -73,7 +73,7 @@ const KeyboardManager = (() => {
                     const wasEnabled = SoundManager.isEnabled();
                     SoundManager.setEnabled(!wasEnabled);
                     if (typeof Toast !== 'undefined') {
-                        Toast.info(wasEnabled ? '🔇 Suara dimatikan' : '🔊 Suara dinyalakan', 1500);
+                        Toast.info(wasEnabled ? 'Mute Suara dimatikan' : 'Audio Suara dinyalakan', 1500);
                     }
                     if (!wasEnabled) SoundManager.play('click');
                 }

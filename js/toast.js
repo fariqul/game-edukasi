@@ -24,23 +24,38 @@ const Toast = (() => {
         const toast = document.createElement('div');
         toast.className = `toast-item pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl font-medium text-sm backdrop-blur-lg border shadow-2xl transition-all duration-300 transform translate-x-full opacity-0`;
 
+        const getIconSvg = (iconType) => {
+            const icons = {
+                info: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h2v4h-2z"/></svg>',
+                success: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>',
+                error: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>',
+                warning: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v5m0 3h.01"/></svg>',
+                xp: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg>',
+                achievement: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8v4a4 4 0 0 1-8 0V3Z"/><path d="M6 7H4a3 3 0 0 0 3 3m8-3h2a3 3 0 0 1-3 3"/><path d="M12 11v4m-3 6h6"/></svg>',
+                streak: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c2 3 .8 5.5-1 7 3.2-.7 6 1.6 6 5 0 3.3-2.7 6-6 6s-6-2.7-6-6c0-3.1 2-5 4-6.5C8.3 6 9.4 4 12 3Z"/></svg>',
+                levelup: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 4 3 6 6 .9-4.5 4.4 1 6.2L12 18.7l-5.5 2.8 1-6.2L3 10.9l6-.9L12 4Z"/></svg>',
+                star: '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+            };
+            return icons[iconType] || icons.info;
+        };
+
         const configs = {
-            info: { icon: 'ℹ️', bg: 'bg-blue-500/20', border: 'border-blue-500/40', text: 'text-blue-200' },
-            success: { icon: '✅', bg: 'bg-green-500/20', border: 'border-green-500/40', text: 'text-green-200' },
-            error: { icon: '❌', bg: 'bg-red-500/20', border: 'border-red-500/40', text: 'text-red-200' },
-            warning: { icon: '⚠️', bg: 'bg-yellow-500/20', border: 'border-yellow-500/40', text: 'text-yellow-200' },
-            xp: { icon: '✨', bg: 'bg-purple-500/20', border: 'border-purple-500/40', text: 'text-purple-200' },
-            achievement: { icon: '🏆', bg: 'bg-amber-500/20', border: 'border-amber-500/40', text: 'text-amber-200' },
-            streak: { icon: '🔥', bg: 'bg-orange-500/20', border: 'border-orange-500/40', text: 'text-orange-200' },
-            levelup: { icon: '🎉', bg: 'bg-cyan-500/20', border: 'border-cyan-500/40', text: 'text-cyan-200' },
-            star: { icon: '⭐', bg: 'bg-yellow-500/20', border: 'border-yellow-400/40', text: 'text-yellow-100' }
+            info: { bg: 'bg-blue-500/20', border: 'border-blue-500/40', text: 'text-blue-200' },
+            success: { bg: 'bg-green-500/20', border: 'border-green-500/40', text: 'text-green-200' },
+            error: { bg: 'bg-red-500/20', border: 'border-red-500/40', text: 'text-red-200' },
+            warning: { bg: 'bg-yellow-500/20', border: 'border-yellow-500/40', text: 'text-yellow-200' },
+            xp: { bg: 'bg-purple-500/20', border: 'border-purple-500/40', text: 'text-purple-200' },
+            achievement: { bg: 'bg-amber-500/20', border: 'border-amber-500/40', text: 'text-amber-200' },
+            streak: { bg: 'bg-orange-500/20', border: 'border-orange-500/40', text: 'text-orange-200' },
+            levelup: { bg: 'bg-cyan-500/20', border: 'border-cyan-500/40', text: 'text-cyan-200' },
+            star: { bg: 'bg-yellow-500/20', border: 'border-yellow-400/40', text: 'text-yellow-100' }
         };
 
         const config = configs[type] || configs.info;
         toast.classList.add(config.bg, config.border, config.text);
 
         toast.innerHTML = `
-            <span class="text-lg flex-shrink-0">${config.icon}</span>
+            <span class="text-lg flex-shrink-0" aria-hidden="true">${getIconSvg(type)}</span>
             <span class="flex-1 leading-snug">${message}</span>
         `;
 
@@ -89,9 +104,9 @@ const Toast = (() => {
     function warning(msg, duration) { return createToast(msg, 'warning', duration); }
     function xp(amount) { return createToast(`+${amount} XP`, 'xp', 2500); }
     function achievement(name) { return createToast(`Achievement: ${name}`, 'achievement', 4000); }
-    function streak(count) { return createToast(`Streak ${count}x! 🔥`, 'streak', 2500); }
+    function streak(count) { return createToast(`Streak ${count}x!`, 'streak', 2500); }
     function levelUp(level, title) { return createToast(`Level Up! Lv.${level} - ${title}`, 'levelup', 4000); }
-    function star(count) { return createToast(`${count} Bintang! ${'⭐'.repeat(count)}`, 'star', 3000); }
+    function star(count) { return createToast(`${count} Bintang!`, 'star', 3000); }
 
     // ============================================
     // LEVEL COMPLETE CELEBRATION
@@ -123,7 +138,7 @@ const Toast = (() => {
 
         if (result.newAchievements && result.newAchievements.length > 0) {
             result.newAchievements.forEach((ach, i) => {
-                setTimeout(() => achievement(`${ach.icon} ${ach.name}`), delay + i * 500);
+                setTimeout(() => achievement(ach.name), delay + i * 500);
             });
         }
     }

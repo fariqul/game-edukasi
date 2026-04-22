@@ -143,6 +143,8 @@ const CharacterSystem = (() => {
             idleImg.src = imgPath(char, 'idle');
             idleImg.alt = char.name;
             idleImg.draggable = false;
+            idleImg.loading = 'lazy';
+            idleImg.decoding = 'async';
             spriteContainer.appendChild(idleImg);
 
             const nameEl = document.createElement('p');
@@ -391,6 +393,8 @@ const CharacterSystem = (() => {
             img.src = imgPath(char, pose);
             img.alt = '';
             img.draggable = false;
+            img.loading = 'lazy';
+            img.decoding = 'async';
             el.appendChild(img);
 
             const size = 35 + Math.random() * 55;

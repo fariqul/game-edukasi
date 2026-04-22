@@ -13,7 +13,7 @@ const CircuitGame = (() => {
     const COMPONENT_TYPES = {
         battery: {
             name: 'Baterai',
-            emoji: '🔋',
+            icon: 'battery',
             color: '#22c55e',
             desc: 'Sumber tegangan listrik. Arus mengalir dari kutub + ke kutub −.',
             pins: [{ x: 0, y: 0.5, label: '+' }, { x: 1, y: 0.5, label: '−' }],
@@ -22,7 +22,7 @@ const CircuitGame = (() => {
         },
         resistor: {
             name: 'Resistor',
-            emoji: '⚡',
+            icon: 'resistor',
             color: '#f59e0b',
             desc: 'Menahan arus listrik. Semakin besar nilai Ohm, semakin kecil arus.',
             pins: [{ x: 0, y: 0.5, label: 'A' }, { x: 1, y: 0.5, label: 'B' }],
@@ -31,7 +31,7 @@ const CircuitGame = (() => {
         },
         led: {
             name: 'LED',
-            emoji: '💡',
+            icon: 'led',
             color: '#ef4444',
             desc: 'Lampu yang menyala saat dialiri arus listrik searah.',
             pins: [{ x: 0, y: 0.5, label: '+' }, { x: 1, y: 0.5, label: '−' }],
@@ -39,7 +39,7 @@ const CircuitGame = (() => {
         },
         switch_open: {
             name: 'Switch',
-            emoji: '🔲',
+            icon: 'switch',
             color: '#8b5cf6',
             desc: 'Saklar ON/OFF. Klik untuk menghidupkan/mematikan rangkaian.',
             pins: [{ x: 0, y: 0.5, label: 'A' }, { x: 1, y: 0.5, label: 'B' }],
@@ -48,7 +48,7 @@ const CircuitGame = (() => {
         },
         buzzer: {
             name: 'Buzzer',
-            emoji: '🔔',
+            icon: 'buzzer',
             color: '#06b6d4',
             desc: 'Menghasilkan bunyi saat dialiri arus listrik.',
             pins: [{ x: 0, y: 0.5, label: '+' }, { x: 1, y: 0.5, label: '−' }],
@@ -56,7 +56,7 @@ const CircuitGame = (() => {
         },
         capacitor: {
             name: 'Kapasitor',
-            emoji: '⚡',
+            icon: 'capacitor',
             color: '#3b82f6',
             desc: 'Menyimpan muatan listrik sementara.',
             pins: [{ x: 0, y: 0.5, label: '+' }, { x: 1, y: 0.5, label: '−' }],
@@ -64,7 +64,7 @@ const CircuitGame = (() => {
         },
         junction: {
             name: 'Junction',
-            emoji: '⊕',
+            icon: 'junction',
             color: '#64748b',
             desc: 'Titik percabangan kabel.',
             pins: [
@@ -83,7 +83,7 @@ const CircuitGame = (() => {
     const levels = [
         {
             id: 1,
-            mission: 'Level 1: Rangkaian Seri 💡',
+            mission: 'Level 1: Rangkaian Seri Hint',
             hint: 'Hubungkan Baterai → Switch → LED secara berurutan (seri) membentuk loop tertutup!',
             concept: 'Rangkaian Seri — Komponen dihubungkan berurutan',
             description: 'Rangkaian seri: semua komponen terhubung dalam satu jalur. Arus yang mengalir sama di setiap komponen.',
@@ -99,10 +99,10 @@ const CircuitGame = (() => {
         },
         {
             id: 2,
-            mission: 'Level 2: Rangkaian dengan Resistor 🔧',
+            mission: 'Level 2: Rangkaian dengan Resistor Komponen',
             hint: 'LED membutuhkan Resistor agar tidak terbakar! Hubungkan: Baterai → Resistor → LED (seri).',
             concept: 'Resistor melindungi LED dari arus berlebih',
-            description: 'Resistor membatasi arus agar LED tidak rusak. Hukum Ohm: V = I × R.',
+            description: 'Resistor membatasi arus agar LED tidak rusak. Hukum Ohm: V = I X R.',
             availableComponents: ['battery', 'resistor', 'led', 'switch_open'],
             target: {
                 requiredComponents: ['battery', 'resistor', 'led'],
@@ -114,7 +114,7 @@ const CircuitGame = (() => {
         },
         {
             id: 3,
-            mission: 'Level 3: Rangkaian Paralel 🔀',
+            mission: 'Level 3: Rangkaian Paralel Percabangan',
             hint: 'Dua LED dihubungkan secara paralel. Gunakan Junction untuk memecah dan menggabungkan kabel!',
             concept: 'Rangkaian Paralel — Komponen memiliki jalur masing-masing',
             description: 'Rangkaian paralel: setiap komponen memiliki jalur sendiri. Tegangan sama, arus terbagi.',
@@ -190,6 +190,7 @@ const CircuitGame = (() => {
         setupCanvas();
         renderComponentPalette();
         setupEventListeners();
+        setupControls();
         updateControlButtons();
 
         // Pre-place components if any
@@ -382,12 +383,7 @@ const CircuitGame = (() => {
     }
 
     function drawComponentDetails(comp, x, y, w, h, type) {
-        // Emoji / icon
-        ctx.font = `${Math.min(w, h) * 0.5}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(type.emoji, x + w / 2, y + h / 2 - 6);
+        drawComponentGlyph(type.icon, x + w / 2, y + h / 2 - 8, Math.min(w, h) * 0.35, '#e2e8f0');
 
         // Name
         ctx.font = 'bold 10px Nunito, sans-serif';
@@ -412,6 +408,103 @@ const CircuitGame = (() => {
             ctx.fillStyle = '#94a3b8';
             ctx.fillText('100Ω', x + w / 2, y + h - 4);
         }
+    }
+
+    function drawComponentGlyph(icon, cx, cy, size, color) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        switch (icon) {
+            case 'battery':
+                ctx.beginPath();
+                ctx.moveTo(-size * 0.45, -size * 0.55);
+                ctx.lineTo(-size * 0.45, size * 0.55);
+                ctx.moveTo(0, -size * 0.35);
+                ctx.lineTo(0, size * 0.35);
+                ctx.moveTo(size * 0.4, -size * 0.2);
+                ctx.lineTo(size * 0.4, size * 0.2);
+                ctx.stroke();
+                break;
+            case 'resistor':
+                ctx.beginPath();
+                ctx.moveTo(-size * 0.8, 0);
+                ctx.lineTo(-size * 0.45, 0);
+                ctx.lineTo(-size * 0.28, -size * 0.35);
+                ctx.lineTo(-size * 0.1, size * 0.35);
+                ctx.lineTo(size * 0.1, -size * 0.35);
+                ctx.lineTo(size * 0.28, size * 0.35);
+                ctx.lineTo(size * 0.45, 0);
+                ctx.lineTo(size * 0.8, 0);
+                ctx.stroke();
+                break;
+            case 'led':
+                ctx.strokeRect(-size * 0.45, -size * 0.35, size * 0.9, size * 0.7);
+                ctx.beginPath();
+                ctx.moveTo(size * 0.2, -size * 0.75);
+                ctx.lineTo(size * 0.45, -size);
+                ctx.moveTo(-size * 0.15, -size * 0.75);
+                ctx.lineTo(size * 0.1, -size);
+                ctx.stroke();
+                break;
+            case 'switch':
+                ctx.beginPath();
+                ctx.arc(-size * 0.65, 0, size * 0.14, 0, Math.PI * 2);
+                ctx.arc(size * 0.65, 0, size * 0.14, 0, Math.PI * 2);
+                ctx.moveTo(-size * 0.5, 0);
+                ctx.lineTo(size * 0.35, -size * 0.28);
+                ctx.stroke();
+                break;
+            case 'buzzer':
+                ctx.beginPath();
+                ctx.moveTo(-size * 0.75, -size * 0.3);
+                ctx.lineTo(-size * 0.4, -size * 0.3);
+                ctx.lineTo(size * 0.05, -size * 0.55);
+                ctx.lineTo(size * 0.05, size * 0.55);
+                ctx.lineTo(-size * 0.4, size * 0.3);
+                ctx.lineTo(-size * 0.75, size * 0.3);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(size * 0.22, 0, size * 0.24, -0.8, 0.8);
+                ctx.arc(size * 0.36, 0, size * 0.4, -0.8, 0.8);
+                ctx.stroke();
+                break;
+            case 'capacitor':
+                ctx.beginPath();
+                ctx.moveTo(-size * 0.8, 0);
+                ctx.lineTo(-size * 0.2, 0);
+                ctx.moveTo(size * 0.2, 0);
+                ctx.lineTo(size * 0.8, 0);
+                ctx.moveTo(-size * 0.15, -size * 0.5);
+                ctx.lineTo(-size * 0.15, size * 0.5);
+                ctx.moveTo(size * 0.15, -size * 0.5);
+                ctx.lineTo(size * 0.15, size * 0.5);
+                ctx.stroke();
+                break;
+            case 'junction':
+            default:
+                ctx.beginPath();
+                ctx.arc(0, 0, size * 0.18, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(-size * 0.7, 0);
+                ctx.lineTo(-size * 0.2, 0);
+                ctx.moveTo(size * 0.2, 0);
+                ctx.lineTo(size * 0.7, 0);
+                ctx.moveTo(0, -size * 0.7);
+                ctx.lineTo(0, -size * 0.2);
+                ctx.moveTo(0, size * 0.2);
+                ctx.lineTo(0, size * 0.7);
+                ctx.stroke();
+                break;
+        }
+
+        ctx.restore();
     }
 
     function drawPins(comp, cx, cy, cw, ch, type) {
@@ -586,11 +679,25 @@ const CircuitGame = (() => {
     // ============================================
     // COMPONENT PALETTE
     // ============================================
+    function componentIconSvg(icon, size = 18) {
+        const s = size;
+        const icons = {
+            battery: `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6v12M14 8v8M18 10v4"/><path d="M4 12h3"/></svg>`,
+            resistor: `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h3l2-3 2 6 2-6 2 6 2-3h3"/></svg>`,
+            led: `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h10v7H7z"/><path d="M12 14v4m-3 0h6"/><path d="m15 4 2-2m-5 2 2-2"/></svg>`,
+            switch: `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 12h6"/></svg>`,
+            buzzer: `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10h4l4-3v10l-4-3H4z"/><path d="M16 9c1.5 1 1.5 5 0 6m2-8c3 2 3 8 0 10"/></svg>`,
+            capacitor: `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12h5m2 0h5M11 7v10m2-10v10"/></svg>`,
+            junction: `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M12 4v6M12 14v6M4 12h6M14 12h6"/></svg>`
+        };
+        return icons[icon] || icons.junction;
+    }
+
     function renderComponentPalette() {
         const palette = document.getElementById('circuit-palette');
         if (!palette) return;
 
-        palette.innerHTML = '<h4 class="font-display font-bold text-dark-100 mb-3 text-sm">⚡ Komponen</h4>';
+        palette.innerHTML = '<h4 class="font-display font-bold text-dark-100 mb-3 text-sm">Simulasi Komponen</h4>';
 
         // Count occurrences in available pool
         const pool = {};
@@ -615,10 +722,10 @@ const CircuitGame = (() => {
             item.dataset.componentType = compType;
             item.innerHTML = `
                 <div class="flex items-center gap-2">
-                    <span class="text-lg">${type.emoji}</span>
+                    <span class="text-lg text-slate-200">${componentIconSvg(type.icon)}</span>
                     <div class="flex-1 min-w-0">
                         <span class="font-medium text-xs block text-white">${type.name}</span>
-                        <span class="text-[10px] text-dark-300">${remaining > 0 ? `×${remaining}` : 'Sudah dipakai'}</span>
+                        <span class="text-[10px] text-dark-300">${remaining > 0 ? `X${remaining}` : 'Sudah dipakai'}</span>
                     </div>
                 </div>
                 <div class="circuit-palette-tooltip">
@@ -1045,7 +1152,7 @@ const CircuitGame = (() => {
         // Find batteries
         const batteries = components.filter(c => c.type === 'battery');
         if (batteries.length === 0) {
-            showFeedback('circuit-feedback', '❌ Tidak ada baterai! Tambahkan baterai sebagai sumber listrik.', false);
+            showFeedback('circuit-feedback', 'Tidak ada baterai! Tambahkan baterai sebagai sumber listrik.', false);
             isSimulating = false;
             return false;
         }
@@ -1082,9 +1189,9 @@ const CircuitGame = (() => {
         });
 
         if (anyCircuitComplete) {
-            showFeedback('circuit-feedback', '⚡ Rangkaian terhubung! Arus mengalir.', true);
+            showFeedback('circuit-feedback', 'Simulasi Rangkaian terhubung! Arus mengalir.', true);
         } else {
-            showFeedback('circuit-feedback', '❌ Rangkaian tidak lengkap. Periksa koneksi kabel!', false);
+            showFeedback('circuit-feedback', 'Rangkaian tidak lengkap. Periksa koneksi kabel!', false);
         }
 
         return anyCircuitComplete;
@@ -1149,6 +1256,34 @@ const CircuitGame = (() => {
         return false;
     }
 
+    function findAllPaths(graph, start, end, maxPaths = 120, maxDepth = 40) {
+        const paths = [];
+        const visited = new Set();
+
+        function dfs(node, pathEdges) {
+            if (paths.length >= maxPaths) return;
+            if (pathEdges.length > maxDepth) return;
+            if (node === end && pathEdges.length > 0) {
+                paths.push([...pathEdges]);
+                return;
+            }
+
+            visited.add(node);
+            const neighbors = graph[node] || [];
+            for (const edge of neighbors) {
+                if (visited.has(edge.to)) continue;
+                pathEdges.push(edge);
+                dfs(edge.to, pathEdges);
+                pathEdges.pop();
+                if (paths.length >= maxPaths) break;
+            }
+            visited.delete(node);
+        }
+
+        dfs(start, []);
+        return paths;
+    }
+
     // ============================================
     // VALIDATION
     // ============================================
@@ -1173,7 +1308,7 @@ const CircuitGame = (() => {
         // Ensure switch is closed
         const sw = components.find(c => c.type === 'switch_open');
         if (sw && sw.state !== 'closed') {
-            showFeedback('circuit-feedback', '💡 Nyalakan Switch dulu! Klik switch untuk ON.', false);
+            showFeedback('circuit-feedback', 'Hint Nyalakan Switch dulu! Alur seri harus Baterai → Switch(ON) → LED.', false);
             return false;
         }
 
@@ -1192,7 +1327,34 @@ const CircuitGame = (() => {
 
         const circuitOk = runSimulation();
         const ledOn = components.some(c => c.type === 'led' && c.state === 'on');
-        return circuitOk && ledOn;
+        if (!circuitOk || !ledOn) return false;
+
+        const battery = components.find(c => c.type === 'battery');
+        if (!battery) return false;
+        const ledIds = components.filter(c => c.type === 'led').map(c => c.id);
+        const resistorIds = components.filter(c => c.type === 'resistor').map(c => c.id);
+        const graph = buildGraph();
+        const paths = findAllPaths(graph, `${battery.id}:0`, `${battery.id}:1`);
+        if (paths.length === 0) return false;
+
+        const rules = typeof CircuitRules !== 'undefined' ? CircuitRules : null;
+        if (rules && rules.hasUnsafeLedBypass(paths, ledIds, resistorIds)) {
+            showFeedback('circuit-feedback', 'LED masih punya jalur bypass tanpa resistor. Tempatkan resistor di jalur LED.', false);
+            return false;
+        }
+
+        const hasLedPathWithResistor = paths.some(path => {
+            const ids = rules ? rules.pathComponentIds(path) : new Set(path.filter(e => e.compId).map(e => e.compId));
+            const containsLed = ledIds.some(id => ids.has(id));
+            const containsResistor = resistorIds.some(id => ids.has(id));
+            return containsLed && containsResistor;
+        });
+        if (!hasLedPathWithResistor) {
+            showFeedback('circuit-feedback', 'Jalur LED belum melewati resistor.', false);
+            return false;
+        }
+
+        return true;
     }
 
     function validateParallelCircuit() {
@@ -1203,17 +1365,41 @@ const CircuitGame = (() => {
 
         const circuitOk = runSimulation();
         const allLedsOn = leds.every(l => l.state === 'on');
-        return circuitOk && allLedsOn;
+        if (!circuitOk || !allLedsOn) return false;
+
+        const battery = components.find(c => c.type === 'battery');
+        if (!battery) return false;
+        const graph = buildGraph();
+        const paths = findAllPaths(graph, `${battery.id}:0`, `${battery.id}:1`);
+        if (paths.length === 0) return false;
+
+        const rules = typeof CircuitRules !== 'undefined' ? CircuitRules : null;
+        const ledIds = leds.map(l => l.id);
+        const hasParallelBranches = rules
+            ? rules.hasDistinctSingleLedPaths(paths, ledIds)
+            : ledIds.every(ledId => paths.some(path => path.some(edge => edge.compId === ledId)));
+        if (!hasParallelBranches) {
+            showFeedback('circuit-feedback', 'Ini belum paralel. Tiap LED harus punya cabang jalur sendiri.', false);
+            return false;
+        }
+
+        return true;
     }
 
     // ============================================
     // CONTROLS
     // ============================================
     function setupControls() {
+        const controlIds = ['circuit-simulate-btn', 'circuit-reset-btn', 'circuit-wire-btn', 'circuit-delete-btn'];
+        controlIds.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.replaceWith(btn.cloneNode(true));
+        });
+
         // Simulate button
         const simBtn = document.getElementById('circuit-simulate-btn');
         if (simBtn) {
-            simBtn.onclick = () => {
+            simBtn.addEventListener('click', () => {
                 // Check required components
                 const required = currentLevel.target.requiredComponents;
                 const placedTypes = components.map(c => c.type);
@@ -1226,12 +1412,12 @@ const CircuitGame = (() => {
                 });
 
                 if (missing.length > 0) {
-                    showFeedback('circuit-feedback', `⚠️ Komponen belum lengkap: ${missing.join(', ')}`, false);
+                    showFeedback('circuit-feedback', `Peringatan Komponen belum lengkap: ${missing.join(', ')}`, false);
                     return;
                 }
 
                 if (wires.length === 0) {
-                    showFeedback('circuit-feedback', '⚠️ Belum ada kabel! Hubungkan komponen dengan klik pin.', false);
+                    showFeedback('circuit-feedback', 'Peringatan Belum ada kabel! Hubungkan komponen dengan klik pin.', false);
                     return;
                 }
 
@@ -1240,6 +1426,10 @@ const CircuitGame = (() => {
                     // Success!
                     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
                     if (typeof SoundManager !== 'undefined') SoundManager.play('success');
+                    const conceptNote = currentLevel?.concept
+                        ? `<br><span class="text-xs text-dark-200">Konsep ${currentLevel.concept}</span>`
+                        : '';
+                    showFeedback('circuit-feedback', `Rangkaian valid! Simulasi berhasil.${conceptNote}`, true);
 
                     setTimeout(() => {
                         completeLevel('circuit', {
@@ -1249,13 +1439,13 @@ const CircuitGame = (() => {
                         });
                     }, 1000);
                 }
-            };
+            });
         }
 
         // Reset button
         const resetBtn = document.getElementById('circuit-reset-btn');
         if (resetBtn) {
-            resetBtn.onclick = () => {
+            resetBtn.addEventListener('click', () => {
                 components = [];
                 wires = [];
                 simulationParticles = [];
@@ -1267,29 +1457,33 @@ const CircuitGame = (() => {
                 updateControlButtons();
                 hideFeedback('circuit-feedback');
                 if (typeof SoundManager !== 'undefined') SoundManager.play('reset');
-            };
+                showFeedback('circuit-feedback', 'Papan rangkaian direset.', true);
+            });
         }
 
         // Wire mode toggle
         const wireBtn = document.getElementById('circuit-wire-btn');
         if (wireBtn) {
-            wireBtn.onclick = () => {
+            wireBtn.addEventListener('click', () => {
                 wireMode = !wireMode;
                 if (!wireMode) wireStart = null;
                 updateControlButtons();
-            };
+            });
         }
 
         // Delete selected
         const deleteBtn = document.getElementById('circuit-delete-btn');
         if (deleteBtn) {
-            deleteBtn.onclick = () => {
+            deleteBtn.addEventListener('click', () => {
                 if (selectedComponent !== null) {
                     removeComponent(selectedComponent);
                     selectedComponent = null;
                     renderComponentPalette();
+                    showFeedback('circuit-feedback', 'Komponen terpilih dihapus.', true);
+                } else {
+                    showFeedback('circuit-feedback', 'Pilih komponen dulu sebelum menghapus.', false);
                 }
-            };
+            });
         }
     }
 
@@ -1297,7 +1491,7 @@ const CircuitGame = (() => {
         const wireBtn = document.getElementById('circuit-wire-btn');
         if (wireBtn) {
             wireBtn.classList.toggle('active', wireMode);
-            wireBtn.textContent = wireMode ? '🔗 Kabel Mode (ON)' : '🔗 Kabel';
+            wireBtn.textContent = wireMode ? 'Mode Kabel (ON)' : 'Kabel';
         }
     }
 
