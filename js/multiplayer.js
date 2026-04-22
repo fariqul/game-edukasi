@@ -195,70 +195,47 @@ const Multiplayer = (() => {
 
     function getClassBattleBridge() {
         if (classBattleBridge) return classBattleBridge;
-        
-        // Try real Supabase first
-        if (typeof ClassBattleBridge !== 'undefined' &&
-            typeof ClassBattleService !== 'undefined' &&
-            typeof ClassBattleService.createClassBattleService === 'function' &&
-            window.GameSupabase && window.GameSupabase.enabled && window.GameSupabase.client) {
-            
-            const service = ClassBattleService.createClassBattleService(window.GameSupabase.client, {
-                realtimeChannelPrefix: window.GameSupabase.config && window.GameSupabase.config.realtimeChannelPrefix
+
+        const hasBridgeFactory = typeof ClassBattleBridge !== 'undefined'
+            && typeof ClassBattleBridge.createBridge === 'function';
+        const hasServiceFactory = typeof ClassBattleService !== 'undefined'
+            && typeof ClassBattleService.createClassBattleService === 'function';
+        const supabaseReady = Boolean(
+            window.GameSupabase
+            && window.GameSupabase.enabled
+            && window.GameSupabase.client
+        );
+
+        if (!hasBridgeFactory || !hasServiceFactory) {
+            console.error('Class battle production modules belum termuat.', {
+                hasBridgeFactory,
+                hasServiceFactory
             });
-            
-            classBattleBridge = ClassBattleBridge.createBridge({
-                service,
-                onStartCountdown(seconds) {
-                    setClassCountdownLabel(seconds);
-                    setClassSessionStatus(`Countdown dimulai (${seconds} detik).`, false);
-                },
-                onCountdownTick(left) {
-                    setClassCountdownLabel(left);
-                },
-                onSessionLocked() {
-                    finishClassBattleSession('finished');
-                },
-                onRankingUpdated(ranking) {
-                    renderClassBattleRanking(ranking);
-                },
-                onEvent(eventName, payload) {
-                    handleClassBattleEvent(eventName, payload);
-                },
-                onError(error) {
-                    const message = (error && error.message) || 'Terjadi error class battle.';
-                    setClassJoinStatus(message, true);
-                }
-            });
-            return classBattleBridge;
-        }
-        
-        // Fallback to Demo Mode
-        console.log('Using Demo Class Battle (local mock, no internet required)');
-        if (typeof DemoClassBattleService === 'undefined') {
-            console.error('DemoClassBattleService not loaded');
             return null;
         }
-        
-        const demoService = DemoClassBattleService.createDemoService();
-        classBattleBridge = {
-            service: demoService,
-            resetFirstFinishLock() {},
-            syncSessionMeta() {},
-            connectRealtime() { return Promise.resolve(); },
-            refreshRanking() {
-                return demoService.fetchRanking({ sessionId: classBattleSession?.id })
-                    .then(ranking => {
-                        renderClassBattleRanking(ranking);
-                    });
-            },
-            broadcast(event, payload) {},
-            submitCompletion(data) {
-                return demoService.submitResultWithRetry(data);
-            },
-            // Mock callbacks
+
+        if (!supabaseReady) {
+            const config = window.GameSupabase && window.GameSupabase.config
+                ? window.GameSupabase.config
+                : null;
+            console.error('Supabase client belum siap untuk class battle production.', {
+                enabled: Boolean(window.GameSupabase && window.GameSupabase.enabled),
+                hasClient: Boolean(window.GameSupabase && window.GameSupabase.client),
+                hasUrl: Boolean(config && config.url),
+                hasClientKey: Boolean(config && config.clientKey)
+            });
+            return null;
+        }
+
+        const service = ClassBattleService.createClassBattleService(window.GameSupabase.client, {
+            realtimeChannelPrefix: window.GameSupabase.config && window.GameSupabase.config.realtimeChannelPrefix
+        });
+
+        classBattleBridge = ClassBattleBridge.createBridge({
+            service,
             onStartCountdown(seconds) {
                 setClassCountdownLabel(seconds);
-                setClassSessionStatus(`Demo countdown: ${seconds}s`, false);
+                setClassSessionStatus(`Countdown dimulai (${seconds} detik).`, false);
             },
             onCountdownTick(left) {
                 setClassCountdownLabel(left);
@@ -273,10 +250,10 @@ const Multiplayer = (() => {
                 handleClassBattleEvent(eventName, payload);
             },
             onError(error) {
-                const message = (error && error.message) || 'Demo error.';
+                const message = (error && error.message) || 'Terjadi error class battle.';
                 setClassJoinStatus(message, true);
             }
-        };
+        });
         return classBattleBridge;
     }
 

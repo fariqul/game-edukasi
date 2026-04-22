@@ -3045,14 +3045,34 @@
     <script src="js/levelSelect.js"></script>
     <script src="js/statsDashboard.js"></script>
     <script src="js/characterSelect.js"></script>
-    <!-- Supabase Config (GANTI DENGAN KEYS REALMU) -->
+    <!-- Supabase + Class Battle (production stack) -->
+    <script src="js/supabaseConfig.js"></script>
     <script>
-        window.GAME_EDUKASI_SUPABASE = {
-            url: 'https://ngcioiearbemwqzavcfp.supabase.co', // Project URL
-            anonKey: 'YOUR_ANON_KEY_HERE', // Ganti dengan anon/public key dari dashboard Supabase
-            realtimeChannelPrefix: 'kelas-room'
-        };
+        (function (globalScope) {
+            const current = globalScope.GAME_EDUKASI_SUPABASE || {};
+            globalScope.GAME_EDUKASI_SUPABASE = {
+                ...current,
+                url: typeof current.url === 'string' && current.url.trim()
+                    ? current.url.trim()
+                    : 'https://ngcioiearbemwqzavcfp.supabase.co',
+                publishableKey: typeof current.publishableKey === 'string'
+                    ? current.publishableKey.trim()
+                    : '',
+                anonKey: typeof current.anonKey === 'string'
+                    ? current.anonKey.trim()
+                    : '',
+                realtimeChannelPrefix: typeof current.realtimeChannelPrefix === 'string' && current.realtimeChannelPrefix.trim()
+                    ? current.realtimeChannelPrefix.trim()
+                    : 'kelas-room'
+            };
+        })(window);
     </script>
+    <script src="js/supabaseRuntime.js"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/classBattleRules.js"></script>
+    <script src="js/classBattleState.js"></script>
+    <script src="js/classBattleService.js"></script>
+    <script src="js/classBattleBridge.js"></script>
     <script src="js/multiplayer.js"></script>
 
     <script src="js/main.js"></script>
@@ -3061,7 +3081,6 @@
     <script src="js/computer.js"></script>
     <script src="js/codingPuzzle.js"></script>
     <script src="js/circuit.js"></script>
-    <script src="js/demoClassBattle.js"></script>
     
 
 
