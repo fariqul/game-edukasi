@@ -39,6 +39,7 @@ const Multiplayer = (() => {
     let classBattleRole = 'guest';
     let classBattleActive = false;
     let classBattleRoundStartedAt = 0;
+    let classBattleStartLevel = 1;
 
     const CHAR_DATA = {
         maleAdventurer:   { name: 'Alex',  folder: 'Male adventurer',   prefix: 'character_maleAdventurer',   color: '#38bdf8' },
@@ -84,6 +85,22 @@ const Multiplayer = (() => {
         const m = Math.floor(s / 60);
         const sec = s % 60;
         return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function getCurrentModeLevel(mode) {
+        if (typeof GameState === 'undefined' || !GameState || !GameState.currentLevel) {
+            return 1;
+        }
+        return Math.max(1, Math.floor(Number(GameState.currentLevel[mode]) || 1));
+    }
+
+    function toClassBattleProgressLevel(mode, reachedLevel) {
+        const absoluteLevel = Math.max(
+            1,
+            Math.floor(Number(reachedLevel) || getCurrentModeLevel(mode))
+        );
+        const startLevel = Math.max(1, Math.floor(Number(classBattleStartLevel) || 1));
+        return Math.max(1, absoluteLevel - startLevel + 1);
     }
 
     function mapPeerError(errType) {
@@ -276,7 +293,7 @@ const Multiplayer = (() => {
                 return `
                     <li class="flex items-center justify-between gap-3 rounded-lg border border-dark-700 bg-dark-800/60 px-3 py-2">
                         <span class="text-sm text-dark-100">#${rank} ${name}</span>
-                        <span class="text-xs font-mono text-accent-300">Lv.${reachedLevel} • ${score} pts • ${formatTime(timeMs)}</span>
+                        <span class="text-xs font-mono text-accent-300">Progress ${reachedLevel} • ${score} pts • ${formatTime(timeMs)}</span>
                     </li>
                 `;
             }).join('');
@@ -376,6 +393,7 @@ const Multiplayer = (() => {
             }
 
             classBattleRoundStartedAt = Date.now();
+            classBattleStartLevel = getCurrentModeLevel(mode);
             if (mode && typeof navigateTo === 'function') {
                 navigateTo(mode);
             }
@@ -669,6 +687,7 @@ const Multiplayer = (() => {
             classBattleParticipant = joined.participant;
             classBattleRole = 'host';
             classBattleActive = false;
+            classBattleStartLevel = 1;
             isHost = true;
 
             bridge.resetFirstFinishLock();
@@ -729,6 +748,7 @@ const Multiplayer = (() => {
             classBattleParticipant = joined.participant;
             classBattleRole = 'guest';
             classBattleActive = false;
+            classBattleStartLevel = 1;
             isHost = false;
 
             bridge.resetFirstFinishLock();
@@ -782,6 +802,7 @@ const Multiplayer = (() => {
             };
             classBattleActive = true;
             classBattleRoundStartedAt = Date.now();
+            classBattleStartLevel = getCurrentModeLevel(classBattleSession.mode);
 
             bridge.resetFirstFinishLock();
             bridge.syncSessionMeta({
@@ -821,10 +842,7 @@ const Multiplayer = (() => {
             return;
         }
 
-        const reachedLevel = Math.max(
-            1,
-            Math.floor(Number(payload && payload.reachedLevel) || (GameState.currentLevel[mode] || 1))
-        );
+        const reachedLevel = toClassBattleProgressLevel(mode, payload && payload.reachedLevel);
         const targetLevel = Math.max(1, Math.floor(Number(classBattleSession.target_level) || 1));
         const elapsedMs = Math.max(0, Date.now() - classBattleRoundStartedAt);
 
@@ -864,7 +882,7 @@ const Multiplayer = (() => {
 
                 setClassSessionStatus(`Target level ${targetLevel} tercapai. Menunggu hitung mundur selesai...`, false);
             } else {
-                setClassSessionStatus(`Progres terkirim (level ${reachedLevel}/${targetLevel}).`, false);
+                setClassSessionStatus(`Progres terkirim (${reachedLevel}/${targetLevel} level).`, false);
             }
         } catch (error) {
             setClassJoinStatus((error && error.message) || 'Gagal mengirim hasil class battle.', true);
@@ -1378,6 +1396,7 @@ const Multiplayer = (() => {
         classBattleRole = 'guest';
         classBattleActive = false;
         classBattleRoundStartedAt = 0;
+        classBattleStartLevel = 1;
 
         setClassSessionCode('-');
         setClassSessionStatus('Belum terhubung', false);
