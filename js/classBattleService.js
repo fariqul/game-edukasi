@@ -100,8 +100,13 @@
             }
         }
 
-        async function createSession({ hostName, mode, targetLevel, maxParticipants }) {
+        async function createSession({ hostName, mode, targetLevel, maxParticipants, perLevelSeconds }) {
             assertClient();
+
+            const safePerLevelSeconds = Math.max(
+                10,
+                Math.min(300, Math.floor(Number(perLevelSeconds) || defaultCountdown))
+            );
 
             const payload = {
                 session_code: randomCode(),
@@ -111,7 +116,7 @@
                 target_level: Math.max(1, Math.floor(Number(targetLevel) || 1)),
                 max_participants: Math.max(2, Math.min(30, Math.floor(Number(maxParticipants) || 30))),
                 status: 'waiting',
-                finish_countdown_seconds: defaultCountdown
+                finish_countdown_seconds: safePerLevelSeconds
             };
 
             const query = applySelectSingle(client.from(tables.sessions).insert([payload]), false);
@@ -314,10 +319,12 @@
 
             const eventNames = [
                 'session-started',
+                'session-timer-started',
                 'first-finish-window-started',
                 'session-finished',
                 'ranking-updated',
-                'participant-joined'
+                'participant-joined',
+                'all-participants-finished'
             ];
 
             eventNames.forEach((eventName) => {

@@ -149,6 +149,7 @@
                 case 'session-started':
                     stateApi.setStatus(state, 'in_progress');
                     break;
+                case 'session-timer-started':
                 case 'first-finish-window-started':
                     applyCountdownFromServer(payload && payload.startedAt, payload && payload.seconds);
                     break;

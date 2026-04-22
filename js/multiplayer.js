@@ -41,6 +41,8 @@ const Multiplayer = (() => {
     let classBattleRoundStartedAt = 0;
     let classBattleStartLevel = 1;
     let classParticipantPollTimer = null;
+    let classBattleParticipantRows = [];
+    let classBattleRankingRows = [];
     const classBattleSavedLevels = {};
 
     const CHAR_DATA = {
@@ -272,6 +274,7 @@ const Multiplayer = (() => {
 
     function renderClassParticipantPreview(participants) {
         const rows = Array.isArray(participants) ? participants : [];
+        classBattleParticipantRows = rows;
         const list = document.getElementById('class-participant-preview-list');
         const countEl = document.getElementById('class-participant-count');
 
@@ -283,6 +286,7 @@ const Multiplayer = (() => {
 
         if (rows.length === 0) {
             list.innerHTML = '<p class="text-xs text-dark-400">Belum ada peserta bergabung.</p>';
+            updateClassCompletionProgress();
             return;
         }
 
@@ -297,6 +301,47 @@ const Multiplayer = (() => {
                 </div>
             `;
         }).join('');
+
+        updateClassCompletionProgress();
+    }
+
+    function getResultTrophySvg() {
+        return `
+            <span class="ui-icon-chip ui-icon-chip--result mx-auto">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 4h12v3a6 6 0 01-12 0V4z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 8H4.5A2.5 2.5 0 012 5.5V5h4m12 3h1.5A2.5 2.5 0 0022 5.5V5h-4"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 13v4m-3 3h6m-8 0h10"></path>
+                </svg>
+            </span>
+        `;
+    }
+
+    function updateClassCompletionProgress() {
+        const labels = [
+            document.getElementById('class-completion-progress'),
+            document.getElementById('result-completion-progress')
+        ].filter(Boolean);
+        if (labels.length === 0) return;
+
+        const target = Math.max(1, Math.floor(Number(classBattleSession && classBattleSession.target_level) || 1));
+        const participants = (classBattleParticipantRows || []).filter((item) => !Boolean(item && item.is_host));
+        const total = participants.length;
+        if (total === 0) {
+            labels.forEach((el) => {
+                el.textContent = 'Selesai: 0/0 peserta';
+            });
+            return;
+        }
+
+        const completedSet = new Set((classBattleRankingRows || [])
+            .filter((row) => Math.max(0, Number(row && row.reached_level) || 0) >= target)
+            .map((row) => String(row && row.participant_id)));
+
+        const done = participants.filter((item) => completedSet.has(String(item && item.id))).length;
+        labels.forEach((el) => {
+            el.textContent = `Selesai: ${done}/${total} peserta`;
+        });
     }
 
     async function refreshClassParticipants() {
@@ -332,6 +377,37 @@ const Multiplayer = (() => {
         classParticipantPollTimer = setInterval(() => {
             refreshClassParticipants().catch(() => {});
         }, 2000);
+    }
+
+    function getClassBattlePerLevelSeconds(session) {
+        const safe = Math.floor(Number(session && session.finish_countdown_seconds) || 20);
+        return Math.max(10, Math.min(300, safe));
+    }
+
+    function getClassBattleTotalCountdownSeconds(session) {
+        const perLevel = getClassBattlePerLevelSeconds(session);
+        const target = Math.max(1, Math.floor(Number(session && session.target_level) || 1));
+        return Math.max(10, Math.min(3600, perLevel * target));
+    }
+
+    async function areAllBattleParticipantsDone(bridge, targetLevel, rankingRows) {
+        if (!classBattleSession || !classBattleSession.id || !bridge || !bridge.service) {
+            return false;
+        }
+
+        const participants = await bridge.service.listParticipants(classBattleSession.id);
+        const activeParticipants = (participants || []).filter((item) => !Boolean(item && item.is_host));
+        if (activeParticipants.length === 0) return false;
+
+        const rows = Array.isArray(rankingRows)
+            ? rankingRows
+            : await bridge.service.fetchRanking({ sessionId: classBattleSession.id, limit: 100 });
+
+        const doneSet = new Set((rows || [])
+            .filter((row) => Math.max(0, Number(row && row.reached_level) || 0) >= targetLevel)
+            .map((row) => String(row && row.participant_id)));
+
+        return activeParticipants.every((item) => doneSet.has(String(item && item.id)));
     }
 
     function isHostLobbyLockedInClassBattle() {
@@ -418,6 +494,7 @@ const Multiplayer = (() => {
 
     function renderClassBattleRanking(rows) {
         const rankedRows = Array.isArray(rows) ? rows : [];
+        classBattleRankingRows = rankedRows;
         const liveCountEl = document.getElementById('live-participant-count');
         if (liveCountEl) {
             liveCountEl.textContent = String(rankedRows.length);
@@ -436,10 +513,23 @@ const Multiplayer = (() => {
                 const reachedLevel = Math.max(0, Number(row.reached_level) || 0);
                 const score = Number(row.score) || 0;
                 const timeMs = Number(row.timeMs ?? row.time_ms) || 0;
+                const targetLevel = Math.max(1, Number(classBattleSession && classBattleSession.target_level) || 1);
+                const badgeTone = rank === 1
+                    ? 'border-yellow-300/50 bg-yellow-500/20 text-yellow-200'
+                    : rank === 2
+                        ? 'border-slate-300/50 bg-slate-400/20 text-slate-200'
+                        : rank === 3
+                            ? 'border-amber-400/50 bg-amber-500/20 text-amber-200'
+                            : 'border-dark-500 bg-dark-700/50 text-dark-200';
+                const badgeText = rank <= 3 ? `TOP ${rank}` : `#${rank}`;
                 return `
-                    <li class="flex items-center justify-between gap-3 rounded-lg border border-dark-700 bg-dark-800/60 px-3 py-2">
-                        <span class="text-sm text-dark-100">#${rank} ${name}</span>
-                        <span class="text-xs font-mono text-accent-300">Progress ${reachedLevel} • ${score} pts • ${formatTime(timeMs)}</span>
+                    <li class="flex items-center gap-3 rounded-xl border border-dark-700 bg-dark-800/60 px-3 py-2">
+                        <span class="min-w-[58px] rounded-lg border px-2 py-1 text-center text-[11px] font-extrabold tracking-wide ${badgeTone}">${badgeText}</span>
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate text-sm font-semibold text-dark-100">${name}</p>
+                            <p class="text-[11px] text-dark-300">Lv ${reachedLevel}/${targetLevel} • ${score} pts</p>
+                        </div>
+                        <span class="text-xs font-mono text-accent-300">${formatTime(timeMs)}</span>
                     </li>
                 `;
             }).join('');
@@ -447,6 +537,55 @@ const Multiplayer = (() => {
 
         renderInto(document.getElementById('class-battle-ranking-list'));
         renderInto(document.getElementById('class-live-progress-list'));
+
+        const resultList = document.getElementById('result-player-list');
+        if (resultList) {
+            if (rankedRows.length === 0) {
+                resultList.innerHTML = '<p class="text-xs text-dark-300">Belum ada submission.</p>';
+            } else {
+                resultList.innerHTML = rankedRows.slice(0, 30).map((row, index) => {
+                    const rank = Number(row.rank) || index + 1;
+                    const name = escapeHtml(row.participantName || row.display_name || 'Peserta');
+                    const reachedLevel = Math.max(0, Number(row.reached_level) || 0);
+                    const score = Number(row.score) || 0;
+                    const timeMs = Number(row.timeMs ?? row.time_ms) || 0;
+                    const targetLevel = Math.max(1, Number(classBattleSession && classBattleSession.target_level) || 1);
+                    const progressPercent = Math.max(0, Math.min(100, Math.round((reachedLevel / targetLevel) * 100)));
+                    const cardTone = rank === 1
+                        ? 'border-yellow-300/50 bg-yellow-500/10'
+                        : rank === 2
+                            ? 'border-slate-300/45 bg-slate-500/10'
+                            : rank === 3
+                                ? 'border-amber-400/45 bg-amber-500/10'
+                                : 'border-dark-700 bg-dark-800/70';
+                    const badgeTone = rank === 1
+                        ? 'border-yellow-300/50 bg-yellow-500/20 text-yellow-200'
+                        : rank === 2
+                            ? 'border-slate-300/50 bg-slate-400/20 text-slate-200'
+                            : rank === 3
+                                ? 'border-amber-400/50 bg-amber-500/20 text-amber-200'
+                                : 'border-dark-500 bg-dark-700/60 text-dark-200';
+                    const badgeText = rank <= 3 ? `TOP ${rank}` : `#${rank}`;
+                    return `
+                        <div class="rounded-xl border px-3 py-2 ${cardTone}">
+                            <div class="flex items-center gap-3">
+                                <span class="min-w-[60px] rounded-lg border px-2 py-1 text-center text-[11px] font-extrabold tracking-wide ${badgeTone}">${badgeText}</span>
+                                <div class="min-w-0 flex-1">
+                                    <p class="truncate text-sm font-semibold text-dark-100">${name}</p>
+                                    <p class="text-[11px] text-dark-300">${reachedLevel}/${targetLevel} level • ${score} pts</p>
+                                </div>
+                                <span class="text-xs font-mono text-accent-300">${formatTime(timeMs)}</span>
+                            </div>
+                            <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-dark-900/70">
+                                <div class="h-full rounded-full bg-gradient-to-r from-accent-400 to-secondary-400" style="width:${progressPercent}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        updateClassCompletionProgress();
     }
 
     function showClassBattleResultModal() {
@@ -462,21 +601,26 @@ const Multiplayer = (() => {
             title.className = 'font-display text-3xl font-bold text-accent-400 mb-2';
         }
 
+        const emoji = document.getElementById('mp-result-emoji');
+        if (emoji) emoji.innerHTML = getResultTrophySvg();
+
         const detail = document.getElementById('mp-result-detail');
         if (detail) {
-            detail.classList.add('hidden');
-            detail.innerHTML = '';
+            detail.classList.remove('hidden');
         }
 
-        const classPanel = document.getElementById('class-battle-result-panel');
-        if (classPanel) classPanel.classList.remove('hidden');
+        const rankedList = document.getElementById('result-ranked-list');
+        if (rankedList) rankedList.classList.remove('hidden');
 
-        const statusEl = document.getElementById('class-battle-result-status');
-        if (statusEl) {
-            const status = classBattleSession && classBattleSession.status
-                ? classBattleSession.status
-                : 'finished';
-            statusEl.textContent = `Status sesi: ${status}`;
+        const legacy = document.getElementById('legacy-result');
+        if (legacy) legacy.classList.add('hidden');
+
+        const status = classBattleSession && classBattleSession.status
+            ? classBattleSession.status
+            : 'finished';
+        const subtitle = document.getElementById('class-session-status');
+        if (subtitle && status === 'finished') {
+            subtitle.textContent = 'Sesi selesai. Ranking akhir ditampilkan.';
         }
 
         const playAgainBtn = document.getElementById('mp-btn-play-again');
@@ -484,11 +628,14 @@ const Multiplayer = (() => {
     }
 
     function hideClassBattleResultPanel() {
-        const panel = document.getElementById('class-battle-result-panel');
-        if (panel) panel.classList.add('hidden');
-
         const detail = document.getElementById('mp-result-detail');
         if (detail) detail.classList.remove('hidden');
+
+        const rankedList = document.getElementById('result-ranked-list');
+        if (rankedList) rankedList.classList.remove('hidden');
+
+        const legacy = document.getElementById('legacy-result');
+        if (legacy) legacy.classList.add('hidden');
 
         const playAgainBtn = document.getElementById('mp-btn-play-again');
         if (playAgainBtn) playAgainBtn.classList.remove('hidden');
@@ -499,6 +646,7 @@ const Multiplayer = (() => {
         if (!bridge || !classBattleSession || !classBattleSession.id) return;
         if (classBattleSession.status === 'finished' || classBattleSession.status === 'cancelled') {
             classBattleActive = false;
+            await bridge.refreshRanking().catch(() => {});
             syncLobbyBackButtonState();
             showClassBattleResultModal();
             return;
@@ -530,6 +678,14 @@ const Multiplayer = (() => {
     function handleClassBattleEvent(eventName, payload) {
         if (!eventName) return;
 
+        if (eventName === 'session-timer-started' || eventName === 'first-finish-window-started') {
+            const totalSeconds = Math.max(0, Number(payload && payload.seconds) || 0);
+            if (totalSeconds > 0) {
+                setClassSessionStatus(`Timer sesi aktif (${totalSeconds} detik total).`, false);
+            }
+            return;
+        }
+
         if (eventName === 'participant-joined') {
             refreshClassParticipants().catch(() => {});
             const joinedName = payload && typeof payload.displayName === 'string'
@@ -537,6 +693,16 @@ const Multiplayer = (() => {
                 : '';
             if (joinedName) {
                 setClassSessionStatus(`${joinedName} bergabung ke sesi.`, false);
+            }
+            return;
+        }
+
+        if (eventName === 'all-participants-finished') {
+            setClassSessionStatus('Semua peserta selesai. Menutup sesi...', false);
+            if (classBattleSession && classBattleSession.status === 'in_progress') {
+                if (classBattleRole === 'host') {
+                    finishClassBattleSession('finished').catch(() => {});
+                }
             }
             return;
         }
@@ -674,6 +840,8 @@ const Multiplayer = (() => {
         setClassCreateStatus('', false);
         setClassJoinStatus('', false);
         if (!classBattleSession) {
+            classBattleParticipantRows = [];
+            classBattleRankingRows = [];
             setClassSessionCode('-');
             setClassSessionStatus('Belum terhubung', false);
             setClassCountdownLabel('-');
@@ -683,6 +851,7 @@ const Multiplayer = (() => {
         } else {
             refreshClassParticipants().catch(() => {});
             startClassParticipantPolling();
+            updateClassCompletionProgress();
         }
         setClassSessionPanelVisible(Boolean(classBattleSession));
 
@@ -826,12 +995,14 @@ const Multiplayer = (() => {
         const hostNameEl = document.getElementById('class-host-name');
         const modeEl = document.getElementById('class-mode-select');
         const targetEl = document.getElementById('class-target-level');
+        const perLevelEl = document.getElementById('class-per-level-seconds');
 
         const hostName = (hostNameEl && hostNameEl.value.trim())
             || (typeof CharacterSystem !== 'undefined' ? CharacterSystem.getPlayerName() : '')
             || 'Host';
         const mode = modeEl ? modeEl.value : 'coding';
         const targetLevel = Math.max(1, Math.floor(Number(targetEl && targetEl.value) || 1));
+        const perLevelSeconds = Math.max(10, Math.min(300, Math.floor(Number(perLevelEl && perLevelEl.value) || 20)));
 
         setClassCreateStatus('Membuat sesi class battle...', false);
         setClassJoinStatus('', false);
@@ -846,6 +1017,7 @@ const Multiplayer = (() => {
                 hostName,
                 mode,
                 targetLevel,
+                perLevelSeconds,
                 maxParticipants: 30
             });
 
@@ -1003,6 +1175,27 @@ const Multiplayer = (() => {
             classBattleRoundStartedAt = Date.now();
             classBattleStartLevel = getCurrentModeLevel(classBattleSession.mode);
 
+            const totalCountdownSeconds = getClassBattleTotalCountdownSeconds(classBattleSession);
+
+            const countdownSession = await bridge.service.startFirstFinishWindow({
+                sessionId: classBattleSession.id,
+                countdownSeconds: totalCountdownSeconds
+            });
+            if (countdownSession && countdownSession.first_finish_started_at) {
+                classBattleSession = {
+                    ...classBattleSession,
+                    ...countdownSession
+                };
+                bridge.applyCountdownFromServer(
+                    countdownSession.first_finish_started_at,
+                    countdownSession.finish_countdown_seconds
+                );
+                await bridge.broadcast('session-timer-started', {
+                    startedAt: countdownSession.first_finish_started_at,
+                    seconds: countdownSession.finish_countdown_seconds
+                });
+            }
+
             bridge.resetFirstFinishLock();
             bridge.syncSessionMeta({
                 session: classBattleSession,
@@ -1012,10 +1205,11 @@ const Multiplayer = (() => {
 
             await bridge.broadcast('session-started', {
                 mode: classBattleSession.mode,
-                targetLevel: classBattleSession.target_level
+                targetLevel: classBattleSession.target_level,
+                perLevelSeconds: getClassBattlePerLevelSeconds(classBattleSession)
             });
 
-            setClassSessionStatus('Class battle dimulai. Host memantau progres peserta dari lobby.', false);
+            setClassSessionStatus(`Class battle dimulai. Timer total ${totalCountdownSeconds} detik.`, false);
             setClassCreateStatus('Sesi berjalan. Pantau progres peserta pada panel live.', false);
             const startBtn = document.getElementById('class-start-btn');
             if (startBtn) startBtn.classList.add('hidden');
@@ -1054,35 +1248,26 @@ const Multiplayer = (() => {
             });
 
             await bridge.refreshRanking();
+            const ranking = await bridge.service.fetchRanking({
+                sessionId: classBattleSession.id,
+                limit: 100
+            });
             await bridge.broadcast('ranking-updated', {
                 participantId: classBattleParticipant.id
             });
 
-            if (reachedLevel >= targetLevel) {
-                const countdownSession = await bridge.service.startFirstFinishWindow({
-                    sessionId: classBattleSession.id,
-                    countdownSeconds: 10
+            const allFinished = await areAllBattleParticipantsDone(bridge, targetLevel, ranking);
+            if (allFinished) {
+                await bridge.broadcast('all-participants-finished', {
+                    sessionId: classBattleSession.id
                 });
-
-                if (countdownSession && countdownSession.first_finish_started_at) {
-                    classBattleSession = {
-                        ...classBattleSession,
-                        ...countdownSession
-                    };
-                    bridge.applyCountdownFromServer(
-                        countdownSession.first_finish_started_at,
-                        countdownSession.finish_countdown_seconds
-                    );
-                    await bridge.broadcast('first-finish-window-started', {
-                        startedAt: countdownSession.first_finish_started_at,
-                        seconds: countdownSession.finish_countdown_seconds
-                    });
+                if (classBattleRole === 'host') {
+                    await finishClassBattleSession('finished');
                 }
-
-                setClassSessionStatus(`Target level ${targetLevel} tercapai. Menunggu hitung mundur selesai...`, false);
-            } else {
-                setClassSessionStatus(`Progres terkirim (${reachedLevel}/${targetLevel} level).`, false);
+                return;
             }
+
+            setClassSessionStatus(`Progres terkirim (${reachedLevel}/${targetLevel} level).`, false);
         } catch (error) {
             setClassJoinStatus((error && error.message) || 'Gagal mengirim hasil class battle.', true);
         }
@@ -1257,7 +1442,7 @@ const Multiplayer = (() => {
                 const status = p.completedTime ? formatTime(p.completedTime) : (p.ready ? 'Siap' : 'Menunggu');
                 let readyBtn = '';
                 if (!p.completedTime && !isHostLobbyLockedInClassBattle()) {
-                    readyBtn = `<button onclick="Multiplayer.toggleReady('${p.id}')" class="ml-auto px-2 py-1 text-xs rounded-full ${p.ready ? 'bg-secondary-500 text-white' : 'bg-dark-700 text-dark-300 hover:bg-dark-600'}">${p.ready ? 'Siap ✓' : 'Siap'}</button>`;
+                    readyBtn = `<button onclick="Multiplayer.toggleReady('${p.id}')" class="ml-auto px-2 py-1 text-xs rounded-full ${p.ready ? 'bg-secondary-500 text-white' : 'bg-dark-700 text-dark-300 hover:bg-dark-600'}">Siap</button>`;
                 }
                 return `
                     <div class="player-list-item ${isReady} ${isHostClass} flex">
@@ -1409,7 +1594,7 @@ const Multiplayer = (() => {
         listEl.innerHTML = completedPlayers.map((p, index) => {
             const charData = opponentCharacters[p.id] || CHAR_DATA[p.charId];
             const rankColor = index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-400' : 'text-dark-300';
-            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+            const medal = `#${index + 1}`;
             return `
                 <div class="flex items-center gap-3 p-3 rounded-xl bg-dark-800 border border-dark-700">
                     <span class="text-2xl font-bold ${rankColor}">${medal}</span>
@@ -1427,13 +1612,16 @@ const Multiplayer = (() => {
             const myRank = completedPlayers.findIndex(p => p.isMe);
             const myTime = roomPlayers.find(p => p.isMe)?.completedTime;
             if (myRank === 0 && myTime) {
-                modalTitle.textContent = `🥇 Kamu Juara 1! (${formatTime(myTime)})`;
+                modalTitle.textContent = `Kamu Juara 1! (${formatTime(myTime)})`;
             } else if (myRank > -1) {
-                modalTitle.textContent = `🏆 Kamu Peringkat ${myRank + 1}!`;
+                modalTitle.textContent = `Kamu Peringkat ${myRank + 1}!`;
             } else {
                 modalTitle.textContent = 'Hasil Pertandingan';
             }
         }
+
+        const emoji = document.getElementById('mp-result-emoji');
+        if (emoji) emoji.innerHTML = getResultTrophySvg();
 
         // Show modal
         const modal = document.getElementById('mp-result-modal');
@@ -1598,6 +1786,8 @@ const Multiplayer = (() => {
         classBattleStartLevel = 1;
         restoreAllSavedLevelsAfterClassBattle();
         stopClassParticipantPolling();
+        classBattleParticipantRows = [];
+        classBattleRankingRows = [];
 
         setClassSessionPanelVisible(false);
         setClassSessionCode('-');

@@ -907,7 +907,7 @@
         }
 
         .char-card.selected::after {
-            content: '✓';
+            content: '';
             position: absolute;
             top: 0.75rem;
             right: 0.75rem;
@@ -1008,6 +1008,88 @@
             background: rgba(250, 204, 21, 0.08);
             transform: translateY(-6px);
             box-shadow: 0 8px 30px rgba(250, 204, 21, 0.15);
+        }
+
+        .ui-icon-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: linear-gradient(150deg, rgba(30, 41, 59, 0.75), rgba(15, 23, 42, 0.9));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 6px 18px rgba(2, 6, 23, 0.45);
+            transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+        }
+
+        .ui-icon-chip svg {
+            width: 2rem;
+            height: 2rem;
+            stroke-width: 1.9;
+        }
+
+        .ui-icon-chip--solo {
+            color: #7dd3fc;
+            border-color: rgba(56, 189, 248, 0.45);
+            background: linear-gradient(150deg, rgba(14, 116, 144, 0.22), rgba(14, 165, 233, 0.12));
+        }
+
+        .ui-icon-chip--party {
+            color: #a5b4fc;
+            border-color: rgba(129, 140, 248, 0.45);
+            background: linear-gradient(150deg, rgba(99, 102, 241, 0.2), rgba(59, 130, 246, 0.12));
+        }
+
+        .ui-icon-chip--host {
+            color: #5eead4;
+            border-color: rgba(45, 212, 191, 0.5);
+            background: linear-gradient(150deg, rgba(13, 148, 136, 0.28), rgba(45, 212, 191, 0.12));
+        }
+
+        .ui-icon-chip--join {
+            color: #c4b5fd;
+            border-color: rgba(167, 139, 250, 0.5);
+            background: linear-gradient(150deg, rgba(126, 34, 206, 0.22), rgba(168, 85, 247, 0.12));
+        }
+
+        .ui-icon-chip--circuit {
+            color: #5eead4;
+            border-color: rgba(20, 184, 166, 0.45);
+            background: linear-gradient(150deg, rgba(15, 118, 110, 0.25), rgba(45, 212, 191, 0.12));
+        }
+
+        .ui-icon-chip--result {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 1.25rem;
+            color: #67e8f9;
+            border-color: rgba(34, 211, 238, 0.48);
+            background: linear-gradient(150deg, rgba(8, 145, 178, 0.32), rgba(14, 116, 144, 0.14));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 24px rgba(8, 47, 73, 0.55);
+            animation: result-trophy-pulse 1.8s ease-in-out infinite;
+        }
+
+        .ui-icon-chip--result svg {
+            width: 2.3rem;
+            height: 2.3rem;
+        }
+
+        .pm-card:hover .ui-icon-chip,
+        .group:hover .ui-icon-chip {
+            transform: translateY(-2px) scale(1.06);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 24px rgba(30, 41, 59, 0.55);
+        }
+
+        @keyframes result-trophy-pulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.06);
+            }
         }
 
         .lobby-panel {
@@ -1538,7 +1620,7 @@
                 class="font-display text-4xl md:text-5xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-3">
                 Pilih Karaktermu!
             </h1>
-            <p class="text-dark-200 text-lg">Siapa yang akan menemanimu berpetualang? 🚀</p>
+            <p class="text-dark-200 text-lg">Siapa yang akan menemanimu berpetualang?</p>
         </div>
 
         <!-- Character Grid -->
@@ -1556,7 +1638,10 @@
 
         <!-- Start Button -->
         <button id="btn-start-game" disabled class="relative z-10">
-            🚀 Mulai Petualangan!
+            <svg class="w-5 h-5 inline-block mr-2 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-6.518-3.76A1 1 0 007 8.274v7.452a1 1 0 001.234.966l6.518-1.63A1 1 0 0015.5 14.1v-1.94a1 1 0 00-.748-.992z" />
+            </svg>
+            Mulai Petualangan!
         </button>
     </div>
 
@@ -1577,13 +1662,26 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl w-full mb-6 mx-auto">
             <!-- Solo -->
             <div class="pm-card" onclick="Multiplayer.goSolo()">
-                <div class="text-5xl mb-3">🎮</div>
+                <div class="mb-3 flex justify-center">
+                    <span class="ui-icon-chip ui-icon-chip--solo">
+                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <circle cx="12" cy="12" r="9" stroke-width="1.8"></circle>
+                            <path d="M10 8l6 4-6 4V8z" fill="currentColor" stroke="none"></path>
+                        </svg>
+                    </span>
+                </div>
                 <h3 class="font-display text-2xl font-bold text-primary-400 mb-2">Main Sendiri</h3>
                 <p class="text-dark-200 text-sm">Pelajari semua materi dengan kecepatanmu sendiri</p>
             </div>
             <!-- Multiplayer -->
             <div class="pm-card" onclick="Multiplayer.goMultiplayer()">
-                <div class="text-5xl mb-3">👥</div>
+                <div class="mb-3 flex justify-center">
+                    <span class="ui-icon-chip ui-icon-chip--party">
+                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 21v-1a4 4 0 00-4-4H8a4 4 0 00-4 4v1m16 0v-1a4 4 0 00-3-3.87M14 3.13a4 4 0 010 7.75M10 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </span>
+                </div>
                 <h3 class="font-display text-2xl font-bold text-accent-400 mb-2">Main Bersama</h3>
                 <p class="text-dark-200 text-sm">Main bareng teman! Supports lebih dari 2 pemain.</p>
 
@@ -1616,7 +1714,14 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl w-full mb-8">
                 <!-- Host Button -->
                 <div class="group lobby-panel p-8 text-center cursor-pointer hover:bg-accent-500/10 transition-all border-2 border-accent-400/30 rounded-3xl hover:border-accent-400 hover:shadow-2xl hover:shadow-accent-500/25" onclick="Multiplayer.showClassBattleHostForm()">
-                    <div class="text-5xl mb-4 mx-auto group-hover:scale-110 transition-transform">🖥️</div>
+                    <div class="mb-4 flex justify-center">
+                        <span class="ui-icon-chip ui-icon-chip--host">
+                            <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <rect x="3" y="4" width="18" height="12" rx="2" ry="2" stroke-width="1.8"></rect>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 20h8m-4-4v4"></path>
+                            </svg>
+                        </span>
+                    </div>
                     <h3 class="font-display text-2xl font-bold text-accent-400 mb-3 group-hover:text-accent-300">Buat Room sebagai Host</h3>
                     <p class="text-dark-300 mb-4">Buat sesi class battle, bagikan kode 6 digit ke temanmu</p>
                     <div class="text-accent-400 font-bold text-lg bg-accent-500/10 px-6 py-3 rounded-2xl border-2 border-accent-400/50">Mulai Host</div>
@@ -1624,7 +1729,14 @@
 
                 <!-- Join Button -->
                 <div class="group lobby-panel p-8 text-center cursor-pointer hover:bg-secondary-500/10 transition-all border-2 border-secondary-400/30 rounded-3xl hover:border-secondary-400 hover:shadow-2xl hover:shadow-secondary-500/25" onclick="Multiplayer.showClassBattleJoinForm()">
-                    <div class="text-5xl mb-4 mx-auto group-hover:scale-110 transition-transform">🚪</div>
+                    <div class="mb-4 flex justify-center">
+                        <span class="ui-icon-chip ui-icon-chip--join">
+                            <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 3h9a2 2 0 012 2v14a2 2 0 01-2 2H4V3z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 12h10m0 0l-3-3m3 3l-3 3"></path>
+                            </svg>
+                        </span>
+                    </div>
                     <h3 class="font-display text-2xl font-bold text-secondary-400 mb-3 group-hover:text-secondary-300">Gabung Room sebagai Pemain</h3>
                     <p class="text-dark-300 mb-4">Masukkan kode room dari host untuk bergabung</p>
                     <div class="text-secondary-400 font-bold text-lg bg-secondary-500/10 px-6 py-3 rounded-2xl border-2 border-secondary-400/50">Gabung Room</div>
@@ -1649,11 +1761,11 @@
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-dark-200 mb-2">Mode Permainan:</label>
                         <select id="class-mode-select" class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-lg font-bold focus:border-accent-400 transition-colors">
-                            <option value="coding">💻 Coding Puzzle</option>
-                            <option value="robot">🤖 Robot Logic</option>
-                            <option value="network">🌐 Network</option>
-                            <option value="computer">🖥️ Build Computer</option>
-                            <option value="circuit">🔌 Circuit</option>
+                            <option value="coding">Coding Puzzle</option>
+                            <option value="robot">Robot Logic</option>
+                            <option value="network">Network</option>
+                            <option value="computer">Build Computer</option>
+                            <option value="circuit">Circuit</option>
                         </select>
                     </div>
 
@@ -1664,9 +1776,16 @@
                             class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-center font-mono text-lg focus:border-accent-400 transition-colors">
                     </div>
 
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-dark-200 mb-2">Durasi per Level (detik):</label>
+                        <input id="class-per-level-seconds" type="number" min="10" max="300" value="20"
+                            class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-center font-mono text-lg focus:border-accent-400 transition-colors">
+                        <p class="mt-2 text-xs text-dark-400">Total timer sesi = target level × durasi per level.</p>
+                    </div>
+
                     <button onclick="Multiplayer.createClassBattleRoom()" 
                         class="btn-primary w-full px-8 py-4 rounded-2xl font-bold text-xl mb-4 shadow-lg hover:shadow-xl hover:shadow-primary-500/30 transition-all">
-                        🚀 Buat Room
+                        Buat Room
                     </button>
 
                     <p class="text-xs text-dark-400 text-center" id="class-create-status"></p>
@@ -1691,14 +1810,17 @@
                                 class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-center font-mono text-2xl font-bold tracking-wider focus:border-secondary-400 transition-colors">
                             <button onclick="navigator.clipboard.writeText(document.getElementById('class-join-code').value); showToast('Kode disalin!')" 
                                 class="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-secondary-400 transition-colors p-1" title="Salin">
-                                📋
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7a2 2 0 012-2h7a2 2 0 012 2v10a2 2 0 01-2 2h-7a2 2 0 01-2-2V7z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h7a2 2 0 012 2v1"></path>
+                                </svg>
                             </button>
                         </div>
                     </div>
 
                     <button onclick="Multiplayer.joinClassBattleRoom()" 
                         class="btn-success w-full px-8 py-4 rounded-2xl font-bold text-xl mb-4 shadow-lg hover:shadow-xl hover:shadow-secondary-500/30 transition-all">
-                        🚪 Gabung Room
+                        Gabung Room
                     </button>
 
                     <p class="text-xs text-dark-400 text-center" id="class-join-status"></p>
@@ -1717,11 +1839,12 @@
                     <div class="flex items-center gap-2">
                         <span id="class-countdown-label" class="text-sm font-mono bg-dark-700 px-3 py-1 rounded-full text-accent-400">-</span>
                         <button id="class-start-btn" onclick="Multiplayer.startClassBattle()" class="hidden px-4 py-2 bg-gradient-to-r from-accent-400 to-accent-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-accent-500/50 transition-all">
-                            🎮 Mulai Class Battle
+                            Mulai Class Battle
                         </button>
                     </div>
                 </div>
                 <p class="text-sm mb-4" id="class-session-status">Belum terhubung ke sesi</p>
+                <p class="mb-3 text-xs font-semibold text-secondary-300" id="class-completion-progress">Selesai: 0/0 peserta</p>
 
                 <!-- Participants Preview -->
                 <div class="border-t border-dark-600 pt-4 mb-4">
@@ -1735,7 +1858,7 @@
                 <!-- Live Ranking -->
                 <div class="border-t border-dark-600 pt-4">
                     <h4 class="font-bold text-sm text-dark-100 mb-3 flex items-center gap-2">
-                        📊 Live Ranking 
+                        Live Ranking 
                         <span class="text-xs bg-accent-500/20 text-accent-400 px-2 py-1 rounded-full font-mono" id="live-participant-count">0</span>
                     </h4>
                     <div id="class-live-progress-list" class="max-h-40 overflow-y-auto space-y-1 text-xs"></div>
@@ -1775,7 +1898,7 @@
         <!-- Host start button -->
         <button id="vs-start-btn" onclick="Multiplayer.vsStart()"
             class="hidden px-8 py-4 rounded-2xl font-bold text-lg text-dark-900 bg-gradient-to-r from-accent-400 to-accent-500 hover:scale-105 transition-transform shadow-lg shadow-accent-500/30">
-            🚀 Mulai!
+             Mulai!
         </button>
         <!-- Guest wait message -->
         <p id="vs-wait-msg" class="hidden text-dark-200 text-lg animate-pulse">Menunggu host memulai permainan...</p>
@@ -1816,7 +1939,15 @@
          ============================================ -->
     <div id="mp-result-modal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
         <div id="mp-result-content" class="modal-content p-8 max-w-lg w-full text-center">
-            <div class="text-6xl mb-3" id="mp-result-emoji">🏆</div>
+            <div class="mb-3" id="mp-result-emoji">
+                <span class="ui-icon-chip ui-icon-chip--result mx-auto">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 4h12v3a6 6 0 01-12 0V4z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 8H4.5A2.5 2.5 0 012 5.5V5h4m12 3h1.5A2.5 2.5 0 0022 5.5V5h-4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 13v4m-3 3h6m-8 0h10"></path>
+                    </svg>
+                </span>
+            </div>
             <h2 id="mp-result-title" class="font-display text-3xl font-bold text-accent-400 mb-2">Hasil</h2>
             <div id="mp-result-detail" class="mb-6">
                 <!-- Legacy 2-player fallback -->
@@ -1834,7 +1965,8 @@
                 </div>
                 <!-- N-player ranked list -->
                 <div id="result-ranked-list" class="mt-6">
-                    <h3 class="font-bold text-lg mb-3 text-accent-400 text-center">🏆 Ranking (Waktu tercepat menang)</h3>
+                    <h3 class="font-bold text-lg mb-2 text-accent-400 text-center">Ranking (Waktu tercepat menang)</h3>
+                    <p id="result-completion-progress" class="mb-3 text-xs font-semibold text-secondary-300 text-center">Selesai: 0/0 peserta</p>
                     <div id="result-player-list" class="space-y-2 max-h-64 overflow-y-auto bg-dark-800 rounded-xl p-4"></div>
                 </div>
             </div>
@@ -2119,7 +2251,16 @@
                 <!-- Mode 5: Circuit Builder -->
                 <button class="mode-card circuit rounded-3xl p-6 text-left group" data-mode="circuit">
                     <div class="flex items-start justify-between mb-4">
-                        <div class="mode-icon" style="font-size:3.5rem;">🔌</div>
+                        <div class="mode-icon" id="mode-icon-circuit" style="font-size:3.5rem;">
+                            <span class="ui-icon-chip ui-icon-chip--circuit">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <rect x="4" y="4" width="16" height="16" rx="3" ry="3" stroke-width="1.8"></rect>
+                                    <circle cx="9" cy="9" r="1.6" stroke-width="1.8"></circle>
+                                    <circle cx="15" cy="15" r="1.6" stroke-width="1.8"></circle>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.5 9h3m1.5 0v3m-6 3h3"></path>
+                                </svg>
+                            </span>
+                        </div>
                         <div class="relative w-16 h-16">
                             <svg class="progress-ring w-16 h-16" viewBox="0 0 60 60">
                                 <circle cx="30" cy="30" r="26" stroke="#334155" stroke-width="4" fill="none" />
@@ -2318,19 +2459,19 @@
                     <div class="flex flex-wrap gap-2 mb-6" id="command-blocks">
                         <div class="command-block text-white font-semibold text-sm" draggable="true"
                             data-command="forward">
-                            ⬆️ Maju
+                            ⬆ Maju
                         </div>
                         <div class="command-block text-white font-semibold text-sm" draggable="true"
                             data-command="left">
-                            ↩️ Kiri
+                            ↩ Kiri
                         </div>
                         <div class="command-block text-white font-semibold text-sm" draggable="true"
                             data-command="right">
-                            ↪️ Kanan
+                            ↪ Kanan
                         </div>
                         <div class="command-block loop text-white font-semibold text-sm" draggable="true"
                             data-command="loop">
-                            🔄 Loop (2x)
+                             Loop (2x)
                         </div>
                     </div>
 
@@ -2352,7 +2493,7 @@
                             </svg> Hapus
                         </button>
                         <button class="btn-success flex-1 py-3 rounded-xl font-bold text-white" id="btn-run-robot">
-                            ▶️ Jalankan
+                            ▶ Jalankan
                         </button>
                     </div>
                 </div>
@@ -2366,14 +2507,14 @@
                 style="background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(8px);">
                 <div class="glass-card rounded-3xl p-8 max-w-md w-full text-center border border-primary-500/30"
                     style="box-shadow: 0 0 60px rgba(99, 102, 241, 0.2);">
-                    <div class="text-6xl mb-6" id="tutorial-icon">👋</div>
-                    <h3 class="font-display text-xl font-bold text-primary-400 mb-3">📖 Tutorial</h3>
+                    <div class="text-6xl mb-6" id="tutorial-icon"></div>
+                    <h3 class="font-display text-xl font-bold text-primary-400 mb-3">Tutorial</h3>
                     <p class="text-dark-100 mb-8 text-lg leading-relaxed" id="tutorial-message">...</p>
                     <div class="flex items-center justify-between">
                         <span class="text-dark-400 text-sm font-mono" id="tutorial-step-indicator">1/3</span>
                         <button class="btn-primary px-8 py-3 rounded-xl font-bold text-white text-lg"
                             id="tutorial-next-btn">
-                            Lanjut ➡️
+                            Lanjut
                         </button>
                     </div>
                 </div>
@@ -2686,7 +2827,7 @@
                         </div>
                         <div>
                             <h4 class="font-display font-bold text-dark-200 text-sm">Status</h4>
-                            <p id="case-status" class="text-xs text-dark-300 font-semibold">⚫ Power Off</p>
+                            <p id="case-status" class="text-xs text-dark-300 font-semibold"> Power Off</p>
                         </div>
                     </div>
                 </div>
@@ -2864,12 +3005,12 @@
                     </svg> Reset
                 </button>
                 <button class="btn-success px-8 py-3 rounded-xl font-bold text-white" id="btn-run-code">
-                    ▶️ Jalankan
+                    ▶ Jalankan
                 </button>
                 <button
                     class="btn-primary px-6 py-3 rounded-xl font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     id="btn-next-puzzle" disabled>
-                    ➡️ Lanjut
+                     Lanjut
                 </button>
             </div>
 
@@ -2890,7 +3031,7 @@
                     ⬅ Kembali
                 </button>
                 <h2 class="font-display text-2xl font-bold text-teal-400 flex items-center gap-2">
-                    🔌 Circuit Builder
+                     Circuit Builder
                 </h2>
                 <div class="flex items-center gap-2">
                     <button
@@ -2912,7 +3053,7 @@
             <div class="glass-card rounded-2xl p-4 mb-4 border-l-4 border-teal-500">
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h3 class="font-display text-lg font-bold text-teal-400 mb-1">⚡ Tantangan</h3>
+                        <h3 class="font-display text-lg font-bold text-teal-400 mb-1"> Tantangan</h3>
                         <p class="text-dark-100" id="circuit-mission">Buat rangkaian seri sederhana!</p>
                     </div>
                     <div class="flex items-center gap-2">
@@ -2948,7 +3089,7 @@
             <!-- Main Workspace -->
             <div class="grid lg:grid-cols-4 gap-4 mb-4">
                 <!-- Component Palette -->
-                <div class="lg:col-span-1">
+                <div class="lg:col-span-1 relative z-20">
                     <div class="glass-card rounded-2xl p-4">
                         <div id="circuit-palette">
                             <!-- Generated by JS -->
@@ -2956,20 +3097,20 @@
 
                         <!-- Instructions -->
                         <div class="circuit-info-panel mt-4">
-                            <h5 class="font-bold text-xs text-teal-300 mb-2">📋 Cara Main</h5>
+                            <h5 class="font-bold text-xs text-teal-300 mb-2"> Cara Main</h5>
                             <ul class="text-[10px] text-dark-300 space-y-1">
                                 <li>• <b>Drag</b> komponen dari panel ke papan</li>
                                 <li>• <b>Klik pin</b> (titik) untuk hubungkan kabel</li>
                                 <li>• <b>Klik Switch</b> untuk ON/OFF</li>
                                 <li>• <b>Double-click</b> komponen untuk hapus</li>
                                 <li>• <b>Klik kanan</b> kabel untuk hapus</li>
-                                <li>• Tekan <b>⚡ Simulasi</b> untuk cek rangkaian</li>
+                                <li>• Tekan <b> Simulasi</b> untuk cek rangkaian</li>
                             </ul>
                         </div>
 
                         <!-- Description -->
                         <div class="circuit-info-panel mt-3">
-                            <h5 class="font-bold text-xs text-purple-300 mb-1">📖 Konsep</h5>
+                            <h5 class="font-bold text-xs text-purple-300 mb-1"> Konsep</h5>
                             <p class="text-[10px] text-dark-300" id="circuit-description">Rangkaian seri: semua komponen
                                 terhubung dalam satu jalur.</p>
                         </div>
@@ -2977,7 +3118,7 @@
                 </div>
 
                 <!-- Circuit Board Canvas -->
-                <div class="lg:col-span-3">
+                <div class="lg:col-span-3 relative z-10">
                     <div class="glass-card rounded-2xl p-3"
                         style="background: rgba(10,42,26,0.4); border-color: rgba(20,184,166,0.2);">
                         <canvas id="circuit-canvas" width="700" height="440"></canvas>
@@ -2989,15 +3130,15 @@
             <div class="flex flex-wrap justify-center gap-3 mb-4">
                 <button class="circuit-control-btn text-white" id="circuit-wire-btn"
                     style="background: linear-gradient(145deg, #14b8a6, #0d9488);">
-                    🔗 Kabel
+                     Kabel
                 </button>
                 <button class="circuit-control-btn text-white" id="circuit-simulate-btn"
                     style="background: linear-gradient(145deg, #22c55e, #16a34a);">
-                    ⚡ Simulasi
+                     Simulasi
                 </button>
                 <button class="circuit-control-btn text-white" id="circuit-delete-btn"
                     style="background: linear-gradient(145deg, #f59e0b, #d97706);">
-                    🗑 Hapus Terpilih
+                     Hapus Terpilih
                 </button>
                 <button class="circuit-control-btn text-white" id="circuit-reset-btn"
                     style="background: linear-gradient(145deg, #ef4444, #dc2626);">
@@ -3046,7 +3187,7 @@
             <p class="text-dark-200 mb-6" id="success-message">Kamu berhasil menyelesaikan tantangan!</p>
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
                 <button class="btn-success px-6 py-3 rounded-xl font-bold text-white" id="btn-next-level">
-                    ➡️ Level Berikutnya
+                     Level Berikutnya
                 </button>
                 <button
                     class="px-6 py-3 rounded-xl font-bold text-dark-200 bg-dark-700 hover:bg-dark-600 transition-colors"
@@ -3130,14 +3271,14 @@
     <script>
             (function () {
                 const tips = [
-                    '💡 Tip: Tekan M untuk mute/unmute suara',
-                    '💡 Tip: Tekan Esc untuk buka pengaturan',
-                    '💡 Tip: Gunakan Ctrl+Enter untuk jalankan perintah',
-                    '💡 Tip: Tekan R untuk reset level saat ini',
-                    '💡 Tip: Alt+← dan Alt+→ untuk navigasi level',
-                    '💡 Tip: Selesaikan level tanpa hint untuk dapat 3 bintang!',
-                    '💡 Tip: Streak bertambah setiap level berturut-turut berhasil',
-                    '💡 Tip: Raih semua achievement untuk jadi Supreme Master!'
+                    ' Tip: Tekan M untuk mute/unmute suara',
+                    ' Tip: Tekan Esc untuk buka pengaturan',
+                    ' Tip: Gunakan Ctrl+Enter untuk jalankan perintah',
+                    ' Tip: Tekan R untuk reset level saat ini',
+                    ' Tip: Alt+← dan Alt+→ untuk navigasi level',
+                    ' Tip: Selesaikan level tanpa hint untuk dapat 3 bintang!',
+                    ' Tip: Streak bertambah setiap level berturut-turut berhasil',
+                    ' Tip: Raih semua achievement untuk jadi Supreme Master!'
                 ];
 
                 const tipEl = document.getElementById('loader-tip');

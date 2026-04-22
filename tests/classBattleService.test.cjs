@@ -24,11 +24,13 @@ test('createSession: menyimpan mode + target level + kapasitas', async () => {
         hostName: 'Guru',
         mode: 'coding',
         targetLevel: 5,
+        perLevelSeconds: 25,
         maxParticipants: 30
     });
 
     assert.equal(calls[0].table, 'guest_sessions');
     assert.equal(calls[0].rows[0].target_level, 5);
+    assert.equal(calls[0].rows[0].finish_countdown_seconds, 25);
     assert.equal(row.mode, 'coding');
 });
 
