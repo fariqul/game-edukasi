@@ -43,6 +43,11 @@ const Multiplayer = (() => {
     let classParticipantPollTimer = null;
     let classBattleParticipantRows = [];
     let classBattleRankingRows = [];
+    let classLevelTimerTicker = null;
+    let classLevelTimerStartedAt = 0;
+    let classLevelTimerSeconds = 0;
+    let classLevelTimerLevel = 1;
+    let classLevelTimerTargetLevel = 1;
     const classBattleSavedLevels = {};
 
     const CHAR_DATA = {
@@ -221,16 +226,29 @@ const Multiplayer = (() => {
         el.className = `text-sm ${isError ? 'text-red-400' : 'text-accent-300'}`;
     }
 
-    function setClassCountdownLabel(left) {
+    function setClassCountdownLabel(left, meta) {
         const el = document.getElementById('class-countdown-label');
         if (left === '-' || left === null || typeof left === 'undefined') {
             if (el) el.textContent = 'Countdown: -';
-            setClassCountdownOverlay('-');
+            setClassCountdownOverlay('-', null);
             return;
         }
+
         const safeLeft = Math.max(0, Number(left) || 0);
-        if (el) el.textContent = `Countdown: ${safeLeft} detik`;
-        setClassCountdownOverlay(safeLeft);
+        const hasLevelMeta = Boolean(meta)
+            && Number.isFinite(Number(meta.levelIndex))
+            && Number.isFinite(Number(meta.targetLevel));
+        if (el) {
+            if (hasLevelMeta) {
+                const levelIndex = Math.max(1, Math.floor(Number(meta.levelIndex) || 1));
+                const targetLevel = Math.max(levelIndex, Math.floor(Number(meta.targetLevel) || levelIndex));
+                el.textContent = `Level ${levelIndex}/${targetLevel}: ${safeLeft} detik`;
+            } else {
+                el.textContent = `Countdown: ${safeLeft} detik`;
+            }
+        }
+
+        setClassCountdownOverlay(safeLeft, meta);
     }
 
     function setClassSessionCode(code) {
@@ -245,24 +263,54 @@ const Multiplayer = (() => {
         panel.classList.toggle('hidden', !visible);
     }
 
-    function setClassCountdownOverlay(left) {
+    function setClassCountdownOverlay(left, meta) {
         const overlay = document.getElementById('class-countdown-overlay');
         const valueEl = document.getElementById('class-countdown-overlay-value');
         const labelEl = document.getElementById('class-countdown-overlay-label');
+        const levelEl = document.getElementById('class-countdown-overlay-level');
+        const progressEl = document.getElementById('class-countdown-overlay-progress');
         if (!overlay || !valueEl) return;
 
         if (left === '-' || left === null || typeof left === 'undefined') {
             overlay.classList.add('hidden');
             overlay.classList.remove('countdown-overlay-pop', 'countdown-overlay-danger');
+            if (progressEl) progressEl.style.width = '0%';
+            if (levelEl) levelEl.textContent = '';
             return;
         }
 
         const safeLeft = Math.max(0, Number(left) || 0);
+        const totalSeconds = Math.max(
+            1,
+            Math.floor(
+                Number(meta && meta.totalSeconds)
+                || Number(classLevelTimerSeconds)
+                || safeLeft
+                || 1
+            )
+        );
+        const providedProgress = Number(meta && meta.progress01);
+        const progress01 = Number.isFinite(providedProgress)
+            ? Math.max(0, Math.min(1, providedProgress))
+            : Math.max(0, Math.min(1, (totalSeconds - safeLeft) / totalSeconds));
+
         valueEl.textContent = String(safeLeft);
         if (labelEl) {
             labelEl.textContent = safeLeft > 0
-                ? 'Countdown Penutupan Sesi'
-                : 'Sesi Terkunci';
+                ? 'Countdown Per Level'
+                : 'Waktu Level Habis';
+        }
+
+        if (levelEl) {
+            const levelIndex = Math.max(1, Math.floor(Number(meta && meta.levelIndex) || 0));
+            const targetLevel = Math.max(levelIndex, Math.floor(Number(meta && meta.targetLevel) || levelIndex));
+            levelEl.textContent = (meta && Number.isFinite(Number(meta.levelIndex)))
+                ? `Level ${levelIndex}/${targetLevel}`
+                : '';
+        }
+
+        if (progressEl) {
+            progressEl.style.width = `${Math.round(progress01 * 100)}%`;
         }
 
         overlay.classList.remove('hidden');
@@ -384,10 +432,130 @@ const Multiplayer = (() => {
         return Math.max(10, Math.min(300, safe));
     }
 
-    function getClassBattleTotalCountdownSeconds(session) {
-        const perLevel = getClassBattlePerLevelSeconds(session);
-        const target = Math.max(1, Math.floor(Number(session && session.target_level) || 1));
-        return Math.max(10, Math.min(3600, perLevel * target));
+    function stopClassLevelTimer() {
+        if (!classLevelTimerTicker) return;
+        clearInterval(classLevelTimerTicker);
+        classLevelTimerTicker = null;
+    }
+
+    function buildClassLevelTimerSnapshot(nowMs) {
+        if (!classLevelTimerStartedAt || classLevelTimerSeconds <= 0) return null;
+
+        const now = Number.isFinite(nowMs) ? nowMs : Date.now();
+        const elapsedMs = Math.max(0, now - classLevelTimerStartedAt);
+        const left = Math.max(0, classLevelTimerSeconds - Math.floor(elapsedMs / 1000));
+        const progress01 = Math.max(0, Math.min(1, elapsedMs / (classLevelTimerSeconds * 1000)));
+
+        return {
+            left,
+            totalSeconds: classLevelTimerSeconds,
+            levelIndex: classLevelTimerLevel,
+            targetLevel: classLevelTimerTargetLevel,
+            progress01
+        };
+    }
+
+    function renderClassLevelTimerSnapshot(snapshot) {
+        if (!snapshot) {
+            setClassCountdownLabel('-');
+            return;
+        }
+        setClassCountdownLabel(snapshot.left, snapshot);
+    }
+
+    function startClassLevelCountdown({ startedAt, seconds, levelIndex, targetLevel }) {
+        stopClassLevelTimer();
+
+        classLevelTimerSeconds = Math.max(1, Math.floor(Number(seconds) || getClassBattlePerLevelSeconds(classBattleSession)));
+        classLevelTimerLevel = Math.max(1, Math.floor(Number(levelIndex) || 1));
+        classLevelTimerTargetLevel = Math.max(
+            classLevelTimerLevel,
+            Math.floor(Number(targetLevel) || Math.max(1, Math.floor(Number(classBattleSession && classBattleSession.target_level) || 1)))
+        );
+
+        const startedAtMs = typeof startedAt === 'number'
+            ? startedAt
+            : new Date(startedAt).getTime();
+        classLevelTimerStartedAt = Number.isFinite(startedAtMs)
+            ? startedAtMs
+            : Date.now();
+
+        renderClassLevelTimerSnapshot(buildClassLevelTimerSnapshot(classLevelTimerStartedAt));
+
+        classLevelTimerTicker = setInterval(() => {
+            const snapshot = buildClassLevelTimerSnapshot(Date.now());
+            renderClassLevelTimerSnapshot(snapshot);
+
+            if (!snapshot || snapshot.left > 0) return;
+
+            stopClassLevelTimer();
+            if (
+                classBattleRole === 'host'
+                && classBattleActive
+                && classBattleSession
+                && classBattleSession.status === 'in_progress'
+            ) {
+                onClassLevelTimerElapsed().catch(() => {});
+            }
+        }, 200);
+    }
+
+    async function announceClassLevelTimerStart({ levelIndex, targetLevel, seconds, startedAt }) {
+        const bridge = getClassBattleBridge();
+        if (!bridge || !classBattleSession || !classBattleSession.id) return;
+
+        const safeSeconds = Math.max(1, Math.floor(Number(seconds) || getClassBattlePerLevelSeconds(classBattleSession)));
+        const safeLevel = Math.max(1, Math.floor(Number(levelIndex) || 1));
+        const safeTarget = Math.max(
+            safeLevel,
+            Math.floor(Number(targetLevel) || Math.max(1, Math.floor(Number(classBattleSession.target_level) || 1)))
+        );
+
+        const parsedStart = typeof startedAt === 'number'
+            ? startedAt
+            : new Date(startedAt).getTime();
+        const startedAtIso = Number.isFinite(parsedStart)
+            ? new Date(parsedStart).toISOString()
+            : new Date().toISOString();
+
+        startClassLevelCountdown({
+            startedAt: startedAtIso,
+            seconds: safeSeconds,
+            levelIndex: safeLevel,
+            targetLevel: safeTarget
+        });
+
+        await bridge.broadcast('session-timer-started', {
+            startedAt: startedAtIso,
+            seconds: safeSeconds,
+            levelIndex: safeLevel,
+            targetLevel: safeTarget
+        });
+    }
+
+    async function onClassLevelTimerElapsed() {
+        if (!classBattleSession || classBattleRole !== 'host' || !classBattleActive) return;
+
+        const target = Math.max(
+            1,
+            Math.floor(Number(classBattleSession.target_level) || Number(classLevelTimerTargetLevel) || 1)
+        );
+        const currentLevel = Math.max(1, Math.floor(Number(classLevelTimerLevel) || 1));
+        const seconds = Math.max(1, Math.floor(Number(classLevelTimerSeconds) || getClassBattlePerLevelSeconds(classBattleSession)));
+
+        if (currentLevel >= target) {
+            setClassSessionStatus('Waktu level terakhir habis. Menutup sesi...', false);
+            await finishClassBattleSession('finished');
+            return;
+        }
+
+        const nextLevel = currentLevel + 1;
+        setClassSessionStatus(`Waktu level ${currentLevel} habis. Lanjut ke level ${nextLevel}.`, false);
+        await announceClassLevelTimerStart({
+            levelIndex: nextLevel,
+            targetLevel: target,
+            seconds
+        });
     }
 
     async function areAllBattleParticipantsDone(bridge, targetLevel, rankingRows) {
@@ -468,16 +636,9 @@ const Multiplayer = (() => {
 
         classBattleBridge = ClassBattleBridge.createBridge({
             service,
-            onStartCountdown(seconds) {
-                setClassCountdownLabel(seconds);
-                setClassSessionStatus(`Countdown dimulai (${seconds} detik).`, false);
-            },
-            onCountdownTick(left) {
-                setClassCountdownLabel(left);
-            },
-            onSessionLocked() {
-                finishClassBattleSession('finished');
-            },
+            onStartCountdown() {},
+            onCountdownTick() {},
+            onSessionLocked() {},
             onRankingUpdated(ranking) {
                 renderClassBattleRanking(ranking);
             },
@@ -667,6 +828,11 @@ const Multiplayer = (() => {
         } finally {
             classBattleActive = false;
             setClassSessionStatus('Sesi class battle ditutup.', false);
+            stopClassLevelTimer();
+            classLevelTimerStartedAt = 0;
+            classLevelTimerSeconds = 0;
+            classLevelTimerLevel = 1;
+            classLevelTimerTargetLevel = 1;
             setClassCountdownLabel('-');
             stopClassParticipantPolling();
             syncLobbyBackButtonState();
@@ -679,9 +845,36 @@ const Multiplayer = (() => {
         if (!eventName) return;
 
         if (eventName === 'session-timer-started' || eventName === 'first-finish-window-started') {
-            const totalSeconds = Math.max(0, Number(payload && payload.seconds) || 0);
-            if (totalSeconds > 0) {
-                setClassSessionStatus(`Timer sesi aktif (${totalSeconds} detik total).`, false);
+            const seconds = Math.max(0, Number(payload && payload.seconds) || 0);
+            const levelIndex = Math.max(1, Math.floor(Number(payload && payload.levelIndex) || Number(classLevelTimerLevel) || 1));
+            const targetLevel = Math.max(
+                levelIndex,
+                Math.floor(Number(payload && payload.targetLevel) || Number(classBattleSession && classBattleSession.target_level) || levelIndex)
+            );
+
+            if (seconds > 0) {
+                startClassLevelCountdown({
+                    startedAt: payload && payload.startedAt,
+                    seconds,
+                    levelIndex,
+                    targetLevel
+                });
+
+                if (classBattleRole === 'guest' && classBattleSession && classBattleSession.mode) {
+                    const absoluteLevelFromTimer = Math.max(
+                        1,
+                        Math.floor(Number(classBattleStartLevel) || 1) + levelIndex - 1
+                    );
+                    const currentAbsoluteLevel = getCurrentModeLevel(classBattleSession.mode);
+                    if (currentAbsoluteLevel < absoluteLevelFromTimer) {
+                        setModeLevel(classBattleSession.mode, absoluteLevelFromTimer);
+                        if (typeof navigateTo === 'function') {
+                            navigateTo(classBattleSession.mode);
+                        }
+                    }
+                }
+
+                setClassSessionStatus(`Timer level ${levelIndex}/${targetLevel} aktif (${seconds} detik).`, false);
             }
             return;
         }
@@ -718,13 +911,16 @@ const Multiplayer = (() => {
                 return;
             }
 
+            const perLevelSeconds = Math.max(1, Math.floor(Number(payload && payload.perLevelSeconds) || getClassBattlePerLevelSeconds(classBattleSession)));
+            classLevelTimerSeconds = perLevelSeconds;
+
             classBattleRoundStartedAt = Date.now();
             ensureClassBattleStartsFromLevelOne(mode);
             classBattleStartLevel = getCurrentModeLevel(mode);
             if (mode && typeof navigateTo === 'function') {
                 navigateTo(mode);
             }
-            setClassSessionStatus('Class battle sudah dimulai.', false);
+            setClassSessionStatus('Class battle dimulai. Menunggu sinkron timer level dari host...', false);
             return;
         }
 
@@ -734,6 +930,11 @@ const Multiplayer = (() => {
                 classBattleSession.status = (payload && payload.status) || 'finished';
             }
             restoreSavedLevelAfterClassBattle(classBattleSession && classBattleSession.mode);
+            stopClassLevelTimer();
+            classLevelTimerStartedAt = 0;
+            classLevelTimerSeconds = 0;
+            classLevelTimerLevel = 1;
+            classLevelTimerTargetLevel = 1;
             setClassCountdownLabel('-');
             setClassSessionStatus('Sesi selesai. Menampilkan ranking akhir.', false);
             stopClassParticipantPolling();
@@ -840,6 +1041,11 @@ const Multiplayer = (() => {
         setClassCreateStatus('', false);
         setClassJoinStatus('', false);
         if (!classBattleSession) {
+            stopClassLevelTimer();
+            classLevelTimerStartedAt = 0;
+            classLevelTimerSeconds = 0;
+            classLevelTimerLevel = 1;
+            classLevelTimerTargetLevel = 1;
             classBattleParticipantRows = [];
             classBattleRankingRows = [];
             setClassSessionCode('-');
@@ -1053,6 +1259,11 @@ const Multiplayer = (() => {
             setClassSessionPanelVisible(true);
             setClassSessionCode(resolvedSessionCode || '-');
             setClassSessionStatus('Sesi dibuat. Bagikan kode ke peserta.', false);
+            stopClassLevelTimer();
+            classLevelTimerStartedAt = 0;
+            classLevelTimerSeconds = 0;
+            classLevelTimerLevel = 1;
+            classLevelTimerTargetLevel = 1;
             setClassCountdownLabel('-');
             setClassCreateStatus('Sesi siap. Tekan "Mulai Class Battle" saat semua peserta sudah masuk.', false);
 
@@ -1124,6 +1335,11 @@ const Multiplayer = (() => {
             setClassSessionPanelVisible(true);
             setClassSessionCode(resolvedSessionCode || '-');
             setClassSessionStatus('Berhasil bergabung. Menunggu host memulai.', false);
+            stopClassLevelTimer();
+            classLevelTimerStartedAt = 0;
+            classLevelTimerSeconds = 0;
+            classLevelTimerLevel = 1;
+            classLevelTimerTargetLevel = 1;
             setClassCountdownLabel('-');
             setClassJoinStatus(`Bergabung sebagai ${classBattleParticipant.display_name}.`, false);
 
@@ -1143,7 +1359,8 @@ const Multiplayer = (() => {
             if (classBattleSession.status === 'in_progress') {
                 handleClassBattleEvent('session-started', {
                     mode: classBattleSession.mode,
-                    targetLevel: classBattleSession.target_level
+                    targetLevel: classBattleSession.target_level,
+                    perLevelSeconds: getClassBattlePerLevelSeconds(classBattleSession)
                 });
             }
         } catch (error) {
@@ -1175,26 +1392,10 @@ const Multiplayer = (() => {
             classBattleRoundStartedAt = Date.now();
             classBattleStartLevel = getCurrentModeLevel(classBattleSession.mode);
 
-            const totalCountdownSeconds = getClassBattleTotalCountdownSeconds(classBattleSession);
-
-            const countdownSession = await bridge.service.startFirstFinishWindow({
-                sessionId: classBattleSession.id,
-                countdownSeconds: totalCountdownSeconds
-            });
-            if (countdownSession && countdownSession.first_finish_started_at) {
-                classBattleSession = {
-                    ...classBattleSession,
-                    ...countdownSession
-                };
-                bridge.applyCountdownFromServer(
-                    countdownSession.first_finish_started_at,
-                    countdownSession.finish_countdown_seconds
-                );
-                await bridge.broadcast('session-timer-started', {
-                    startedAt: countdownSession.first_finish_started_at,
-                    seconds: countdownSession.finish_countdown_seconds
-                });
-            }
+            const perLevelSeconds = getClassBattlePerLevelSeconds(classBattleSession);
+            const targetLevel = Math.max(1, Math.floor(Number(classBattleSession.target_level) || 1));
+            classLevelTimerSeconds = perLevelSeconds;
+            classLevelTimerTargetLevel = targetLevel;
 
             bridge.resetFirstFinishLock();
             bridge.syncSessionMeta({
@@ -1206,10 +1407,16 @@ const Multiplayer = (() => {
             await bridge.broadcast('session-started', {
                 mode: classBattleSession.mode,
                 targetLevel: classBattleSession.target_level,
-                perLevelSeconds: getClassBattlePerLevelSeconds(classBattleSession)
+                perLevelSeconds
             });
 
-            setClassSessionStatus(`Class battle dimulai. Timer total ${totalCountdownSeconds} detik.`, false);
+            await announceClassLevelTimerStart({
+                levelIndex: 1,
+                targetLevel,
+                seconds: perLevelSeconds
+            });
+
+            setClassSessionStatus(`Class battle dimulai. Timer per level ${perLevelSeconds} detik.`, false);
             setClassCreateStatus('Sesi berjalan. Pantau progres peserta pada panel live.', false);
             const startBtn = document.getElementById('class-start-btn');
             if (startBtn) startBtn.classList.add('hidden');
@@ -1784,6 +1991,11 @@ const Multiplayer = (() => {
         classBattleActive = false;
         classBattleRoundStartedAt = 0;
         classBattleStartLevel = 1;
+        stopClassLevelTimer();
+        classLevelTimerStartedAt = 0;
+        classLevelTimerSeconds = 0;
+        classLevelTimerLevel = 1;
+        classLevelTimerTargetLevel = 1;
         restoreAllSavedLevelsAfterClassBattle();
         stopClassParticipantPolling();
         classBattleParticipantRows = [];
