@@ -294,7 +294,16 @@ const CodingGame = (() => {
         renderPuzzle();
         renderBlocks();
         clearOutput();
-        updateExpectedOutput();
+        // Always show expected output for fill, sort, debug - hide only for guess
+        const expectedCard = document.querySelector('#expected-output-display')?.closest('.glass-card');
+        if (expectedCard) {
+            if (currentPuzzle.type === 'guess') {
+                expectedCard.style.display = 'none';
+            } else {
+                expectedCard.style.display = 'block';
+                updateExpectedOutput();
+            }
+        }
         hideFeedback('coding-feedback');
 
         const nextBtn = document.getElementById('btn-next-puzzle');
@@ -472,6 +481,10 @@ const CodingGame = (() => {
 
             container.appendChild(lineEl);
         });
+
+        // Hide expected output for guess puzzles
+        const expectedCard = document.querySelector('#expected-output-display')?.closest('.glass-card');
+        if (expectedCard) expectedCard.style.display = 'none';
 
         // Show choices
         const choicesDiv = document.createElement('div');
@@ -702,7 +715,16 @@ const CodingGame = (() => {
         renderPuzzle();
         renderBlocks();
         clearOutput();
-        updateExpectedOutput();
+        // Always show expected output for fill, sort, debug - hide only for guess
+        const expectedCard = document.querySelector('#expected-output-display')?.closest('.glass-card');
+        if (expectedCard) {
+            if (currentPuzzle.type === 'guess') {
+                expectedCard.style.display = 'none';
+            } else {
+                expectedCard.style.display = 'block';
+                updateExpectedOutput();
+            }
+        }
         hideFeedback('coding-feedback');
         animateEntrance();
     }
