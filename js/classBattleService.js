@@ -316,7 +316,8 @@
                 'session-started',
                 'first-finish-window-started',
                 'session-finished',
-                'ranking-updated'
+                'ranking-updated',
+                'participant-joined'
             ];
 
             eventNames.forEach((eventName) => {

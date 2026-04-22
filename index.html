@@ -1462,6 +1462,30 @@
             border-radius: 16px;
             padding: 16px;
         }
+
+        .countdown-overlay-pop {
+            animation: class-countdown-pop 240ms ease-out;
+        }
+
+        .countdown-overlay-danger {
+            box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.4), 0 12px 30px rgba(248, 113, 113, 0.25);
+        }
+
+        .countdown-overlay-danger #class-countdown-overlay-value {
+            color: #f87171;
+        }
+
+        @keyframes class-countdown-pop {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.08);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
     </style>
 </head>
 
@@ -1698,6 +1722,15 @@
                     </div>
                 </div>
                 <p class="text-sm mb-4" id="class-session-status">Belum terhubung ke sesi</p>
+
+                <!-- Participants Preview -->
+                <div class="border-t border-dark-600 pt-4 mb-4">
+                    <h4 class="font-bold text-sm text-dark-100 mb-3 flex items-center gap-2">
+                        Peserta Bergabung
+                        <span class="text-xs bg-secondary-500/20 text-secondary-300 px-2 py-1 rounded-full font-mono" id="class-participant-count">0</span>
+                    </h4>
+                    <div id="class-participant-preview-list" class="flex flex-wrap gap-2"></div>
+                </div>
                 
                 <!-- Live Ranking -->
                 <div class="border-t border-dark-600 pt-4">
@@ -1762,6 +1795,13 @@
             <div class="flex items-center gap-3">
                 <span class="text-sm font-mono text-accent-400" id="mp-timer">⏱ 00:00</span>
             </div>
+        </div>
+    </div>
+
+    <div id="class-countdown-overlay" class="hidden fixed right-4 top-4 z-[75] pointer-events-none">
+        <div class="rounded-2xl border border-accent-300/40 bg-dark-900/90 px-4 py-3 shadow-2xl backdrop-blur-sm">
+            <p id="class-countdown-overlay-label" class="text-[11px] uppercase tracking-wider text-dark-200">Countdown Penutupan Sesi</p>
+            <p id="class-countdown-overlay-value" class="font-display text-4xl leading-none text-accent-300">10</p>
         </div>
     </div>
 

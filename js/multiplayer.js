@@ -40,6 +40,8 @@ const Multiplayer = (() => {
     let classBattleActive = false;
     let classBattleRoundStartedAt = 0;
     let classBattleStartLevel = 1;
+    let classParticipantPollTimer = null;
+    const classBattleSavedLevels = {};
 
     const CHAR_DATA = {
         maleAdventurer:   { name: 'Alex',  folder: 'Male adventurer',   prefix: 'character_maleAdventurer',   color: '#38bdf8' },
@@ -101,6 +103,47 @@ const Multiplayer = (() => {
         );
         const startLevel = Math.max(1, Math.floor(Number(classBattleStartLevel) || 1));
         return Math.max(1, absoluteLevel - startLevel + 1);
+    }
+
+    function setModeLevel(mode, level) {
+        if (!mode || typeof GameState === 'undefined' || !GameState || !GameState.currentLevel) {
+            return;
+        }
+        const normalized = Math.max(1, Math.floor(Number(level) || 1));
+        GameState.currentLevel[mode] = normalized;
+    }
+
+    function ensureClassBattleStartsFromLevelOne(mode) {
+        if (!mode || classBattleRole === 'host') return;
+        if (typeof GameState === 'undefined' || !GameState || !GameState.currentLevel) return;
+
+        const current = getCurrentModeLevel(mode);
+        if (!classBattleSavedLevels[mode]) {
+            classBattleSavedLevels[mode] = current;
+        }
+        setModeLevel(mode, 1);
+    }
+
+    function restoreSavedLevelAfterClassBattle(mode) {
+        if (!mode || classBattleRole === 'host') return;
+        if (!Object.prototype.hasOwnProperty.call(classBattleSavedLevels, mode)) return;
+
+        setModeLevel(mode, classBattleSavedLevels[mode]);
+        delete classBattleSavedLevels[mode];
+    }
+
+    function restoreAllSavedLevelsAfterClassBattle() {
+        if (classBattleRole === 'host') {
+            Object.keys(classBattleSavedLevels).forEach((mode) => {
+                delete classBattleSavedLevels[mode];
+            });
+            return;
+        }
+
+        Object.keys(classBattleSavedLevels).forEach((mode) => {
+            setModeLevel(mode, classBattleSavedLevels[mode]);
+            delete classBattleSavedLevels[mode];
+        });
     }
 
     function mapPeerError(errType) {
@@ -178,12 +221,14 @@ const Multiplayer = (() => {
 
     function setClassCountdownLabel(left) {
         const el = document.getElementById('class-countdown-label');
-        if (!el) return;
         if (left === '-' || left === null || typeof left === 'undefined') {
-            el.textContent = 'Countdown: -';
+            if (el) el.textContent = 'Countdown: -';
+            setClassCountdownOverlay('-');
             return;
         }
-        el.textContent = `Countdown: ${Math.max(0, Number(left) || 0)} detik`;
+        const safeLeft = Math.max(0, Number(left) || 0);
+        if (el) el.textContent = `Countdown: ${safeLeft} detik`;
+        setClassCountdownOverlay(safeLeft);
     }
 
     function setClassSessionCode(code) {
@@ -196,6 +241,97 @@ const Multiplayer = (() => {
         const panel = document.getElementById('class-session-panel');
         if (!panel) return;
         panel.classList.toggle('hidden', !visible);
+    }
+
+    function setClassCountdownOverlay(left) {
+        const overlay = document.getElementById('class-countdown-overlay');
+        const valueEl = document.getElementById('class-countdown-overlay-value');
+        const labelEl = document.getElementById('class-countdown-overlay-label');
+        if (!overlay || !valueEl) return;
+
+        if (left === '-' || left === null || typeof left === 'undefined') {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('countdown-overlay-pop', 'countdown-overlay-danger');
+            return;
+        }
+
+        const safeLeft = Math.max(0, Number(left) || 0);
+        valueEl.textContent = String(safeLeft);
+        if (labelEl) {
+            labelEl.textContent = safeLeft > 0
+                ? 'Countdown Penutupan Sesi'
+                : 'Sesi Terkunci';
+        }
+
+        overlay.classList.remove('hidden');
+        overlay.classList.toggle('countdown-overlay-danger', safeLeft <= 3);
+        overlay.classList.remove('countdown-overlay-pop');
+        void overlay.offsetWidth;
+        overlay.classList.add('countdown-overlay-pop');
+    }
+
+    function renderClassParticipantPreview(participants) {
+        const rows = Array.isArray(participants) ? participants : [];
+        const list = document.getElementById('class-participant-preview-list');
+        const countEl = document.getElementById('class-participant-count');
+
+        if (countEl) {
+            countEl.textContent = String(rows.length);
+        }
+
+        if (!list) return;
+
+        if (rows.length === 0) {
+            list.innerHTML = '<p class="text-xs text-dark-400">Belum ada peserta bergabung.</p>';
+            return;
+        }
+
+        list.innerHTML = rows.slice(0, 30).map((row, index) => {
+            const name = escapeHtml((row && row.display_name) || `Peserta ${index + 1}`);
+            const hostTag = row && row.is_host
+                ? '<span class="ml-2 rounded bg-accent-500/20 px-2 py-0.5 text-[10px] font-bold text-accent-300">HOST</span>'
+                : '';
+            return `
+                <div class="inline-flex items-center rounded-full border border-dark-600 bg-dark-800/70 px-3 py-1 text-xs text-dark-100">
+                    <span>${name}</span>${hostTag}
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function refreshClassParticipants() {
+        if (!classBattleSession || !classBattleSession.id) {
+            renderClassParticipantPreview([]);
+            return [];
+        }
+
+        const bridge = classBattleBridge || getClassBattleBridge();
+        if (!bridge || !bridge.service || typeof bridge.service.listParticipants !== 'function') {
+            return [];
+        }
+
+        try {
+            const participants = await bridge.service.listParticipants(classBattleSession.id);
+            renderClassParticipantPreview(participants);
+            return participants;
+        } catch (error) {
+            console.warn('Gagal mengambil daftar peserta class battle:', error);
+            return [];
+        }
+    }
+
+    function stopClassParticipantPolling() {
+        if (!classParticipantPollTimer) return;
+        clearInterval(classParticipantPollTimer);
+        classParticipantPollTimer = null;
+    }
+
+    function startClassParticipantPolling() {
+        stopClassParticipantPolling();
+        if (!classBattleSession || !classBattleSession.id) return;
+        classParticipantPollTimer = setInterval(() => {
+            refreshClassParticipants().catch(() => {});
+        }, 2000);
     }
 
     function isHostLobbyLockedInClassBattle() {
@@ -282,6 +418,10 @@ const Multiplayer = (() => {
 
     function renderClassBattleRanking(rows) {
         const rankedRows = Array.isArray(rows) ? rows : [];
+        const liveCountEl = document.getElementById('live-participant-count');
+        if (liveCountEl) {
+            liveCountEl.textContent = String(rankedRows.length);
+        }
 
         function renderInto(list) {
             if (!list) return;
@@ -379,6 +519,8 @@ const Multiplayer = (() => {
         } finally {
             classBattleActive = false;
             setClassSessionStatus('Sesi class battle ditutup.', false);
+            setClassCountdownLabel('-');
+            stopClassParticipantPolling();
             syncLobbyBackButtonState();
             await bridge.refreshRanking().catch(() => {});
             showClassBattleResultModal();
@@ -388,9 +530,21 @@ const Multiplayer = (() => {
     function handleClassBattleEvent(eventName, payload) {
         if (!eventName) return;
 
+        if (eventName === 'participant-joined') {
+            refreshClassParticipants().catch(() => {});
+            const joinedName = payload && typeof payload.displayName === 'string'
+                ? payload.displayName.trim()
+                : '';
+            if (joinedName) {
+                setClassSessionStatus(`${joinedName} bergabung ke sesi.`, false);
+            }
+            return;
+        }
+
         if (eventName === 'session-started') {
             classBattleActive = true;
             const mode = (payload && payload.mode) || (classBattleSession && classBattleSession.mode);
+            refreshClassParticipants().catch(() => {});
 
             if (classBattleRole === 'host') {
                 setClassSessionStatus('Class battle berjalan. Host sedang memantau progres peserta.', false);
@@ -399,6 +553,7 @@ const Multiplayer = (() => {
             }
 
             classBattleRoundStartedAt = Date.now();
+            ensureClassBattleStartsFromLevelOne(mode);
             classBattleStartLevel = getCurrentModeLevel(mode);
             if (mode && typeof navigateTo === 'function') {
                 navigateTo(mode);
@@ -412,7 +567,10 @@ const Multiplayer = (() => {
             if (classBattleSession) {
                 classBattleSession.status = (payload && payload.status) || 'finished';
             }
+            restoreSavedLevelAfterClassBattle(classBattleSession && classBattleSession.mode);
+            setClassCountdownLabel('-');
             setClassSessionStatus('Sesi selesai. Menampilkan ranking akhir.', false);
+            stopClassParticipantPolling();
             syncLobbyBackButtonState();
             const bridge = getClassBattleBridge();
             if (bridge) bridge.refreshRanking().catch(() => {});
@@ -520,6 +678,11 @@ const Multiplayer = (() => {
             setClassSessionStatus('Belum terhubung', false);
             setClassCountdownLabel('-');
             renderClassBattleRanking([]);
+            renderClassParticipantPreview([]);
+            stopClassParticipantPolling();
+        } else {
+            refreshClassParticipants().catch(() => {});
+            startClassParticipantPolling();
         }
         setClassSessionPanelVisible(Boolean(classBattleSession));
 
@@ -725,6 +888,8 @@ const Multiplayer = (() => {
             if (startBtn) startBtn.classList.remove('hidden');
 
             await bridge.refreshRanking().catch(() => {});
+            await refreshClassParticipants().catch(() => {});
+            startClassParticipantPolling();
         } catch (error) {
             setClassCreateStatus((error && error.message) || 'Gagal membuat sesi class battle.', true);
         }
@@ -794,6 +959,14 @@ const Multiplayer = (() => {
             if (startBtn) startBtn.classList.add('hidden');
 
             await bridge.refreshRanking().catch(() => {});
+            await refreshClassParticipants().catch(() => {});
+            startClassParticipantPolling();
+            await bridge.broadcast('participant-joined', {
+                participantId: classBattleParticipant && classBattleParticipant.id,
+                displayName: classBattleParticipant && classBattleParticipant.display_name
+                    ? classBattleParticipant.display_name
+                    : displayName
+            }).catch(() => {});
 
             if (classBattleSession.status === 'in_progress') {
                 handleClassBattleEvent('session-started', {
@@ -1423,11 +1596,14 @@ const Multiplayer = (() => {
         classBattleActive = false;
         classBattleRoundStartedAt = 0;
         classBattleStartLevel = 1;
+        restoreAllSavedLevelsAfterClassBattle();
+        stopClassParticipantPolling();
 
         setClassSessionPanelVisible(false);
         setClassSessionCode('-');
         setClassSessionStatus('Belum terhubung', false);
         setClassCountdownLabel('-');
+        renderClassParticipantPreview([]);
         hideClassBattleResultPanel();
         syncLobbyBackButtonState();
 
