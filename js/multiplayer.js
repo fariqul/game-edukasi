@@ -28,10 +28,15 @@ const Multiplayer = (() => {
     let gameStartTime = 0;
     let timerInterval = null;
     let reconnectTimer = null;
+    let roomStateInterval = null;
     let myPlayerId = null;
     let myCompleted = false;
     let myTime = 0;
+    let opponentCompleted = false;
+    let opponentTime = 0;
+    let opponentCharacter = null;
     let gameCompletions = {}; // {playerId: time}
+    let classBattleSubmitTimer = null;
 
     let classBattleBridge = null;
     let classBattleSession = null;
@@ -902,7 +907,7 @@ const Multiplayer = (() => {
 
         if (eventName === 'session-started') {
             classBattleActive = true;
-            const mode = (payload && payload.mode) || (classBattleSession && classBattleSession.mode);
+            const mode = (payload && payload.mode) || (classBattleSession && classBattleSession.mode) || 'coding';
             refreshClassParticipants().catch(() => {});
 
             if (classBattleRole === 'host') {
@@ -917,7 +922,7 @@ const Multiplayer = (() => {
             classBattleRoundStartedAt = Date.now();
             ensureClassBattleStartsFromLevelOne(mode);
             classBattleStartLevel = getCurrentModeLevel(mode);
-            if (mode && typeof navigateTo === 'function') {
+            if (typeof navigateTo === 'function') {
                 navigateTo(mode);
             }
             setClassSessionStatus('Class battle dimulai. Menunggu sinkron timer level dari host...', false);
@@ -1434,6 +1439,10 @@ const Multiplayer = (() => {
         if (!bridge || !classBattleSession || !classBattleParticipant) return;
         if (mode !== classBattleSession.mode) return;
 
+        // Debounce: ignore rapid-fire calls within 800ms
+        if (classBattleSubmitTimer) return;
+        classBattleSubmitTimer = setTimeout(() => { classBattleSubmitTimer = null; }, 800);
+
         try {
             bridge.service.assertSessionOpen(classBattleSession);
         } catch (error) {
@@ -1557,9 +1566,10 @@ const Multiplayer = (() => {
 
         renderRoomPlayers();
 
-        // Host: start room-state broadcast interval
+        // Host: start room-state broadcast interval (clean up old one first)
         if (isHost) {
-            setInterval(broadcastRoomState, 1000);
+            if (roomStateInterval) clearInterval(roomStateInterval);
+            roomStateInterval = setInterval(broadcastRoomState, 1000);
         }
     }
 
@@ -1843,7 +1853,8 @@ const Multiplayer = (() => {
 
         myCompleted = true;
         myTime = Date.now() - gameStartTime;
-        roomPlayers.find(p => p.isMe).completedTime = myTime;
+        const me = roomPlayers.find(p => p.isMe);
+        if (me) me.completedTime = myTime;
         send('game-complete', { time: myTime, playerId: myPlayerId });
         renderRoomPlayers();
 
@@ -1978,8 +1989,14 @@ const Multiplayer = (() => {
         syncGuestWaitingOverlay('disconnected');
         if (timerInterval) clearInterval(timerInterval);
         if (reconnectTimer) clearTimeout(reconnectTimer);
+        if (roomStateInterval) { clearInterval(roomStateInterval); roomStateInterval = null; }
+        if (classBattleSubmitTimer) { clearTimeout(classBattleSubmitTimer); classBattleSubmitTimer = null; }
         if (conn) { try { conn.close(); } catch(e) {} conn = null; }
         if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+
+        opponentCompleted = false;
+        opponentTime = 0;
+        opponentCharacter = null;
 
         if (classBattleBridge && typeof classBattleBridge.dispose === 'function') {
             classBattleBridge.dispose().catch(() => {});

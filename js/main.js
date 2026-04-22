@@ -473,27 +473,46 @@ function completeLevel(mode, options) {
         AdaptiveHints.resetAttempts(mode, GameState.currentLevel[mode]);
     }
 
-    // Show enhanced modal with stars, XP, achievements
     const levelNum = GameState.currentLevel[mode];
+
+    // IN MABAR MODE: Skip UI popups (modal and info materi) and sync directly 
+    const isMabar = typeof Multiplayer !== 'undefined' && Multiplayer.isActive();
+    if (isMabar) {
+        // Calculate result silently so they still get XP
+        if (typeof ProgressSystem !== 'undefined') {
+            const mabarResult = ProgressSystem.onLevelComplete(mode, levelNum, safeOptions);
+            updateXPDisplay();
+            updateAchievementGrid();
+            if (typeof SoundManager !== 'undefined') SoundManager.play('levelComplete');
+            
+            // Provide non-intrusive feedback instead of a modal
+            if (typeof Toast !== 'undefined') {
+                Toast.success('Level Selesai! Menunggu pemain lain...', 3000);
+                if (mabarResult) {
+                    // Show small flyout indicators for XP/Stars instead of blocking the screen
+                    setTimeout(() => Toast.showLevelResult(mabarResult), 500);
+                }
+            }
+        }
+
+        // Notify multiplayer opponent / bridge
+        Multiplayer.onMyComplete();
+        if (typeof Multiplayer.isClassBattleActive === 'function' && 
+            Multiplayer.isClassBattleActive() && 
+            typeof Multiplayer.onClassBattleComplete === 'function') {
+            Multiplayer.onClassBattleComplete(mode, {
+                ...safeOptions,
+                reachedLevel: levelNum
+            });
+        }
+        return; // EXIT EARLY: Skip modal
+    }
+
+    // NORMAL SOLO MODE: Show enhanced modal with stars, XP, achievements
     if (typeof ProgressSystem !== 'undefined') {
         showEnhancedModal(mode, levelNum, safeOptions);
     } else {
         showModal('Kamu berhasil menyelesaikan tantangan!');
-    }
-
-    // Notify multiplayer opponent
-    if (typeof Multiplayer !== 'undefined' && Multiplayer.isActive()) {
-        Multiplayer.onMyComplete();
-    }
-
-    if (typeof Multiplayer !== 'undefined'
-        && typeof Multiplayer.isClassBattleActive === 'function'
-        && Multiplayer.isClassBattleActive()
-        && typeof Multiplayer.onClassBattleComplete === 'function') {
-        Multiplayer.onClassBattleComplete(mode, {
-            ...safeOptions,
-            reachedLevel: levelNum
-        });
     }
 }
 

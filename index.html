@@ -1545,12 +1545,13 @@
             padding: 16px;
         }
 
+        /* Countdown overlay — progress-only, no distracting animation */
         .countdown-overlay-pop {
-            animation: class-countdown-pop 240ms ease-out;
+            animation: none;
         }
 
         .countdown-overlay-danger {
-            box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.4), 0 12px 30px rgba(248, 113, 113, 0.25);
+            border-color: rgba(248, 113, 113, 0.35);
         }
 
         .countdown-overlay-danger #class-countdown-overlay-value {
@@ -1559,18 +1560,6 @@
 
         .countdown-overlay-danger #class-countdown-overlay-progress {
             background: linear-gradient(90deg, #f97316, #ef4444);
-        }
-
-        @keyframes class-countdown-pop {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.08);
-            }
-            100% {
-                transform: scale(1);
-            }
         }
     </style>
 </head>
@@ -1926,13 +1915,13 @@
     </div>
 
     <div id="class-countdown-overlay" class="hidden fixed right-4 top-4 z-[75] pointer-events-none">
-        <div class="rounded-2xl border border-accent-300/40 bg-dark-900/90 px-4 py-3 shadow-2xl backdrop-blur-sm">
-            <div class="mb-1 flex items-center justify-between gap-3">
-                <p id="class-countdown-overlay-label" class="text-[11px] uppercase tracking-wider text-dark-200">Countdown Per Level</p>
-                <p id="class-countdown-overlay-level" class="text-[11px] font-semibold text-accent-200"></p>
+        <div class="rounded-xl border border-accent-300/25 bg-dark-900/80 px-3 py-2 shadow-lg backdrop-blur-sm" style="min-width:120px;">
+            <div class="flex items-center justify-between gap-2 mb-0.5">
+                <p id="class-countdown-overlay-label" class="text-[9px] uppercase tracking-wider text-dark-300">Timer</p>
+                <p id="class-countdown-overlay-level" class="text-[9px] font-semibold text-accent-300"></p>
             </div>
-            <p id="class-countdown-overlay-value" class="font-display text-4xl leading-none text-accent-300">10</p>
-            <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-dark-700/80">
+            <p id="class-countdown-overlay-value" class="font-display text-lg leading-tight text-accent-300 text-center">10</p>
+            <div class="mt-1 h-1 w-full overflow-hidden rounded-full bg-dark-700/80">
                 <div id="class-countdown-overlay-progress" class="h-full w-0 rounded-full bg-gradient-to-r from-accent-400 to-secondary-400 transition-[width] duration-200 ease-linear"></div>
             </div>
         </div>
