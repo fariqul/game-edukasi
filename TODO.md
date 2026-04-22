@@ -1,29 +1,23 @@
-## Multiplayer Room Player List Implementation
+# Supabase Class Battle Multiplayer Implementation - TRACKING
 
-### Status: ✅ In Progress
+## Status: ✅ PLAN APPROVED → IMPLEMENTING
 
-**Approved Plan:**
-- Add player list display for host after room creation
-- Max 8 players per room
-- Live updates via room-sync messages
-- Host-only view in #lobby-room-players frame
+### Progress Steps:
+- [x] **Step 0**: Analyzed files (Supabase ready: service.js, bridge.js, schema.sql ✅)
+- [ ] **Step 1**: Update index.html → Real Supabase config + script imports  
+- [ ] **Step 2**: js/multiplayer.js → Force Supabase (remove demo fallback)
+- [ ] **Step 3**: js/main.js → Hook `Multiplayer.onClassBattleComplete()`
+- [ ] **Step 4**: Verify/run supabase/schema.sql 
+- [ ] **Step 5**: Test create/join PIN + multi-tab simultaneous play
+- [ ] **Step 6**: UI Polish (PIN copy button, loading states)
+- [ ] **Step 7**: Complete & cleanup
+- [ ] **Step 8**: Documentation + demo video
 
-### Steps (0/7 completed):
+## Notes
+- **Supabase Ready**: js/classBattleService.js, schema.sql (guest tables) ✅
+- **Schema**: `guest_sessions`, `guest_participants`, `guest_submissions` + RLS
+- **Demo Fallback**: js/demoClassBattle.js (localStorage) for offline testing
+- **PIN**: session_code (6-digit)
+- **Next Action**: Step 1 - Needs anon key for index.html
 
-#### 1. [ ] Create TODO.md ✅ **DONE**
-#### 2. [ ] Update index.html - Add #lobby-room-players frame
-#### 3. [ ] Update js/multiplayer.js - Add roomPlayers array & tracking
-#### 4. [ ] Update js/multiplayer.js - Modify peer.on('connection') for multi-guest
-#### 5. [ ] Update js/multiplayer.js - Add 'player-joined'/'room-update' messages
-#### 6. [ ] Update js/multiplayer.js - Add showRoomPlayers() render function
-#### 7. [ ] Test: Host creates room → Guest joins → Verify list shows both players
-
-#### Post-Implementation:
-- [ ] Add "Mulai Battle" button (host, >=2 players)
-- [ ] Copy PIN button with toast
-- [ ] Player avatars with Lottie hover
-- [ ] Disconnect handling (remove from roomPlayers)
-- [ ] attempt_completion
-
-**Next Step:** Edit index.html to add room players UI frame.
-
+**Current**: Waiting for Supabase anon key to complete Step 1.**

@@ -22,15 +22,16 @@ const Multiplayer = (() => {
     let active = false;
 
     let myCharacter = null;
-    let opponentCharacter = null; // { id, name, folder, prefix, color }
+    let roomPlayers = []; // Array of all players {id, name, charId, color, ready, completedTime, isMe}
+    let opponentCharacters = {}; // Quick lookup by id
 
     let gameStartTime = 0;
     let timerInterval = null;
     let reconnectTimer = null;
+    let myPlayerId = null;
     let myCompleted = false;
     let myTime = 0;
-    let opponentCompleted = false;
-    let opponentTime = 0;
+    let gameCompletions = {}; // {playerId: time}
 
     let classBattleBridge = null;
     let classBattleSession = null;
@@ -194,24 +195,70 @@ const Multiplayer = (() => {
 
     function getClassBattleBridge() {
         if (classBattleBridge) return classBattleBridge;
-        if (typeof ClassBattleBridge === 'undefined'
-            || typeof ClassBattleService === 'undefined'
-            || typeof ClassBattleService.createClassBattleService !== 'function'
-            || !window.GameSupabase
-            || !window.GameSupabase.enabled
-            || !window.GameSupabase.client) {
+        
+        // Try real Supabase first
+        if (typeof ClassBattleBridge !== 'undefined' &&
+            typeof ClassBattleService !== 'undefined' &&
+            typeof ClassBattleService.createClassBattleService === 'function' &&
+            window.GameSupabase && window.GameSupabase.enabled && window.GameSupabase.client) {
+            
+            const service = ClassBattleService.createClassBattleService(window.GameSupabase.client, {
+                realtimeChannelPrefix: window.GameSupabase.config && window.GameSupabase.config.realtimeChannelPrefix
+            });
+            
+            classBattleBridge = ClassBattleBridge.createBridge({
+                service,
+                onStartCountdown(seconds) {
+                    setClassCountdownLabel(seconds);
+                    setClassSessionStatus(`Countdown dimulai (${seconds} detik).`, false);
+                },
+                onCountdownTick(left) {
+                    setClassCountdownLabel(left);
+                },
+                onSessionLocked() {
+                    finishClassBattleSession('finished');
+                },
+                onRankingUpdated(ranking) {
+                    renderClassBattleRanking(ranking);
+                },
+                onEvent(eventName, payload) {
+                    handleClassBattleEvent(eventName, payload);
+                },
+                onError(error) {
+                    const message = (error && error.message) || 'Terjadi error class battle.';
+                    setClassJoinStatus(message, true);
+                }
+            });
+            return classBattleBridge;
+        }
+        
+        // Fallback to Demo Mode
+        console.log('Using Demo Class Battle (local mock, no internet required)');
+        if (typeof DemoClassBattleService === 'undefined') {
+            console.error('DemoClassBattleService not loaded');
             return null;
         }
-
-        const service = ClassBattleService.createClassBattleService(window.GameSupabase.client, {
-            realtimeChannelPrefix: window.GameSupabase.config && window.GameSupabase.config.realtimeChannelPrefix
-        });
-
-        classBattleBridge = ClassBattleBridge.createBridge({
-            service,
+        
+        const demoService = DemoClassBattleService.createDemoService();
+        classBattleBridge = {
+            service: demoService,
+            resetFirstFinishLock() {},
+            syncSessionMeta() {},
+            connectRealtime() { return Promise.resolve(); },
+            refreshRanking() {
+                return demoService.fetchRanking({ sessionId: classBattleSession?.id })
+                    .then(ranking => {
+                        renderClassBattleRanking(ranking);
+                    });
+            },
+            broadcast(event, payload) {},
+            submitCompletion(data) {
+                return demoService.submitResultWithRetry(data);
+            },
+            // Mock callbacks
             onStartCountdown(seconds) {
                 setClassCountdownLabel(seconds);
-                setClassSessionStatus(`Countdown dimulai (${seconds} detik).`, false);
+                setClassSessionStatus(`Demo countdown: ${seconds}s`, false);
             },
             onCountdownTick(left) {
                 setClassCountdownLabel(left);
@@ -226,11 +273,10 @@ const Multiplayer = (() => {
                 handleClassBattleEvent(eventName, payload);
             },
             onError(error) {
-                const message = (error && error.message) || 'Terjadi error class battle.';
+                const message = (error && error.message) || 'Demo error.';
                 setClassJoinStatus(message, true);
             }
-        });
-
+        };
         return classBattleBridge;
     }
 
@@ -877,15 +923,64 @@ const Multiplayer = (() => {
         });
     }
 
+    function addPlayer(playerData, isMe = false) {
+        const existing = roomPlayers.find(p => p.id === playerData.id);
+        if (existing) {
+            Object.assign(existing, playerData);
+        } else {
+            roomPlayers.push({ ...playerData, isMe, ready: false, completedTime: null });
+        }
+        if (playerData.charId) {
+            opponentCharacters[playerData.id] = {
+                id: playerData.id,
+                name: playerData.charName || playerData.name,
+                ...CHAR_DATA[playerData.charId]
+            };
+        }
+        if (isMe) myPlayerId = playerData.id;
+        renderRoomPlayers();
+    }
+
+    function removePlayer(playerId) {
+        roomPlayers = roomPlayers.filter(p => p.id !== playerId);
+        delete opponentCharacters[playerId];
+        renderRoomPlayers();
+    }
+
     function onConnected() {
         active = true;
-        myCharacter = CharacterSystem.getSelected();
+        const myChar = CharacterSystem.getSelected();
+        myPlayerId = peer.id; // Use peer ID as player ID
 
-        // Send my character info
-        send('char-info', {
-            charId: myCharacter.id,
-            charName: CharacterSystem.getPlayerName()
+        // Send my info (host or guest)
+        send('player-joined', {
+            id: myPlayerId,
+            name: CharacterSystem.getPlayerName(),
+            charId: myChar ? myChar.id : null,
+            ready: false
         });
+
+        // Add self to room
+        addPlayer({
+            id: myPlayerId,
+            name: CharacterSystem.getPlayerName(),
+            charId: myChar ? myChar.id : null,
+            isMe: true,
+            ready: false
+        }, true);
+
+        renderRoomPlayers();
+
+        // Host: start room-state broadcast interval
+        if (isHost) {
+            setInterval(broadcastRoomState, 1000);
+        }
+    }
+
+    function broadcastRoomState() {
+        if (isHost && conn && conn.open) {
+            send('room-state', { players: roomPlayers });
+        }
     }
 
     function send(type, data) {
@@ -896,6 +991,26 @@ const Multiplayer = (() => {
 
     function handleMessage(msg) {
         switch (msg.type) {
+            case 'player-joined':
+                addPlayer(msg.data);
+                break;
+            case 'player-left':
+                removePlayer(msg.data.id);
+                break;
+            case 'player-ready':
+                const player = roomPlayers.find(p => p.id === msg.data.id);
+                if (player) {
+                    player.ready = msg.data.ready;
+                    renderRoomPlayers();
+                }
+                break;
+            case 'room-state':
+                roomPlayers = msg.data.players || [];
+                roomPlayers.forEach(p => {
+                    if (p.id in opponentCharacters) Object.assign(opponentCharacters[p.id], p);
+                });
+                renderRoomPlayers();
+                break;
             case 'char-info':
                 opponentCharacter = {
                     id: msg.data.charId,
@@ -904,17 +1019,14 @@ const Multiplayer = (() => {
                 };
                 showVsScreen();
                 break;
-
             case 'vs-start':
                 goToDashboardMultiplayer();
                 break;
-
             case 'game-start':
                 onRemoteGameStart(msg.data.mode, msg.data.level);
                 break;
-
             case 'game-complete':
-                onOpponentComplete(msg.data.time);
+                onOpponentComplete(msg.data.time, msg.data.playerId);
                 break;
         }
     }
@@ -923,53 +1035,81 @@ const Multiplayer = (() => {
     // VS SCREEN
     // ============================================
 
-    function showVsScreen() {
-        if (!myCharacter || !opponentCharacter) return;
+    function toggleReady(playerId) {
+        const player = roomPlayers.find(p => p.id === playerId);
+        if (!player) return;
+        player.ready = !player.ready;
+        renderRoomPlayers();
+        send('player-ready', { id: playerId, ready: player.ready });
+    }
 
-        showScreen('vs-screen');
-
-        // Player 1 (me)
-        const p1Img = document.getElementById('vs-p1-img');
-        const p1Name = document.getElementById('vs-p1-name');
-        if (p1Img) p1Img.src = charImgPath(myCharacter.id, 'cheer0');
-        if (p1Name) {
-            p1Name.textContent = CharacterSystem.getPlayerName() + ' (Kamu)';
-            p1Name.style.color = CHAR_DATA[myCharacter.id]?.color || '#fff';
-        }
-
-        // Player 2 (opponent)
-        const p2Img = document.getElementById('vs-p2-img');
-        const p2Name = document.getElementById('vs-p2-name');
-        if (p2Img) p2Img.src = charImgPath(opponentCharacter.id, 'cheer0');
-        if (p2Name) {
-            p2Name.textContent = opponentCharacter.name;
-            p2Name.style.color = opponentCharacter.color || '#fff';
-        }
-
-        // Host controls start button
-        const startBtn = document.getElementById('vs-start-btn');
-        if (startBtn) {
-            if (isHost) {
-                startBtn.classList.remove('hidden');
-                startBtn.textContent = 'Mulai!';
-            } else {
-                startBtn.classList.add('hidden');
-                const waitMsg = document.getElementById('vs-wait-msg');
-                if (waitMsg) waitMsg.classList.remove('hidden');
+    function renderRoomPlayers(listId = null) {
+        const lists = listId ? [document.getElementById(listId)] : [
+            document.getElementById('lobby-player-list'),
+            document.getElementById('vs-player-list')
+        ];
+        lists.forEach(list => {
+            if (!list) return;
+            const countEl = list.parentElement?.querySelector('.player-count') || document.getElementById('lobby-player-count');
+            if (countEl) {
+                const maxPlayers = runtimeConfig.maxPlayers || 8;
+                countEl.textContent = `${roomPlayers.length}/${maxPlayers} pemain`;
             }
+            list.innerHTML = roomPlayers.map(p => {
+                const charData = opponentCharacters[p.id] || CHAR_DATA[p.charId];
+                const isReady = p.ready ? 'ready' : '';
+                const isHostClass = p.id === roomPlayers[0]?.id ? 'host' : '';
+                const isMe = p.isMe;
+                const status = p.completedTime ? formatTime(p.completedTime) : (p.ready ? 'Siap' : 'Menunggu');
+                let readyBtn = '';
+                if (!p.completedTime && !isHostLobbyLockedInClassBattle()) {
+                    readyBtn = `<button onclick="Multiplayer.toggleReady('${p.id}')" class="ml-auto px-2 py-1 text-xs rounded-full ${p.ready ? 'bg-secondary-500 text-white' : 'bg-dark-700 text-dark-300 hover:bg-dark-600'}">${p.ready ? 'Siap ✓' : 'Siap'}</button>`;
+                }
+                return `
+                    <div class="player-list-item ${isReady} ${isHostClass} flex">
+                        <img src="${charImgPath(p.charId, 'idle')}" alt="${p.name}" class="player-avatar" loading="lazy">
+                        <div class="player-info flex-1">
+                            <div class="player-name" style="color: ${charData?.color || '#fff'}">${escapeHtml(p.name)}</div>
+                            <div class="player-status">${status}</div>
+                        </div>
+                        ${readyBtn}
+                    </div>
+                `;
+            }).join('');
+        });
+    }
+
+    function showVsScreen() {
+        showScreen('vs-screen');
+        renderRoomPlayers('vs-player-list');
+        updateVsPlayerCount();
+
+        const startBtn = document.getElementById('vs-start-btn');
+        if (startBtn && isHost && roomPlayers.length >= 2) {
+            startBtn.classList.remove('hidden');
         }
 
-        // Animate
         if (typeof anime !== 'undefined') {
-            anime({ targets: '#vs-p1', translateX: [-100, 0], opacity: [0, 1], duration: 600, easing: 'easeOutBack', delay: 200 });
-            anime({ targets: '#vs-vs-text', scale: [0, 1], opacity: [0, 1], duration: 500, easing: 'easeOutElastic(1,.5)', delay: 500 });
-            anime({ targets: '#vs-p2', translateX: [100, 0], opacity: [0, 1], duration: 600, easing: 'easeOutBack', delay: 300 });
-            anime({ targets: '#vs-start-btn, #vs-wait-msg', translateY: [20, 0], opacity: [0, 1], duration: 400, delay: 900, easing: 'easeOutQuart' });
+            anime({
+                targets: '#vs-player-list .player-list-item',
+                translateY: [20, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(100),
+                duration: 400,
+                easing: 'easeOutBack'
+            });
+        }
+    }
+
+    function updateVsPlayerCount() {
+        const countEl = document.getElementById('vs-player-count');
+        if (countEl) {
+            countEl.textContent = `${roomPlayers.length} pemain siap`;
         }
     }
 
     function vsStart() {
-        if (!isHost) return;
+        if (!isHost || roomPlayers.filter(p => p.ready).length < 2) return;
         send('vs-start', {});
         goToDashboardMultiplayer();
     }
@@ -1067,35 +1207,80 @@ const Multiplayer = (() => {
     // GAME COMPLETION
     // ============================================
 
+    function renderResultRanking() {
+        const completedPlayers = roomPlayers.filter(p => p.completedTime).sort((a, b) => a.completedTime - b.completedTime);
+        const listEl = document.getElementById('result-player-list');
+        if (!listEl) return;
+
+        listEl.innerHTML = completedPlayers.map((p, index) => {
+            const charData = opponentCharacters[p.id] || CHAR_DATA[p.charId];
+            const rankColor = index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-400' : 'text-dark-300';
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+            return `
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-dark-800 border border-dark-700">
+                    <span class="text-2xl font-bold ${rankColor}">${medal}</span>
+                    <img src="${charImgPath(p.charId, 'idle')}" alt="${p.name}" class="w-12 h-12 object-contain rounded-lg border-2 border-primary-500/50">
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-white truncate" style="color: ${charData?.color || '#fff'}">${escapeHtml(p.name)}</div>
+                        <div class="text-xs font-mono text-accent-400">${formatTime(p.completedTime)}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const modalTitle = document.getElementById('mp-result-title');
+        if (modalTitle) {
+            const myRank = completedPlayers.findIndex(p => p.isMe);
+            const myTime = roomPlayers.find(p => p.isMe)?.completedTime;
+            if (myRank === 0 && myTime) {
+                modalTitle.textContent = `🥇 Kamu Juara 1! (${formatTime(myTime)})`;
+            } else if (myRank > -1) {
+                modalTitle.textContent = `🏆 Kamu Peringkat ${myRank + 1}!`;
+            } else {
+                modalTitle.textContent = 'Hasil Pertandingan';
+            }
+        }
+
+        // Show modal
+        const modal = document.getElementById('mp-result-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    }
+
     function onMyComplete() {
         if (!active || myCompleted) return;
 
         myCompleted = true;
         myTime = Date.now() - gameStartTime;
+        roomPlayers.find(p => p.isMe).completedTime = myTime;
+        send('game-complete', { time: myTime, playerId: myPlayerId });
+        renderRoomPlayers();
 
-        send('game-complete', { time: myTime });
-
-        if (opponentCompleted) {
-            // Both done — show result
+        // Check if all ready players have completed
+        const readyPlayers = roomPlayers.filter(p => p.ready);
+        const allCompleted = readyPlayers.every(p => p.completedTime);
+        if (allCompleted) {
             stopTimer();
-            setTimeout(() => showResult(), 500);
-        } else {
-            // Waiting for opponent
-            updateOpponentBarStatus('Kamu selesai! Menunggu lawan...');
+            setTimeout(() => renderResultRanking(), 800);
         }
     }
 
-    function onOpponentComplete(time) {
-        opponentCompleted = true;
-        opponentTime = time;
+    function onOpponentComplete(time, playerId) {
+        if (playerId && roomPlayers.find(p => p.id === playerId)) {
+            const player = roomPlayers.find(p => p.id === playerId);
+            player.completedTime = time;
+            renderRoomPlayers();
+        }
+        gameCompletions[playerId || 'opponent'] = time;
 
-        if (myCompleted) {
-            // Both done
+        // Check if all ready players have completed
+        const readyPlayers = roomPlayers.filter(p => p.ready);
+        const allCompleted = readyPlayers.every(p => p.completedTime);
+        if (allCompleted && myCompleted) {
             stopTimer();
-            setTimeout(() => showResult(), 500);
-        } else {
-            // Opponent finished first
-            updateOpponentBarStatus(`Lawan selesai! (${formatTime(time)})`);
+            setTimeout(() => renderResultRanking(), 800);
         }
     }
 
@@ -1103,58 +1288,9 @@ const Multiplayer = (() => {
     // RESULT
     // ============================================
 
+    // Legacy fallback, now handled by renderResultRanking()
     function showResult() {
-        const won = myTime <= opponentTime;
-        const modal = document.getElementById('mp-result-modal');
-        if (!modal) return;
-
-        hideClassBattleResultPanel();
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-
-        const emoji = document.getElementById('mp-result-emoji');
-        const title = document.getElementById('mp-result-title');
-        const detail = document.getElementById('mp-result-detail');
-
-        const winnerSvg = '<svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8v4a4 4 0 0 1-8 0V3Z"/><path d="M6 7H4a3 3 0 0 0 3 3m8-3h2a3 3 0 0 1-3 3"/><path d="M12 11v4m-3 6h6"/></svg>';
-        const loseSvg = '<svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>';
-
-        if (won) {
-            if (emoji) {
-                emoji.innerHTML = winnerSvg;
-                emoji.className = 'text-6xl mb-3 text-amber-300 flex justify-center';
-            }
-            if (title) { title.textContent = 'Kamu Menang!'; title.className = 'font-display text-3xl font-bold text-accent-400 mb-2'; }
-        } else {
-            if (emoji) {
-                emoji.innerHTML = loseSvg;
-                emoji.className = 'text-6xl mb-3 text-red-400 flex justify-center';
-            }
-            if (title) { title.textContent = 'Lawan Menang!'; title.className = 'font-display text-3xl font-bold text-red-400 mb-2'; }
-        }
-
-        if (detail) {
-            detail.innerHTML = `
-                <div class="flex justify-center gap-8 text-sm mt-2">
-                    <div class="text-center">
-                        <img src="${charImgPath(myCharacter.id, won ? 'cheer0' : 'hurt')}" loading="lazy" decoding="async" class="w-16 h-16 object-contain mx-auto mb-1">
-                        <p class="font-bold" style="color:${CHAR_DATA[myCharacter.id]?.color}">${CharacterSystem.getPlayerName()}</p>
-                        <p class="text-accent-400 font-mono text-lg">${formatTime(myTime)}</p>
-                    </div>
-                    <div class="text-center">
-                        <img src="${charImgPath(opponentCharacter.id, !won ? 'cheer0' : 'hurt')}" loading="lazy" decoding="async" class="w-16 h-16 object-contain mx-auto mb-1">
-                        <p class="font-bold" style="color:${opponentCharacter.color}">${opponentCharacter.name}</p>
-                        <p class="text-accent-400 font-mono text-lg">${formatTime(opponentTime)}</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        if (typeof anime !== 'undefined') {
-            anime({ targets: modal, opacity: [0, 1], duration: 300, easing: 'easeOutQuart' });
-            anime({ targets: '#mp-result-content', scale: [0.7, 1], opacity: [0, 1], duration: 500, delay: 100, easing: 'easeOutBack' });
-        }
+        renderResultRanking();
     }
 
     function hideResult() {
@@ -1289,7 +1425,42 @@ const Multiplayer = (() => {
     // PUBLIC API
     // ============================================
 
+    function showClassBattleHostForm() {
+        const hostPanel = document.getElementById('class-host-panel');
+        const joinPanel = document.getElementById('class-join-panel');
+        const legacyPanels = document.querySelector('#legacy-peerjs');
+        
+        if (hostPanel) hostPanel.classList.remove('hidden');
+        if (joinPanel) joinPanel.classList.add('hidden');
+        if (legacyPanels) legacyPanels.classList.add('hidden');
+        
+        // Auto-fill host name
+        const hostNameEl = document.getElementById('class-host-name');
+        if (hostNameEl && !hostNameEl.value.trim()) {
+            hostNameEl.value = CharacterSystem?.getPlayerName?.() || 'Host';
+        }
+        hostNameEl?.focus?.();
+        
+        setClassCreateStatus('', false);
+    }
+    
+    function showClassBattleJoinForm() {
+        const hostPanel = document.getElementById('class-host-panel');
+        const joinPanel = document.getElementById('class-join-panel');
+        const legacyPanels = document.querySelector('#legacy-peerjs');
+        
+        if (hostPanel) hostPanel.classList.add('hidden');
+        if (joinPanel) joinPanel.classList.remove('hidden');
+        if (legacyPanels) legacyPanels.classList.add('hidden');
+        
+        const codeEl = document.getElementById('class-join-code');
+        codeEl?.focus?.();
+        setClassJoinStatus('', false);
+    }
+    
     return {
+        showClassBattleHostForm,
+        showClassBattleJoinForm,
         showPlayModeScreen,
         goSolo,
         goMultiplayer,

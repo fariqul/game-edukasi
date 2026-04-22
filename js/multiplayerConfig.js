@@ -44,7 +44,7 @@
     }
 
     function getConfig(rawConfig) {
-        const config = rawConfig && typeof rawConfig === 'object' ? rawConfig : {};
+const config = { maxPlayers: 8, ...((rawConfig && typeof rawConfig === 'object') ? rawConfig : {})};
         const signaling = config.signaling && typeof config.signaling === 'object' ? config.signaling : {};
         const rtc = config.rtc && typeof config.rtc === 'object' ? config.rtc : {};
 
@@ -70,7 +70,7 @@
             iceServers: rawIceServers.map(normalizeIceServer).filter(Boolean)
         };
 
-        return { prefix, peerOptions };
+return { prefix, peerOptions, maxPlayers: config.maxPlayers || 8 };
     }
 
     const api = { getConfig };
