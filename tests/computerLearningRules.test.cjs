@@ -2,7 +2,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
     getComponentZone,
+    getZoneLabel,
     getSlotDisplayName,
+    analyzePlacementIssues,
     buildWrongPlacementHints
 } = require('../js/computerLearningRules.js');
 
@@ -19,6 +21,19 @@ test('getSlotDisplayName memberi nama slot edukatif', () => {
     assert.equal(getSlotDisplayName('unknown-slot'), 'unknown-slot');
 });
 
+test('analyzePlacementIssues memisahkan salah zona dan salah slot', () => {
+    const placed = {
+        cpu: { type: 'keyboard', correct: false },
+        ram: { type: 'cpu', correct: false },
+        psu: { type: 'psu', correct: true }
+    };
+
+    const issues = analyzePlacementIssues(placed);
+    assert.equal(issues.zoneMismatch.length, 1);
+    assert.equal(issues.slotMismatch.length, 1);
+    assert.equal(getZoneLabel('external').includes('external'), true);
+});
+
 test('buildWrongPlacementHints menghasilkan daftar kesalahan yang bisa dipelajari', () => {
     const placed = {
         cpu: { type: 'ram', correct: false },
@@ -26,5 +41,5 @@ test('buildWrongPlacementHints menghasilkan daftar kesalahan yang bisa dipelajar
     };
     const hints = buildWrongPlacementHints(placed);
     assert.equal(hints.length, 2);
-    assert.match(hints[0], /RAM|CPU/i);
+    assert.equal(hints.some((h) => /RAM|CPU/i.test(h)), true);
 });

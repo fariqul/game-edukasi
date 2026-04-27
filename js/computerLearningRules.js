@@ -26,26 +26,82 @@
         'os-installer': 'OS Installation Stage'
     };
 
+    const ZONE_LABELS = {
+        motherboard: 'zona motherboard',
+        case: 'zona inside PC case',
+        external: 'zona external I/O'
+    };
+
     function getComponentZone(component) {
         if (['psu', 'storage', 'motherboard', 'case'].includes(component)) return 'case';
         if (['keyboard', 'mouse', 'monitor', 'os-installer'].includes(component)) return 'external';
         return 'motherboard';
     }
 
+    function getZoneLabel(zone) {
+        return ZONE_LABELS[zone] || zone;
+    }
+
     function getSlotDisplayName(slotType) {
         return SLOT_NAMES[slotType] || slotType;
     }
 
-    function buildWrongPlacementHints(placedComponents) {
-        const wrong = Object.entries(placedComponents || {}).filter(([, info]) => info && !info.correct);
-        return wrong.map(([slotType, info]) => {
-            const placed = getSlotDisplayName(info.type);
-            const expected = getSlotDisplayName(slotType);
-            return `${placed} seharusnya tidak di ${expected}.`;
+    function analyzePlacementIssues(placedComponents) {
+        const issues = {
+            zoneMismatch: [],
+            slotMismatch: []
+        };
+
+        Object.entries(placedComponents || {}).forEach(([slotType, info]) => {
+            if (!info || info.correct) return;
+            const expectedZone = getComponentZone(slotType);
+            const actualZone = getComponentZone(info.type);
+
+            if (expectedZone !== actualZone) {
+                issues.zoneMismatch.push({
+                    slotType,
+                    placedType: info.type,
+                    expectedZone,
+                    actualZone
+                });
+                return;
+            }
+
+            issues.slotMismatch.push({
+                slotType,
+                placedType: info.type,
+                expectedZone
+            });
         });
+
+        return issues;
     }
 
-    const api = { getComponentZone, getSlotDisplayName, buildWrongPlacementHints };
+    function buildWrongPlacementHints(placedComponents) {
+        const issues = analyzePlacementIssues(placedComponents);
+        const hints = [];
+
+        issues.zoneMismatch.forEach((issue) => {
+            const placed = getSlotDisplayName(issue.placedType);
+            hints.push(`${placed} termasuk ${getZoneLabel(issue.actualZone)}, bukan ${getZoneLabel(issue.expectedZone)}.`);
+        });
+
+        issues.slotMismatch.forEach((issue) => {
+            const placed = getSlotDisplayName(issue.placedType);
+            const expected = getSlotDisplayName(issue.slotType);
+            hints.push(`${placed} seharusnya ditempatkan di ${expected}.`);
+        });
+
+        return hints;
+    }
+
+    const api = {
+        getComponentZone,
+        getZoneLabel,
+        getSlotDisplayName,
+        analyzePlacementIssues,
+        buildWrongPlacementHints
+    };
     globalScope.ComputerLearningRules = api;
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

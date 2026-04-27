@@ -1209,7 +1209,7 @@ const NetworkGame = (() => {
             ? ModeFeedbackRules.formatNetworkPathSummary(path)
             : '';
         const routeMsg = route ? `<br><span class="text-xs text-dark-200">Rute data: ${route}</span>` : '';
-        showFeedback('network-feedback', `Jaringan terhubung! Data mengalir...${routeMsg}`, true);
+        showFeedback('network-feedback', `Jaringan terhubung! Data mengalir...${routeMsg}`, true, true);
 
         if (path.length < 2) {
             simpleDataAnimation();

@@ -880,7 +880,7 @@ const CodingGame = (() => {
         if (result.ok) {
             displayOutput(currentPuzzle.expectedOutput);
             const lesson = currentPuzzle.concept ? `<br><span class="text-xs text-dark-200">Konsep Konsep: ${currentPuzzle.concept}</span>` : '';
-            showFeedback('coding-feedback', `Benar! Kode berhasil dijalankan!${lesson}`, true);
+            showFeedback('coding-feedback', `Benar! Kode berhasil dijalankan!${lesson}`, true, true);
             if (typeof SoundManager !== 'undefined') SoundManager.play('success');
             animateSuccess();
 

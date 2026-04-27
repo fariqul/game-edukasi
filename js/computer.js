@@ -7,7 +7,7 @@
 
 const ComputerGame = (() => {
     // ============================================
-    // LEVEL DATA - 10 LEVELS
+    // LEVEL DATA - 15 LEVELS
     // ============================================
 
     const levels = [
@@ -293,7 +293,108 @@ const ComputerGame = (() => {
     let isBooting = false;
     let dragDropInitialized = false;
     let hintsUsed = 0;
-    const MAX_FREE_HINTS = 0; // No free hints - every hint costs a star
+    let selectedComponentType = null;
+    let validationErrors = 0;
+
+    const HINT_ICON = '<svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>';
+    const DEFAULT_CONTROL_HINT = 'Drag komponen ke slot, atau tap komponen lalu tap slot. Tap slot yang sudah terisi untuk melepas komponen.';
+
+    function getSmaTrackLabel(levelId) {
+        if (levelId <= 5) return 'Fase E SMA - Dasar hardware';
+        if (levelId <= 10) return 'Fase E SMA - Integrasi sistem';
+        return 'Fase F SMA - Arsitektur lanjut';
+    }
+
+    function buildLevelObjectives(level) {
+        const objectives = [
+            'Mencocokkan fungsi komponen dengan slot perangkat keras yang benar.'
+        ];
+
+        if (level.required.includes('keyboard') || level.required.includes('mouse') || level.required.includes('monitor')) {
+            objectives.push('Membedakan perangkat input, proses, dan output pada satu sistem komputer.');
+        }
+        if (level.required.includes('bios-chip') || level.required.includes('os-installer')) {
+            objectives.push('Menjelaskan urutan booting: firmware, hardware check, lalu sistem operasi.');
+        }
+        if (level.required.includes('l1-cache') || level.required.includes('l2-cache') || level.required.includes('l3-cache')) {
+            objectives.push('Mengurutkan hierarki memori dari cache, RAM, hingga storage.');
+        }
+        if (level.required.includes('north-bridge') || level.required.includes('south-bridge')) {
+            objectives.push('Menjelaskan aliran data antarkomponen melalui bus sistem.');
+        }
+        if (level.required.includes('gpu') && !level.required.includes('monitor')) {
+            objectives.push('Menjelaskan pembagian kerja CPU dan GPU untuk performa aplikasi.');
+        }
+
+        return objectives.slice(0, 3);
+    }
+
+    function renderLearningTargets() {
+        const gradeEl = document.getElementById('computer-grade-focus');
+        if (gradeEl) {
+            gradeEl.textContent = getSmaTrackLabel(currentLevel.id);
+        }
+
+        const listEl = document.getElementById('computer-objectives');
+        if (!listEl) return;
+
+        const objectives = buildLevelObjectives(currentLevel);
+        listEl.innerHTML = objectives.map(item => `<li>${item}</li>`).join('');
+    }
+
+    function updateAssemblyProgress() {
+        const chip = document.getElementById('computer-progress-chip');
+        if (!chip || !currentLevel) return;
+        const placedCount = Object.keys(placedComponents).length;
+        chip.textContent = `${placedCount}/${currentLevel.required.length} terpasang`;
+    }
+
+    function updateControlHint(text) {
+        const controlHint = document.getElementById('computer-control-hint');
+        if (!controlHint) return;
+        controlHint.textContent = text || DEFAULT_CONTROL_HINT;
+    }
+
+    function setSelectedComponent(componentType) {
+        selectedComponentType = componentType || null;
+        document.querySelectorAll('.component-item').forEach((item) => {
+            const isSelected = !!selectedComponentType && item.dataset.component === selectedComponentType;
+            item.classList.toggle('selected', isSelected);
+        });
+
+        if (selectedComponentType) {
+            const selectedName = componentData[selectedComponentType]?.name || selectedComponentType;
+            updateControlHint(`Mode tap aktif: ${selectedName} dipilih. Tap slot tujuan untuk memasang.`);
+        } else {
+            updateControlHint();
+        }
+    }
+
+    function getZoneText(zone) {
+        if (zone === 'external') return 'External I/O';
+        if (zone === 'case') return 'Inside PC Case';
+        return 'Motherboard';
+    }
+
+    function buildSlotContent(comp, data, difficulty, zone, slotNum) {
+        let slotContent = '';
+        if (difficulty === 'easy') {
+            const { html: ghostHtml } = compLottieHtml(data.lottie || comp, 'flex items-center justify-center opacity-20');
+            slotContent = `<span class="flex items-center justify-center" style="width:80%;height:65%;">${ghostHtml}</span>`;
+        } else if (difficulty === 'medium') {
+            const { html: ghostHtml } = compLottieHtml(data.lottie || comp, 'flex items-center justify-center opacity-10');
+            slotContent = `<span class="flex items-center justify-center" style="width:80%;height:65%;">${ghostHtml}</span>`;
+        } else {
+            slotContent = '<span class="flex items-center justify-center opacity-60 text-2xl text-dark-400">?</span>';
+        }
+
+        const zoneText = getZoneText(zone);
+        const slotName = getSlotDisplayName(comp);
+        const labelText = difficulty === 'hard' ? `Slot ${slotNum}` : slotName;
+        slotContent += `<span class="slot-zone-tag">${zoneText}</span>`;
+        slotContent += `<span class="slot-label text-dark-500" style="font-size: 0.6rem;">${labelText}</span>`;
+        return slotContent;
+    }
 
     // ============================================
     // INITIALIZATION
@@ -304,6 +405,8 @@ const ComputerGame = (() => {
         placedComponents = {};
         isBooting = false;
         hintsUsed = 0;
+        selectedComponentType = null;
+        validationErrors = 0;
 
         document.getElementById('computer-level').textContent = levelNum;
         document.getElementById('computer-mission').textContent = currentLevel.mission;
@@ -315,9 +418,12 @@ const ComputerGame = (() => {
         const conceptEl = document.getElementById('computer-concept');
         if (conceptEl) conceptEl.textContent = currentLevel.concept;
 
+        renderLearningTargets();
+
         renderComponentPalette();
         resetMotherboard();
         hideFeedback('computer-feedback');
+        updateControlHint();
 
         setupDragDrop();
         setupControls();
@@ -345,6 +451,15 @@ const ComputerGame = (() => {
             duration: 600,
             delay: 100,
             easing: 'easeOutElastic(1, .8)'
+        });
+
+        anime({
+            targets: '.external-zone',
+            scale: [0.9, 1],
+            opacity: [0, 1],
+            duration: 500,
+            delay: 180,
+            easing: 'easeOutQuad'
         });
 
         anime({
@@ -393,19 +508,27 @@ const ComputerGame = (() => {
 
     function animateBootSequence() {
         const slots = document.querySelectorAll('.component-slot.filled');
+        if (!slots.length) return Promise.resolve();
 
         return new Promise(resolve => {
-            anime({
-                targets: slots,
-                backgroundColor: [
-                    { value: 'rgba(34, 197, 94, 0.2)', duration: 200 },
-                    { value: 'rgba(34, 197, 94, 0.6)', duration: 200 },
-                    { value: 'rgba(34, 197, 94, 0.3)', duration: 200 }
-                ],
-                delay: anime.stagger(150),
-                easing: 'easeInOutSine',
-                complete: resolve
-            });
+            anime
+                .timeline({ complete: resolve })
+                .add({
+                    targets: slots,
+                    backgroundColor: 'rgba(34, 197, 94, 0.55)',
+                    boxShadow: ['0 0 0 rgba(34, 197, 94, 0)', '0 0 18px rgba(34, 197, 94, 0.65)'],
+                    delay: anime.stagger(120),
+                    duration: 220,
+                    easing: 'easeOutSine'
+                })
+                .add({
+                    targets: slots,
+                    backgroundColor: 'rgba(34, 197, 94, 0.25)',
+                    boxShadow: '0 0 6px rgba(34, 197, 94, 0.25)',
+                    delay: anime.stagger(90),
+                    duration: 220,
+                    easing: 'easeInOutSine'
+                });
         });
     }
 
@@ -425,7 +548,7 @@ const ComputerGame = (() => {
 
             // Screen flicker effect
             anime({
-                targets: '.computer-screen',
+                targets: '#computer-screen',
                 opacity: [0, 1, 0.8, 1],
                 duration: 800,
                 easing: 'steps(4)',
@@ -498,13 +621,27 @@ const ComputerGame = (() => {
                 ${lottieHtml}
                 <div class="flex-1 min-w-0">
                     <span class="font-medium block">${data.name}</span>
-                    <span class="text-xs text-dark-300">Drag ke slot</span>
+                    <span class="text-xs text-dark-300">Drag atau tap</span>
                 </div>
                 ${desc ? `<div class="comp-tooltip hidden group-hover:block absolute left-full ml-2 top-0 z-50 w-52 p-3 rounded-xl bg-dark-800 border border-dark-500 shadow-xl text-xs text-dark-100 leading-relaxed pointer-events-none">
                     <span class="font-bold text-accent-400 block mb-1">Info ${data.name}</span>
                     ${desc}
                 </div>` : ''}
             `;
+
+            if (selectedComponentType === comp) {
+                item.classList.add('selected');
+            }
+
+            item.addEventListener('click', () => {
+                if (isBooting || item.classList.contains('used')) return;
+                if (selectedComponentType === comp) {
+                    setSelectedComponent(null);
+                    return;
+                }
+                setSelectedComponent(comp);
+            });
+
             palette.appendChild(item);
         });
 
@@ -686,6 +823,7 @@ const ComputerGame = (() => {
             }
         }
         placedComponents = {};
+        validationErrors = 0;
 
         // Calculate positions for this level's components
         const positions = getGridPositions(currentLevel.required);
@@ -743,6 +881,9 @@ const ComputerGame = (() => {
             externalPanel.style.display = externalComps.length > 0 ? '' : 'none';
         }
 
+        setSelectedComponent(null);
+        updateAssemblyProgress();
+
         // Update hint counter display
         updateHintButton();
 
@@ -762,24 +903,9 @@ const ComputerGame = (() => {
         slot.style.width = pos.w;
         slot.style.height = pos.h;
 
-        // Difficulty-based slot content
-        let slotContent = '';
-        if (difficulty === 'easy') {
-            const { html: ghostHtml } = compLottieHtml(data.lottie || comp, 'flex items-center justify-center opacity-20');
-            slotContent = `<span class="flex items-center justify-center" style="width:80%;height:65%;">${ghostHtml}</span>`;
-        } else if (difficulty === 'medium') {
-            const { html: ghostHtml } = compLottieHtml(data.lottie || comp, 'flex items-center justify-center opacity-10');
-            slotContent = `<span class="flex items-center justify-center" style="width:80%;height:65%;">${ghostHtml}</span>`;
-        } else {
-            slotContent = `<span class="flex items-center justify-center opacity-60 text-2xl text-dark-400">?</span>`;
-        }
-        const zoneText = zone === 'external' ? 'External' : zone === 'case' ? 'Case' : 'Motherboard';
+        slot.innerHTML = buildSlotContent(comp, data, difficulty, zone, slotNum);
         const slotName = getSlotDisplayName(comp);
-        const labelText = difficulty === 'hard' ? `Slot ${slotNum}` : slotName;
-        slotContent += `<span class="slot-zone-tag">${zoneText}</span>`;
-        slotContent += `<span class="slot-label text-dark-500" style="font-size: 0.6rem;">${labelText}</span>`;
-
-        slot.innerHTML = slotContent;
+        const zoneText = getZoneText(zone);
         slot.setAttribute('title', `${slotName} (${zoneText})`);
         return slot;
     }
@@ -796,10 +922,11 @@ const ComputerGame = (() => {
 
         const { html: lottieHtml } = compLottieHtml(data.lottie || componentType, 'flex items-center justify-center');
 
+        slot.classList.remove('correct', 'incorrect', 'hint-revealed');
         slot.classList.add('filled');
         slot.innerHTML = `
             <span class="flex items-center justify-center" style="width:80%;height:65%;">${lottieHtml}</span>
-            <span class="slot-zone-tag">${slot.dataset.zone === 'external' ? 'External' : slot.dataset.zone === 'case' ? 'Case' : 'Motherboard'}</span>
+            <span class="slot-zone-tag">${getZoneText(slot.dataset.zone)}</span>
             <span class="slot-label" style="color: #94a3b8">${data.name}</span>
         `;
 
@@ -825,10 +952,56 @@ const ComputerGame = (() => {
             });
         }
 
+        if (selectedComponentType === componentType) {
+            setSelectedComponent(null);
+        }
+
+        updateHintButton();
+        updateAssemblyProgress();
+
         // Show a neutral "component placed" message - no right/wrong
         const targetLabel = getSlotDisplayName(slotType);
-        showFeedback('computer-feedback', `${data.name} ditempatkan pada area <b>${targetLabel}</b>. Tekan Power On untuk validasi akhir.`, true);
+        showFeedback('computer-feedback', `${data.name} ditempatkan pada area <b>${targetLabel}</b>. Tekan Power On untuk validasi akhir.`, true, true);
 
+        return true;
+    }
+
+    function removeComponentFromSlot(slotType) {
+        const slot = document.querySelector(`.component-slot[data-slot="${slotType}"]`);
+        const placed = placedComponents[slotType];
+        if (!slot || !placed) return false;
+
+        if (typeof LottieManager !== 'undefined') {
+            LottieManager.destroyInScope(slot);
+        }
+
+        delete placedComponents[slotType];
+
+        const zone = slot.dataset.zone || 'motherboard';
+        const slotNum = Number(slot.dataset.slotNum || 0);
+        const difficulty = getSlotDifficulty();
+        const slotData = componentData[slotType] || { lottie: null, name: slotType };
+        slot.className = 'component-slot';
+        slot.innerHTML = buildSlotContent(slotType, slotData, difficulty, zone, slotNum);
+        slot.setAttribute('title', `${getSlotDisplayName(slotType)} (${getZoneText(zone)})`);
+        initLottiesIn(slot, 'comp-slot');
+
+        const paletteItem = document.querySelector(`.component-item[data-component="${placed.type}"]`);
+        if (paletteItem) {
+            paletteItem.classList.remove('used');
+            paletteItem.draggable = true;
+            anime({
+                targets: paletteItem,
+                opacity: [0.4, 1],
+                scale: [0.95, 1],
+                duration: 220,
+                easing: 'easeOutQuad'
+            });
+        }
+
+        updateHintButton();
+        updateAssemblyProgress();
+        showFeedback('computer-feedback', 'Komponen dilepas dari slot. Pilih komponen lain untuk dipasang.', true);
         return true;
     }
 
@@ -882,9 +1055,32 @@ const ComputerGame = (() => {
                     const componentType = e.dataTransfer.getData('text/plain');
                     const slotType = slot.dataset.slot;
                     if (componentType && slotType) {
+                        if (slot.classList.contains('filled')) {
+                            removeComponentFromSlot(slotType);
+                        }
                         placeComponent(componentType, slotType);
                     }
                 }
+            });
+
+            area.addEventListener('click', (e) => {
+                const slot = e.target.closest('.component-slot');
+                if (!slot || isBooting) return;
+
+                const slotType = slot.dataset.slot;
+                if (!slotType) return;
+
+                if (slot.classList.contains('filled')) {
+                    removeComponentFromSlot(slotType);
+                    return;
+                }
+
+                if (!selectedComponentType) {
+                    showFeedback('computer-feedback', 'Pilih komponen dulu dari panel kiri, lalu tap slot tujuan.', true);
+                    return;
+                }
+
+                placeComponent(selectedComponentType, slotType);
             });
         });
     }
@@ -892,6 +1088,11 @@ const ComputerGame = (() => {
     // ============================================
     // HINT SYSTEM
     // ============================================
+
+    function setHintButtonLabel(button, labelText) {
+        if (!button) return;
+        button.innerHTML = `${HINT_ICON} ${labelText}`;
+    }
 
     function updateHintButton() {
         const hintBtn = document.getElementById('btn-hint-computer');
@@ -902,10 +1103,10 @@ const ComputerGame = (() => {
             });
             if (unrevealedSlots.length === 0) {
                 hintBtn.disabled = true;
-                hintBtn.textContent = 'Petunjuk Semua terungkap';
+                setHintButtonLabel(hintBtn, 'Hint habis');
             } else {
                 hintBtn.disabled = false;
-                hintBtn.textContent = `Petunjuk Hint (−Bintang)`;
+                setHintButtonLabel(hintBtn, `Hint (${hintsUsed} dipakai)`);
             }
         }
     }
@@ -920,7 +1121,7 @@ const ComputerGame = (() => {
         });
 
         if (unrevealedSlots.length === 0) {
-            showFeedback('computer-feedback', 'Hint Semua slot sudah terungkap!', true);
+            showFeedback('computer-feedback', 'Semua slot sudah terbuka. Tinggal cocokkan komponennya.', true);
             return;
         }
 
@@ -948,7 +1149,7 @@ const ComputerGame = (() => {
             });
 
             hintsUsed++;
-            showFeedback('computer-feedback', `Petunjuk Hint: Slot itu untuk <b>${data.name}</b>! (Hint dipakai: ${hintsUsed})`, true);
+            showFeedback('computer-feedback', `Hint: slot tersebut untuk <b>${data.name}</b>. Total hint dipakai: ${hintsUsed}.`, true, true);
         }
 
         updateHintButton();
@@ -980,6 +1181,8 @@ const ComputerGame = (() => {
         if (hintBtn) {
             hintBtn.addEventListener('click', revealHint);
         }
+
+        updateHintButton();
     }
 
     // ============================================
@@ -993,9 +1196,10 @@ const ComputerGame = (() => {
         const placedCount = Object.keys(placedComponents).length;
 
         if (placedCount < requiredCount) {
+            validationErrors += 1;
             showFeedback('computer-feedback', `Belum lengkap! Pasang semua ${requiredCount} komponen.`, false);
             anime({
-                targets: '#motherboard-slots',
+                targets: ['#motherboard-slots', '#case-slots', '#external-slots'],
                 translateX: [-5, 5, -5, 5, 0],
                 duration: 400,
                 easing: 'easeInOutSine'
@@ -1003,7 +1207,11 @@ const ComputerGame = (() => {
             return;
         }
 
-        // Now reveal correct/incorrect on each slot
+        // Reset previous validation markers, then reveal current validation
+        document.querySelectorAll('.component-slot').forEach((slot) => {
+            slot.classList.remove('correct', 'incorrect');
+        });
+
         Object.entries(placedComponents).forEach(([slotType, info]) => {
             const slot = document.querySelector(`.component-slot[data-slot="${slotType}"]`);
             if (slot) {
@@ -1026,13 +1234,30 @@ const ComputerGame = (() => {
 
             // Count wrong placements
             const wrongCount = Object.values(placedComponents).filter(c => !c.correct).length;
+            validationErrors += Math.max(1, wrongCount);
+
+            const issueSummary = typeof ComputerLearningRules !== 'undefined' && typeof ComputerLearningRules.analyzePlacementIssues === 'function'
+                ? ComputerLearningRules.analyzePlacementIssues(placedComponents)
+                : null;
+            const summaryParts = [];
+            if (issueSummary && issueSummary.zoneMismatch.length > 0) {
+                summaryParts.push(`${issueSummary.zoneMismatch.length} salah zona`);
+            }
+            if (issueSummary && issueSummary.slotMismatch.length > 0) {
+                summaryParts.push(`${issueSummary.slotMismatch.length} salah slot`);
+            }
+
             const wrongHints = typeof ComputerLearningRules !== 'undefined' && typeof ComputerLearningRules.buildWrongPlacementHints === 'function'
                 ? ComputerLearningRules.buildWrongPlacementHints(placedComponents)
                 : [];
             const detail = wrongHints.length
                 ? `<div class="text-left text-xs mt-2 p-3 bg-dark-900/40 rounded-xl">${wrongHints.slice(0, 4).map(h => `• ${h}`).join('<br>')}</div>`
                 : '';
-            showFeedback('computer-feedback', `${wrongCount} komponen salah tempat!${detail}`, false);
+            const summaryText = summaryParts.length
+                ? `Validasi gagal: ${summaryParts.join(', ')}.`
+                : `${wrongCount} komponen belum tepat.`;
+            const actionText = '<div class="text-xs mt-2 text-dark-200">Tap slot yang sudah terisi untuk melepas komponen, lalu pasang ulang.</div>';
+            showFeedback('computer-feedback', `${summaryText}${detail}${actionText}`, false, true);
             anime({
                 targets: '.component-slot.incorrect',
                 translateX: [-5, 5, -5, 5, 0],
@@ -1060,18 +1285,23 @@ const ComputerGame = (() => {
             .map(comp => `<b>${componentData[comp]?.name || comp}</b>: ${currentLevel.description[comp]}`)
             .join('<br>');
 
-        const hintPenalty = hintsUsed > 0 ? ` (${hintsUsed} hint dipakai)` : ' Bonus Tanpa hint!';
+        const objectiveList = buildLevelObjectives(currentLevel)
+            .map(item => `• ${item}`)
+            .join('<br>');
+
+        const hintPenalty = hintsUsed > 0 ? `${hintsUsed} hint dipakai.` : 'Tanpa hint.';
         showFeedback('computer-feedback', 
-            `Komputer berhasil dirakit dan menyala!${hintPenalty}<br><br>
+            `Komputer berhasil dirakit dan menyala! ${hintPenalty}<br><br>
             <div class="text-left text-xs mt-2 p-3 bg-dark-800/50 rounded-xl leading-relaxed">
-                <span class="font-bold text-accent-400">Materi Apa yang kamu pelajari:</span><br>${descList}
-            </div>`, true);
+                <span class="font-bold text-accent-400">Materi yang dipelajari:</span><br>${descList}<br><br>
+                <span class="font-bold text-purple-300">Refleksi kompetensi SMA:</span><br>${objectiveList}
+            </div>`, true, true);
 
         setTimeout(() => {
             completeLevel('computer', {
                 timeTaken: typeof ProgressSystem !== 'undefined' ? ProgressSystem.getLevelTime() : 0,
                 hintsUsed: hintsUsed,
-                errorsOccurred: 0
+                errorsOccurred: validationErrors
             });
             isBooting = false;
         }, 2500);

@@ -1429,7 +1429,7 @@ const CircuitGame = (() => {
                     const conceptNote = currentLevel?.concept
                         ? `<br><span class="text-xs text-dark-200">Konsep ${currentLevel.concept}</span>`
                         : '';
-                    showFeedback('circuit-feedback', `Rangkaian valid! Simulasi berhasil.${conceptNote}`, true);
+                    showFeedback('circuit-feedback', `Rangkaian valid! Simulasi berhasil.${conceptNote}`, true, true);
 
                     setTimeout(() => {
                         completeLevel('circuit', {

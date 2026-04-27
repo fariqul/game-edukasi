@@ -6,7 +6,9 @@
   "scripts": {
     "sync:vendor": "node scripts/sync-vendor.cjs",
     "serve": "npx serve . -l 5500",
-    "test": "node --test"
+    "test": "node --test",
+    "test:smoke": "node tests/computerSmoke.playwright.cjs",
+    "test:all": "npm test && npm run test:smoke"
   },
   "repository": {
     "type": "git",
@@ -23,5 +25,8 @@
     "animejs": "^3.2.2",
     "lottie-web": "^5.13.0",
     "peerjs": "^1.5.5"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
   }
 }

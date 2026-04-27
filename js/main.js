@@ -725,9 +725,13 @@ function resetHintPanels() {
 // FEEDBACK HELPERS
 // ============================================
 
-function showFeedback(elementId, message, isSuccess) {
+function showFeedback(elementId, message, isSuccess, allowHtml = false) {
     const feedback = document.getElementById(elementId);
-    feedback.textContent = message;
+    if (allowHtml) {
+        feedback.innerHTML = typeof message === 'string' ? message : String(message ?? '');
+    } else {
+        feedback.textContent = message;
+    }
     feedback.className = `mt-4 p-4 rounded-2xl text-center font-medium ${isSuccess ? 'feedback-success' : 'feedback-error'}`;
 
     // Animate feedback
