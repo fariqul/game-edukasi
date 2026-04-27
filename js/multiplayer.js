@@ -92,6 +92,10 @@ const Multiplayer = (() => {
             target.classList.add('active');
             target.style.opacity = 1;
         }
+
+        if (typeof syncMultiplayerFocusUi === 'function') {
+            syncMultiplayerFocusUi(id);
+        }
     }
 
     function formatTime(ms) {
@@ -172,13 +176,13 @@ const Multiplayer = (() => {
             : (peer.disconnected && !peer.destroyed);
         if (!canReconnect) return;
 
-        if (statusEl) statusEl.textContent = 'Koneksi putus, mencoba reconnect...';
+        if (statusEl) statusEl.textContent = 'Koneksi putus. Reconnect...';
         if (reconnectTimer) clearTimeout(reconnectTimer);
         reconnectTimer = setTimeout(() => {
             try {
                 peer.reconnect();
             } catch (e) {
-                if (statusEl) statusEl.textContent = 'Reconnect gagal. Coba buat/join room lagi.';
+                if (statusEl) statusEl.textContent = 'Reconnect gagal. Coba masuk room lagi.';
             }
         }, 2000);
     }
@@ -549,13 +553,13 @@ const Multiplayer = (() => {
         const seconds = Math.max(1, Math.floor(Number(classLevelTimerSeconds) || getClassBattlePerLevelSeconds(classBattleSession)));
 
         if (currentLevel >= target) {
-            setClassSessionStatus('Waktu level terakhir habis. Menutup sesi...', false);
+            setClassSessionStatus('Waktu level terakhir habis. Menutup match...', false);
             await finishClassBattleSession('finished');
             return;
         }
 
         const nextLevel = currentLevel + 1;
-        setClassSessionStatus(`Waktu level ${currentLevel} habis. Lanjut ke level ${nextLevel}.`, false);
+        setClassSessionStatus(`Level ${currentLevel} selesai. Naik ke level ${nextLevel}.`, false);
         await announceClassLevelTimerStart({
             levelIndex: nextLevel,
             targetLevel: target,
@@ -597,7 +601,7 @@ const Multiplayer = (() => {
         const locked = isHostLobbyLockedInClassBattle();
         backBtn.disabled = locked;
         backBtn.title = locked
-            ? 'Host tidak bisa keluar dari lobby saat sesi class battle berjalan.'
+            ? 'Host tidak bisa keluar saat match berjalan.'
             : '';
     }
 
@@ -763,7 +767,7 @@ const Multiplayer = (() => {
 
         const title = document.getElementById('mp-result-title');
         if (title) {
-            title.textContent = 'Ranking Class Battle';
+            title.textContent = 'Ranking Match';
             title.className = 'font-display text-3xl font-bold text-accent-400 mb-2';
         }
 
@@ -786,7 +790,7 @@ const Multiplayer = (() => {
             : 'finished';
         const subtitle = document.getElementById('class-session-status');
         if (subtitle && status === 'finished') {
-            subtitle.textContent = 'Sesi selesai. Ranking akhir ditampilkan.';
+            subtitle.textContent = 'Match selesai. Ranking final ditampilkan.';
         }
 
         const playAgainBtn = document.getElementById('mp-btn-play-again');
@@ -829,10 +833,10 @@ const Multiplayer = (() => {
                 status: classBattleSession.status || finalStatus
             });
         } catch (error) {
-            setClassJoinStatus((error && error.message) || 'Gagal menutup sesi class battle.', true);
+            setClassJoinStatus((error && error.message) || 'Gagal menutup match.', true);
         } finally {
             classBattleActive = false;
-            setClassSessionStatus('Sesi class battle ditutup.', false);
+            setClassSessionStatus('Match ditutup.', false);
             stopClassLevelTimer();
             classLevelTimerStartedAt = 0;
             classLevelTimerSeconds = 0;
@@ -879,7 +883,7 @@ const Multiplayer = (() => {
                     }
                 }
 
-                setClassSessionStatus(`Timer level ${levelIndex}/${targetLevel} aktif (${seconds} detik).`, false);
+                setClassSessionStatus(`Timer level ${levelIndex}/${targetLevel} aktif (${seconds} dtk).`, false);
             }
             return;
         }
@@ -890,13 +894,13 @@ const Multiplayer = (() => {
                 ? payload.displayName.trim()
                 : '';
             if (joinedName) {
-                setClassSessionStatus(`${joinedName} bergabung ke sesi.`, false);
+                setClassSessionStatus(`${joinedName} masuk room.`, false);
             }
             return;
         }
 
         if (eventName === 'all-participants-finished') {
-            setClassSessionStatus('Semua peserta selesai. Menutup sesi...', false);
+            setClassSessionStatus('Semua peserta selesai. Menutup match...', false);
             if (classBattleSession && classBattleSession.status === 'in_progress') {
                 if (classBattleRole === 'host') {
                     finishClassBattleSession('finished').catch(() => {});
@@ -911,7 +915,7 @@ const Multiplayer = (() => {
             refreshClassParticipants().catch(() => {});
 
             if (classBattleRole === 'host') {
-                setClassSessionStatus('Class battle berjalan. Host sedang memantau progres peserta.', false);
+                setClassSessionStatus('Match berjalan. Host pantau progres live.', false);
                 syncLobbyBackButtonState();
                 return;
             }
@@ -925,7 +929,7 @@ const Multiplayer = (() => {
             if (typeof navigateTo === 'function') {
                 navigateTo(mode);
             }
-            setClassSessionStatus('Class battle dimulai. Menunggu sinkron timer level dari host...', false);
+            setClassSessionStatus('Match dimulai. Menunggu sinkron timer dari host...', false);
             return;
         }
 
@@ -941,7 +945,7 @@ const Multiplayer = (() => {
             classLevelTimerLevel = 1;
             classLevelTimerTargetLevel = 1;
             setClassCountdownLabel('-');
-            setClassSessionStatus('Sesi selesai. Menampilkan ranking akhir.', false);
+            setClassSessionStatus('Match selesai. Menampilkan ranking akhir.', false);
             stopClassParticipantPolling();
             syncLobbyBackButtonState();
             const bridge = getClassBattleBridge();
@@ -985,6 +989,9 @@ const Multiplayer = (() => {
     }
 
     function goSolo() {
+        if (active || conn || peer) {
+            disconnect();
+        }
         active = false;
         // Go to dashboard
         const screen = document.getElementById('play-mode-screen');
@@ -1011,6 +1018,7 @@ const Multiplayer = (() => {
                         duration: 400,
                         easing: 'easeOutQuart',
                         complete: () => {
+                            if (typeof syncMultiplayerFocusUi === 'function') syncMultiplayerFocusUi('dashboard');
                             if (typeof animateDashboardEntrance === 'function') animateDashboardEntrance();
                         }
                     });
@@ -1019,6 +1027,7 @@ const Multiplayer = (() => {
         } else {
             screen.classList.remove('active');
             dashboard.classList.add('active');
+            if (typeof syncMultiplayerFocusUi === 'function') syncMultiplayerFocusUi('dashboard');
         }
     }
 
@@ -1054,7 +1063,7 @@ const Multiplayer = (() => {
             classBattleParticipantRows = [];
             classBattleRankingRows = [];
             setClassSessionCode('-');
-            setClassSessionStatus('Belum terhubung', false);
+            setClassSessionStatus('Offline', false);
             setClassCountdownLabel('-');
             renderClassBattleRanking([]);
             renderClassParticipantPreview([]);
@@ -1111,7 +1120,7 @@ const Multiplayer = (() => {
                     `<span class="pin-digit">${d}</span>`
                 ).join('');
             }
-            if (createStatus) createStatus.textContent = 'Menunggu lawan bergabung...';
+            if (createStatus) createStatus.textContent = 'Menunggu lawan...';
         });
 
         peer.on('connection', (connection) => {
@@ -1141,7 +1150,7 @@ const Multiplayer = (() => {
 
         if (pin.length !== 6 || isNaN(pin)) {
             if (joinStatus) {
-                joinStatus.textContent = 'PIN harus 6 digit angka!';
+                joinStatus.textContent = 'Kode harus 6 digit angka.';
                 joinStatus.className = 'text-red-400 text-sm mt-2';
             }
             return;
@@ -1168,7 +1177,7 @@ const Multiplayer = (() => {
 
             conn.on('error', () => {
                 if (joinStatus) {
-                    joinStatus.textContent = 'Gagal terhubung!';
+                    joinStatus.textContent = 'Gagal terhubung.';
                     joinStatus.className = 'text-red-400 text-sm mt-2';
                 }
             });
@@ -1189,7 +1198,7 @@ const Multiplayer = (() => {
         setTimeout(() => {
             if (!active) {
                 if (joinStatus) {
-                    joinStatus.textContent = 'Timeout — room tidak ditemukan.';
+                    joinStatus.textContent = 'Timeout, room tidak ditemukan.';
                     joinStatus.className = 'text-red-400 text-sm mt-2';
                 }
             }
@@ -1199,7 +1208,7 @@ const Multiplayer = (() => {
     async function createClassBattleRoom() {
         const bridge = getClassBattleBridge();
         if (!bridge) {
-            setClassCreateStatus('Supabase belum siap untuk class battle.', true);
+            setClassCreateStatus('Supabase belum siap untuk match.', true);
             return;
         }
 
@@ -1215,7 +1224,7 @@ const Multiplayer = (() => {
         const targetLevel = Math.max(1, Math.floor(Number(targetEl && targetEl.value) || 1));
         const perLevelSeconds = Math.max(10, Math.min(300, Math.floor(Number(perLevelEl && perLevelEl.value) || 20)));
 
-        setClassCreateStatus('Membuat sesi class battle...', false);
+        setClassCreateStatus('Membuat match...', false);
         setClassJoinStatus('', false);
 
         active = false;
@@ -1263,14 +1272,14 @@ const Multiplayer = (() => {
 
             setClassSessionPanelVisible(true);
             setClassSessionCode(resolvedSessionCode || '-');
-            setClassSessionStatus('Sesi dibuat. Bagikan kode ke peserta.', false);
+            setClassSessionStatus('Room siap. Bagikan kode ke pemain.', false);
             stopClassLevelTimer();
             classLevelTimerStartedAt = 0;
             classLevelTimerSeconds = 0;
             classLevelTimerLevel = 1;
             classLevelTimerTargetLevel = 1;
             setClassCountdownLabel('-');
-            setClassCreateStatus('Sesi siap. Tekan "Mulai Class Battle" saat semua peserta sudah masuk.', false);
+            setClassCreateStatus('Siap tempur. Tekan "Mulai Match" saat semua pemain masuk.', false);
 
             const startBtn = document.getElementById('class-start-btn');
             if (startBtn) startBtn.classList.remove('hidden');
@@ -1279,14 +1288,14 @@ const Multiplayer = (() => {
             await refreshClassParticipants().catch(() => {});
             startClassParticipantPolling();
         } catch (error) {
-            setClassCreateStatus((error && error.message) || 'Gagal membuat sesi class battle.', true);
+            setClassCreateStatus((error && error.message) || 'Gagal membuat match.', true);
         }
     }
 
     async function joinClassBattleRoom() {
         const bridge = getClassBattleBridge();
         if (!bridge) {
-            setClassJoinStatus('Supabase belum siap untuk class battle.', true);
+            setClassJoinStatus('Supabase belum siap untuk match.', true);
             return;
         }
 
@@ -1296,11 +1305,11 @@ const Multiplayer = (() => {
         const sessionCode = (codeEl && codeEl.value.trim()) || '';
 
         if (sessionCode.length !== 6 || isNaN(sessionCode)) {
-            setClassJoinStatus('Kode sesi harus 6 digit angka.', true);
+            setClassJoinStatus('Kode match harus 6 digit angka.', true);
             return;
         }
 
-        setClassJoinStatus('Menghubungkan ke sesi class battle...', false);
+        setClassJoinStatus('Menghubungkan ke room...', false);
         setClassCreateStatus('', false);
 
         active = false;
@@ -1339,14 +1348,14 @@ const Multiplayer = (() => {
 
             setClassSessionPanelVisible(true);
             setClassSessionCode(resolvedSessionCode || '-');
-            setClassSessionStatus('Berhasil bergabung. Menunggu host memulai.', false);
+            setClassSessionStatus('Berhasil masuk. Menunggu host mulai.', false);
             stopClassLevelTimer();
             classLevelTimerStartedAt = 0;
             classLevelTimerSeconds = 0;
             classLevelTimerLevel = 1;
             classLevelTimerTargetLevel = 1;
             setClassCountdownLabel('-');
-            setClassJoinStatus(`Bergabung sebagai ${classBattleParticipant.display_name}.`, false);
+            setClassJoinStatus(`Masuk sebagai ${classBattleParticipant.display_name}.`, false);
 
             const startBtn = document.getElementById('class-start-btn');
             if (startBtn) startBtn.classList.add('hidden');
@@ -1369,18 +1378,18 @@ const Multiplayer = (() => {
                 });
             }
         } catch (error) {
-            setClassJoinStatus((error && error.message) || 'Gagal bergabung ke class battle.', true);
+            setClassJoinStatus((error && error.message) || 'Gagal masuk ke match.', true);
         }
     }
 
     async function startClassBattle() {
         const bridge = getClassBattleBridge();
         if (!bridge || !classBattleSession || classBattleRole !== 'host') {
-            setClassCreateStatus('Hanya host yang bisa memulai class battle.', true);
+            setClassCreateStatus('Hanya host yang bisa memulai match.', true);
             return;
         }
 
-        setClassCreateStatus('Memulai class battle...', false);
+        setClassCreateStatus('Memulai match...', false);
 
         try {
             const started = await bridge.service.startSession({
@@ -1421,13 +1430,13 @@ const Multiplayer = (() => {
                 seconds: perLevelSeconds
             });
 
-            setClassSessionStatus(`Class battle dimulai. Timer per level ${perLevelSeconds} detik.`, false);
-            setClassCreateStatus('Sesi berjalan. Pantau progres peserta pada panel live.', false);
+            setClassSessionStatus(`Match dimulai. Timer per level ${perLevelSeconds} detik.`, false);
+            setClassCreateStatus('Match berjalan. Pantau progres live.', false);
             const startBtn = document.getElementById('class-start-btn');
             if (startBtn) startBtn.classList.add('hidden');
             syncLobbyBackButtonState();
         } catch (error) {
-            setClassCreateStatus((error && error.message) || 'Gagal memulai class battle.', true);
+            setClassCreateStatus((error && error.message) || 'Gagal memulai match.', true);
         }
     }
 
@@ -1721,7 +1730,7 @@ const Multiplayer = (() => {
 
         // Show opponent info bar on dashboard
         showOpponentBar(true);
-        updateOpponentBarStatus('Menunggu host memilih mode...');
+        updateOpponentBarStatus('Menunggu host pilih mode...');
 
         // If guest, disable mode cards clicking and show wait overlay on dashboard only
         if (!isHost) {
@@ -1775,7 +1784,7 @@ const Multiplayer = (() => {
         startTimer();
 
         // Update opponent bar
-        updateOpponentBarStatus('Mengerjakan...');
+        updateOpponentBarStatus('Berlomba...');
         showOpponentBar(true);
     }
 
@@ -1829,11 +1838,11 @@ const Multiplayer = (() => {
             const myRank = completedPlayers.findIndex(p => p.isMe);
             const myTime = roomPlayers.find(p => p.isMe)?.completedTime;
             if (myRank === 0 && myTime) {
-                modalTitle.textContent = `Kamu Juara 1! (${formatTime(myTime)})`;
+                modalTitle.textContent = `Menang! Peringkat #1 (${formatTime(myTime)})`;
             } else if (myRank > -1) {
-                modalTitle.textContent = `Kamu Peringkat ${myRank + 1}!`;
+                modalTitle.textContent = `Peringkat #${myRank + 1}`;
             } else {
-                modalTitle.textContent = 'Hasil Pertandingan';
+                modalTitle.textContent = 'Hasil Match';
             }
         }
 
@@ -1973,7 +1982,7 @@ const Multiplayer = (() => {
             bar.classList.remove('hidden');
             const status = document.getElementById('mp-opp-status');
             if (status) {
-                status.textContent = 'Lawan terputus!';
+                status.textContent = 'Lawan terputus.';
                 status.className = 'text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400';
             }
         }
@@ -2020,18 +2029,21 @@ const Multiplayer = (() => {
 
         setClassSessionPanelVisible(false);
         setClassSessionCode('-');
-        setClassSessionStatus('Belum terhubung', false);
+        setClassSessionStatus('Offline', false);
         setClassCountdownLabel('-');
         renderClassParticipantPreview([]);
         hideClassBattleResultPanel();
         syncLobbyBackButtonState();
 
         showOpponentBar(false);
+        if (typeof syncMultiplayerFocusUi === 'function') {
+            syncMultiplayerFocusUi('dashboard');
+        }
     }
 
     function backFromLobby() {
         if (isHostLobbyLockedInClassBattle()) {
-            setClassCreateStatus('Host tidak bisa keluar dari lobby sampai sesi class battle selesai.', true);
+            setClassCreateStatus('Host tidak bisa keluar sebelum match selesai.', true);
             return;
         }
 

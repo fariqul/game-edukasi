@@ -25,7 +25,28 @@ const AdaptiveHints = (() => {
         localStorage.setItem('adaptiveHintsState', JSON.stringify(s));
     }
 
+    function shouldSuppressLearningOverlays(mode) {
+        const active = typeof Multiplayer !== 'undefined'
+            && typeof Multiplayer.isActive === 'function'
+            && Multiplayer.isActive();
+
+        if (!active) return false;
+
+        const currentScreen = typeof mode === 'string'
+            ? mode
+            : (typeof GameState !== 'undefined' && GameState && GameState.currentScreen) || '';
+
+        if (typeof MultiplayerUiRules !== 'undefined' && typeof MultiplayerUiRules.shouldEnableFocusPlayUi === 'function') {
+            return MultiplayerUiRules.shouldEnableFocusPlayUi({ active, currentScreen });
+        }
+
+        return true;
+    }
+
     function recordAttempt(mode, level) {
+        if (shouldSuppressLearningOverlays(mode)) {
+            return getAttemptCount(mode, level);
+        }
         const s = getState();
         const key = `${mode}_${level}`;
         s.attempts[key] = (s.attempts[key] || 0) + 1;
@@ -232,6 +253,8 @@ const AdaptiveHints = (() => {
     // ============================================
 
     function showConceptSummary(mode, level) {
+        if (shouldSuppressLearningOverlays(mode)) return;
+
         const modeData = HINT_DATA[mode];
         if (!modeData) return;
 

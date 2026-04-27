@@ -286,20 +286,20 @@ const RobotGame = (() => {
         {
             id: 17,
             mission: "Level 17: Mirror Mind!",
-            hint: "Robot merah bergerak TERBALIK! Kiri jadi Kanan, Atas jadi Bawah. Pikirkan dua perspektif!",
+            hint: "Gunakan belok untuk membuat jalur berlawanan. Saat Biru belok KANAN, Merah akan belok KIRI.",
             concept: "Mirror Logic - Berpikir Terbalik",
             dualMode: 'mirror',
             grid: [
                 [0, 0, 0, 0, 0],
-                ['S', 0, 0, 0, 'G'],
+                ['F', 0, 0, 0, 'G'],
                 [0, 0, 0, 0, 0],
-                ['R', 0, 0, 0, 'F'],
+                [0, 'S', 0, 'R', 0],
                 [0, 0, 0, 0, 0]
             ],
-            startDirection: 'right',
-            startDirection2: 'left',
-            solution: ['forward', 'forward', 'forward', 'forward'],
-            minCommands: 4
+            startDirection: 'up',
+            startDirection2: 'up',
+            solution: ['forward', 'right', 'forward', 'forward', 'left', 'forward', 'right', 'forward'],
+            minCommands: 8
         },
         {
             id: 18,
@@ -405,7 +405,7 @@ const RobotGame = (() => {
             { icon: 'Tujuan', msg: 'Robot Biru menuju Tujuan dan Robot Merah menuju Goal.' },
             { icon: 'Hint', msg: 'Pikirkan jalur yang bisa dilalui KEDUA robot sekaligus!' }
         ]},
-        17: { maxCommands: 6, phase: 'Dual Mirror', tutorial: [
+        17: { maxCommands: 10, phase: 'Dual Mirror', tutorial: [
             { icon: 'Mirror', msg: 'Mode Mirror! Robot Merah bergerak TERBALIK dari Robot Biru.' },
             { icon: 'Kiri', msg: 'Saat Biru belok KIRI, Merah belok KANAN. Pikirkan dua perspektif!' }
         ]},
@@ -439,6 +439,12 @@ const RobotGame = (() => {
     let dragDropInitialized = false;
     let crashCount = 0;
     let crashCount2 = 0;
+    let executionStep = 0;
+    let executionTotal = 0;
+    let analyticsControlsInitialized = false;
+    let robotAnalytics = null;
+
+    const ROBOT_ANALYTICS_STORAGE_KEY = 'informatikaLabRobotAnalytics';
 
     // ============================================
     // INITIALIZATION
@@ -448,12 +454,350 @@ const RobotGame = (() => {
         return currentLevel && currentLevel.dualMode;
     }
 
+    function isMultiplayerMatchActive() {
+        return typeof Multiplayer !== 'undefined'
+            && typeof Multiplayer.isActive === 'function'
+            && Multiplayer.isActive();
+    }
+
+    function escapeHtml(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function getAnalyticsRules() {
+        return typeof RobotAnalyticsRules !== 'undefined' ? RobotAnalyticsRules : null;
+    }
+
+    function getFallbackAnalyticsState() {
+        return {
+            version: 1,
+            totalAttempts: 0,
+            totalSuccesses: 0,
+            totalFailures: 0,
+            failureByReason: {
+                out: 0,
+                wall: 0,
+                other: 0
+            },
+            levels: {}
+        };
+    }
+
+    function normalizeAnalyticsState(input) {
+        const rules = getAnalyticsRules();
+        if (rules && typeof rules.normalizeRobotAnalytics === 'function') {
+            return rules.normalizeRobotAnalytics(input);
+        }
+        const fallback = getFallbackAnalyticsState();
+        if (!input || typeof input !== 'object') return fallback;
+        return {
+            ...fallback,
+            ...input,
+            failureByReason: {
+                ...fallback.failureByReason,
+                ...(input.failureByReason || {})
+            },
+            levels: typeof input.levels === 'object' && input.levels ? input.levels : {}
+        };
+    }
+
+    function summarizeAnalytics(state, limit = 3) {
+        const rules = getAnalyticsRules();
+        if (rules && typeof rules.summarizeRobotAnalytics === 'function') {
+            return rules.summarizeRobotAnalytics(state, limit);
+        }
+
+        const safe = normalizeAnalyticsState(state);
+        const entries = Object.keys(safe.levels || {})
+            .map((levelId) => ({ levelId: Number(levelId), ...(safe.levels[levelId] || {}) }))
+            .filter((entry) => Number.isInteger(entry.levelId) && entry.levelId > 0)
+            .sort((a, b) => (b.attempts || 0) - (a.attempts || 0))
+            .slice(0, limit);
+
+        return {
+            totalAttempts: Number(safe.totalAttempts) || 0,
+            totalSuccesses: Number(safe.totalSuccesses) || 0,
+            totalFailures: Number(safe.totalFailures) || 0,
+            failuresOut: Number(safe.failureByReason.out) || 0,
+            failuresWall: Number(safe.failureByReason.wall) || 0,
+            failuresOther: Number(safe.failureByReason.other) || 0,
+            overallEfficiency: 0,
+            levelSummaries: entries
+        };
+    }
+
+    function loadRobotAnalytics() {
+        try {
+            const raw = localStorage.getItem(ROBOT_ANALYTICS_STORAGE_KEY);
+            if (!raw) {
+                robotAnalytics = normalizeAnalyticsState(null);
+                return;
+            }
+            robotAnalytics = normalizeAnalyticsState(JSON.parse(raw));
+        } catch (error) {
+            console.warn('Failed to load robot analytics:', error);
+            robotAnalytics = normalizeAnalyticsState(null);
+        }
+    }
+
+    function saveRobotAnalytics() {
+        if (!robotAnalytics) return;
+        try {
+            localStorage.setItem(ROBOT_ANALYTICS_STORAGE_KEY, JSON.stringify(robotAnalytics));
+        } catch (error) {
+            console.warn('Failed to save robot analytics:', error);
+        }
+    }
+
+    function updateRobotAnalyticsDashboard() {
+        if (!robotAnalytics) {
+            robotAnalytics = normalizeAnalyticsState(null);
+        }
+
+        const summary = summarizeAnalytics(robotAnalytics, 3);
+
+        const attemptsEl = document.getElementById('robot-analytics-attempts');
+        if (attemptsEl) attemptsEl.textContent = String(summary.totalAttempts || 0);
+
+        const outEl = document.getElementById('robot-analytics-out');
+        if (outEl) outEl.textContent = String(summary.failuresOut || 0);
+
+        const wallEl = document.getElementById('robot-analytics-wall');
+        if (wallEl) wallEl.textContent = String(summary.failuresWall || 0);
+
+        const efficiencyEl = document.getElementById('robot-analytics-efficiency');
+        if (efficiencyEl) efficiencyEl.textContent = `${summary.overallEfficiency || 0}%`;
+
+        const listEl = document.getElementById('robot-analytics-levels');
+        if (listEl) {
+            listEl.innerHTML = '';
+            if (!summary.levelSummaries || summary.levelSummaries.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'Belum ada data percobaan.';
+                listEl.appendChild(li);
+                return;
+            }
+
+            summary.levelSummaries.forEach((entry) => {
+                const li = document.createElement('li');
+                const successRate = entry.attempts > 0
+                    ? Math.round(((entry.successes || 0) / entry.attempts) * 100)
+                    : 0;
+                li.textContent = `Lv ${entry.levelId}: ${entry.attempts || 0} attempt, ${successRate}% sukses, efisiensi terbaik ${entry.bestEfficiency || 0}%.`;
+                listEl.appendChild(li);
+            });
+        }
+    }
+
+    function recordAnalyticsAttempt() {
+        if (!currentLevel) return;
+        const rules = getAnalyticsRules();
+        if (rules && typeof rules.recordRobotAttempt === 'function') {
+            robotAnalytics = rules.recordRobotAttempt(
+                robotAnalytics,
+                currentLevel.id,
+                currentLevel.minCommands || 0
+            );
+        } else {
+            const safe = normalizeAnalyticsState(robotAnalytics);
+            safe.totalAttempts += 1;
+            robotAnalytics = safe;
+        }
+        saveRobotAnalytics();
+        updateRobotAnalyticsDashboard();
+    }
+
+    function recordAnalyticsFailure(reason) {
+        if (!currentLevel) return;
+        const rules = getAnalyticsRules();
+        if (rules && typeof rules.recordRobotFailure === 'function') {
+            robotAnalytics = rules.recordRobotFailure(robotAnalytics, currentLevel.id, reason);
+        } else {
+            const safe = normalizeAnalyticsState(robotAnalytics);
+            safe.totalFailures += 1;
+            const reasonKey = reason === 'out' || reason === 'wall' ? reason : 'other';
+            safe.failureByReason[reasonKey] = (safe.failureByReason[reasonKey] || 0) + 1;
+            robotAnalytics = safe;
+        }
+        saveRobotAnalytics();
+        updateRobotAnalyticsDashboard();
+    }
+
+    function recordAnalyticsSuccess() {
+        if (!currentLevel) return;
+        const rules = getAnalyticsRules();
+        if (rules && typeof rules.recordRobotSuccess === 'function') {
+            robotAnalytics = rules.recordRobotSuccess(
+                robotAnalytics,
+                currentLevel.id,
+                commandSequence.length,
+                currentLevel.minCommands || 0
+            );
+        } else {
+            const safe = normalizeAnalyticsState(robotAnalytics);
+            safe.totalSuccesses += 1;
+            robotAnalytics = safe;
+        }
+        saveRobotAnalytics();
+        updateRobotAnalyticsDashboard();
+    }
+
+    function setupAnalyticsControls() {
+        if (analyticsControlsInitialized) return;
+
+        const resetBtn = document.getElementById('btn-reset-robot-analytics');
+        if (!resetBtn) return;
+
+        analyticsControlsInitialized = true;
+        resetBtn.addEventListener('click', () => {
+            robotAnalytics = normalizeAnalyticsState(null);
+            saveRobotAnalytics();
+            updateRobotAnalyticsDashboard();
+            updateRunStatus('data analitik direset');
+        });
+    }
+
+    function updateRunStatus(message, tone = 'info') {
+        const statusEl = document.getElementById('robot-run-status');
+        if (!statusEl) return;
+
+        const toneClass = tone === 'success'
+            ? 'text-xs text-emerald-300 mb-4'
+            : tone === 'warn'
+                ? 'text-xs text-amber-300 mb-4'
+                : 'text-xs text-sky-300 mb-4';
+
+        statusEl.className = toneClass;
+        statusEl.textContent = `Status: ${message}`;
+
+        if (typeof anime !== 'undefined') {
+            anime.remove(statusEl);
+            anime({
+                targets: statusEl,
+                opacity: [0.45, 1],
+                translateY: [2, 0],
+                duration: 180,
+                easing: 'easeOutQuad'
+            });
+        }
+    }
+
+    function updateLearningTargets() {
+        const rules = typeof RobotLearningRules !== 'undefined' ? RobotLearningRules : null;
+
+        const gradeEl = document.getElementById('robot-grade-focus');
+        if (gradeEl) {
+            if (rules && typeof rules.getRobotGradeFocus === 'function') {
+                gradeEl.textContent = rules.getRobotGradeFocus(currentLevel.id);
+            } else if (currentLevel.id <= 10) {
+                gradeEl.textContent = 'Fase E SMA - Dasar algoritma';
+            } else if (currentLevel.id <= 15) {
+                gradeEl.textContent = 'Fase F SMA - Optimasi algoritma';
+            } else {
+                gradeEl.textContent = 'Fase F SMA - Berpikir komputasional paralel';
+            }
+        }
+
+        const objectiveEl = document.getElementById('robot-objectives');
+        if (objectiveEl) {
+            const fallbackObjective = ['Menyusun urutan perintah yang logis untuk mencapai tujuan robot.'];
+            const objectives = rules && typeof rules.buildRobotObjectives === 'function'
+                ? rules.buildRobotObjectives(currentLevel)
+                : fallbackObjective;
+            objectiveEl.innerHTML = '';
+            objectives.forEach((objective) => {
+                const item = document.createElement('li');
+                item.textContent = objective;
+                objectiveEl.appendChild(item);
+            });
+        }
+    }
+
+    function getExpandedSequenceResult() {
+        if (typeof RobotSequenceRules !== 'undefined') {
+            if (typeof RobotSequenceRules.expandRobotSequenceWithTrace === 'function') {
+                return RobotSequenceRules.expandRobotSequenceWithTrace(commandSequence);
+            }
+            if (typeof RobotSequenceRules.expandRobotSequence === 'function') {
+                const basic = RobotSequenceRules.expandRobotSequence(commandSequence);
+                if (!basic.ok) return basic;
+                return {
+                    ok: true,
+                    expanded: basic.expanded,
+                    trace: basic.expanded.map((_, idx) => idx)
+                };
+            }
+        }
+
+        return {
+            ok: true,
+            expanded: [...commandSequence],
+            trace: commandSequence.map((_, idx) => idx)
+        };
+    }
+
+    function updateProgressChip(expandedCount = null) {
+        const chipEl = document.getElementById('robot-progress-chip');
+        if (!chipEl) return;
+
+        const blockCount = commandSequence.length;
+        const target = currentLevel.minCommands || currentLevel.maxCommands || 0;
+
+        if (expandedCount === null) {
+            chipEl.textContent = `${blockCount} blok / target ${target}`;
+        } else {
+            chipEl.textContent = `${expandedCount} langkah simulasi / target ${target}`;
+        }
+
+        if (target && blockCount > target) {
+            chipEl.className = 'px-3 py-1 bg-red-500/20 text-red-300 rounded-full text-xs font-semibold';
+        } else if (target && blockCount > 0 && blockCount <= target) {
+            chipEl.className = 'px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-semibold';
+        } else {
+            chipEl.className = 'px-3 py-1 bg-sky-500/20 text-sky-300 rounded-full text-xs font-semibold';
+        }
+    }
+
+    function clearSequenceHighlight() {
+        document.querySelectorAll('#sequence-area .command-block.active-step').forEach((el) => {
+            el.classList.remove('active-step');
+        });
+    }
+
+    function highlightSequenceStep(sourceIndex) {
+        const seqBlocks = document.querySelectorAll('#sequence-area .command-block');
+        seqBlocks.forEach((block) => {
+            block.classList.toggle('active-step', Number(block.dataset.index) === sourceIndex);
+        });
+    }
+
+    function commandLabel(cmd) {
+        const labels = {
+            forward: 'Maju',
+            left: 'Kiri',
+            right: 'Kanan',
+            loop: 'Loop'
+        };
+        return labels[cmd] || cmd;
+    }
+
     function init(levelNum) {
+        if (!robotAnalytics) {
+            loadRobotAnalytics();
+        }
+
         currentLevel = levels[levelNum - 1] || levels[0];
         commandSequence = [];
         isRunning = false;
         crashCount = 0;
         crashCount2 = 0;
+        executionStep = 0;
+        executionTotal = 0;
         robot2Position = null;
         robot2Direction = currentLevel.startDirection2 || 'right';
 
@@ -471,6 +815,8 @@ const RobotGame = (() => {
         if (conceptEl) {
             conceptEl.textContent = currentLevel.concept;
         }
+
+        updateLearningTargets();
 
         // Update dual mode badge
         const dualBadge = document.getElementById('robot-dual-badge');
@@ -496,6 +842,7 @@ const RobotGame = (() => {
 
         setupDragDrop();
         setupControls();
+        setupAnalyticsControls();
 
         animateGridEntrance();
 
@@ -521,9 +868,12 @@ const RobotGame = (() => {
 
         // Update command count display
         updateCommandCount();
+        updateProgressChip(0);
+        updateRobotAnalyticsDashboard();
+        updateRunStatus('siap simulasi');
 
         // Show tutorial if available
-        if (currentLevel.tutorial && currentLevel.tutorial.length > 0) {
+        if (currentLevel.tutorial && currentLevel.tutorial.length > 0 && !isMultiplayerMatchActive()) {
             setTimeout(() => showTutorial(), 600);
         }
     }
@@ -533,11 +883,14 @@ const RobotGame = (() => {
     // ============================================
 
     function animateGridEntrance() {
+        const rows = currentLevel && Array.isArray(currentLevel.grid) ? currentLevel.grid.length : 5;
+        const cols = rows > 0 && Array.isArray(currentLevel.grid[0]) ? currentLevel.grid[0].length : 5;
+
         anime({
             targets: '.robot-grid-cell',
             scale: [0, 1],
             opacity: [0, 1],
-            delay: anime.stagger(30, { grid: [5, 5], from: 'center' }),
+            delay: anime.stagger(30, { grid: [cols, rows], from: 'center' }),
             duration: 400,
             easing: 'easeOutBack'
         });
@@ -768,8 +1121,11 @@ const RobotGame = (() => {
         commandSequence = [];
         const sequenceArea = document.getElementById('sequence-area');
         sequenceArea.innerHTML = '<span class="text-dark-200 text-sm w-full text-center py-8">Seret blok perintah ke sini</span>';
+        clearSequenceHighlight();
         updateCommandCount();
         updateLoopPreview();
+        updateProgressChip(0);
+        updateRunStatus('siap simulasi');
         hideFeedback('robot-feedback');
     }
 
@@ -788,6 +1144,7 @@ const RobotGame = (() => {
         commandSequence.push(command);
         if (typeof SoundManager !== 'undefined') SoundManager.play('drop');
         renderSequence();
+        updateRunStatus('urutan diperbarui, siap simulasi');
     }
 
     function renderSequence() {
@@ -796,6 +1153,10 @@ const RobotGame = (() => {
 
         if (commandSequence.length === 0) {
             sequenceArea.innerHTML = '<span class="text-dark-200 text-sm w-full text-center py-8">Seret blok perintah ke sini</span>';
+            clearSequenceHighlight();
+            updateCommandCount();
+            updateLoopPreview();
+            updateProgressChip(0);
             return;
         }
 
@@ -803,6 +1164,7 @@ const RobotGame = (() => {
             const block = document.createElement('div');
             const isLoop = cmd === 'loop';
             block.className = `command-block ${isLoop ? 'loop' : ''} text-white font-semibold text-sm cursor-pointer`;
+            block.dataset.index = String(index);
             block.innerHTML = getCommandDisplay(cmd);
             block.addEventListener('click', () => {
                 if (!isRunning) {
@@ -846,6 +1208,8 @@ const RobotGame = (() => {
             countEl.textContent = `${count}`;
             countEl.className = 'text-sm font-bold text-dark-200';
         }
+
+        updateProgressChip();
     }
 
     function getCommandDisplay(cmd) {
@@ -862,27 +1226,29 @@ const RobotGame = (() => {
         const previewEl = document.getElementById('loop-preview');
         if (!previewEl) return;
         if (commandSequence.length === 0) {
-            previewEl.textContent = '';
+            previewEl.textContent = 'Loop akan menyalin 2 perintah setelah blok loop.';
+            previewEl.className = 'text-xs text-dark-300 mb-2';
             return;
         }
 
-        const expand = typeof RobotSequenceRules !== 'undefined'
-            ? RobotSequenceRules.expandRobotSequence(commandSequence)
-            : { ok: true, expanded: [...commandSequence] };
+        const expand = getExpandedSequenceResult();
 
         if (!expand.ok) {
             previewEl.textContent = `Peringatan ${expand.error}`;
-            previewEl.className = 'text-xs text-red-300 mb-2 min-h-[1rem]';
+            previewEl.className = 'text-xs text-red-300 mb-2';
+            updateProgressChip(0);
             return;
         }
 
         previewEl.textContent = `Preview eksekusi: ${expand.expanded.length} langkah`;
-        previewEl.className = 'text-xs text-dark-300 mb-2 min-h-[1rem]';
+        previewEl.className = 'text-xs text-dark-300 mb-2';
+        updateProgressChip(expand.expanded.length);
     }
 
     function removeFromSequence(index) {
         commandSequence.splice(index, 1);
         renderSequence();
+        updateRunStatus('urutan diperbarui, siap simulasi');
     }
 
     // ============================================
@@ -959,8 +1325,14 @@ const RobotGame = (() => {
 
     async function runSequence() {
         if (isRunning || commandSequence.length === 0) return;
+        hideFeedback('robot-feedback');
         isRunning = true;
         lastCrashReason = null;
+        lastCrashRobot = 0;
+        executionStep = 0;
+        executionTotal = 0;
+        updateRunStatus('menyiapkan simulasi');
+        recordAnalyticsAttempt();
 
         const rows = currentLevel.grid.length;
         const cols = currentLevel.grid[0].length;
@@ -981,20 +1353,30 @@ const RobotGame = (() => {
         updateRobotCell();
 
         // Expand loops with validation
-        const expandedResult = typeof RobotSequenceRules !== 'undefined'
-            ? RobotSequenceRules.expandRobotSequence(commandSequence)
-            : { ok: true, expanded: [...commandSequence] };
+        const expandedResult = getExpandedSequenceResult();
         if (!expandedResult.ok) {
             showFeedback('robot-feedback', `Peringatan ${expandedResult.error}`, false);
+            updateRunStatus('loop belum valid, cek urutan blok', 'warn');
+            recordAnalyticsFailure('other');
             if (typeof SoundManager !== 'undefined') SoundManager.play('warning');
+            clearSequenceHighlight();
             isRunning = false;
             return;
         }
         const expandedCommands = expandedResult.expanded;
+        const trace = Array.isArray(expandedResult.trace)
+            ? expandedResult.trace
+            : expandedCommands.map((_, idx) => idx);
+        executionTotal = expandedCommands.length;
+        updateProgressChip(executionTotal);
 
         // Execute commands
         for (let idx = 0; idx < expandedCommands.length; idx++) {
             const cmd = expandedCommands[idx];
+            executionStep = idx + 1;
+            highlightSequenceStep(Number.isInteger(trace[idx]) ? trace[idx] : idx);
+            updateRunStatus(`menjalankan langkah ${executionStep}/${executionTotal}: ${commandLabel(cmd)}`);
+
             const success = await executeCommand(cmd);
             if (!success) {
                 const whoFailed = lastCrashRobot === 2 ? 'Robot Merah' : 'Robot Biru';
@@ -1010,9 +1392,35 @@ const RobotGame = (() => {
                     : (relevantCrash === 1
                         ? `Gagal ${whoFailed} rusak ringan! (Damage 1) Coba lagi!`
                         : `Gagal berat ${whoFailed} rusak parah! (Damage 2) Coba lagi!`);
-                showFeedback('robot-feedback', damageMsg, false);
+
+                const rules = typeof RobotLearningRules !== 'undefined' ? RobotLearningRules : null;
+                const coachingHints = rules && typeof rules.buildRobotCoachingHints === 'function'
+                    ? rules.buildRobotCoachingHints({
+                        reason: lastCrashReason,
+                        dualMode: currentLevel.dualMode,
+                        robotName: whoFailed,
+                        crashCount: relevantCrash,
+                        stepIndex: idx,
+                        totalSteps: expandedCommands.length
+                    })
+                    : [];
+
+                let failureMessage = damageMsg;
+                let allowHtml = false;
+                if (coachingHints.length > 0) {
+                    allowHtml = true;
+                    const safeHints = coachingHints
+                        .map((hint) => `<li>${escapeHtml(hint)}</li>`)
+                        .join('');
+                    failureMessage += `<div class="mt-2 text-left text-sm"><strong>Coaching:</strong><ul class="list-disc list-inside mt-1">${safeHints}</ul></div>`;
+                }
+
+                showFeedback('robot-feedback', failureMessage, false, allowHtml);
+                updateRunStatus(`simulasi berhenti di langkah ${executionStep}/${executionTotal}`, 'warn');
+                recordAnalyticsFailure(lastCrashReason || 'other');
                 if (typeof SoundManager !== 'undefined') SoundManager.play('error');
                 animateFailure();
+                clearSequenceHighlight();
                 isRunning = false;
                 return;
             }
@@ -1028,12 +1436,15 @@ const RobotGame = (() => {
         }
 
         isRunning = false;
+        clearSequenceHighlight();
         updateRobotCell();
 
         if (goal1Reached && goal2Reached) {
             const efficiency = commandSequence.length <= currentLevel.minCommands ? 'Bintang Efisien!' : '';
             const dualBonus = isDualMode() ? ' Dual robot berhasil sync! Sinkron' : '';
             showFeedback('robot-feedback', `Sukses Berhasil! ${efficiency}${dualBonus}`, true);
+            updateRunStatus('tujuan tercapai, algoritma valid', 'success');
+            recordAnalyticsSuccess();
             if (typeof SoundManager !== 'undefined') SoundManager.play('success');
             animateSuccess();
             await delay(800);
@@ -1047,10 +1458,16 @@ const RobotGame = (() => {
             });
         } else if (!goal1Reached && !goal2Reached) {
             showFeedback('robot-feedback', 'Kedua robot belum sampai ke tujuan!', false);
+            updateRunStatus('kedua robot belum mencapai tujuan', 'warn');
+            recordAnalyticsFailure('other');
         } else if (!goal1Reached) {
             showFeedback('robot-feedback', 'Robot Biru belum sampai ke bendera!', false);
+            updateRunStatus('robot biru belum mencapai tujuan', 'warn');
+            recordAnalyticsFailure('other');
         } else {
             showFeedback('robot-feedback', 'Robot Merah belum sampai ke tujuan!', false);
+            updateRunStatus('robot merah belum mencapai tujuan', 'warn');
+            recordAnalyticsFailure('other');
         }
     }
 
@@ -1202,6 +1619,7 @@ const RobotGame = (() => {
     }
 
     function showTutorial() {
+        if (isMultiplayerMatchActive()) return;
         if (!currentLevel.tutorial || currentLevel.tutorial.length === 0) return;
         tutorialActive = true;
         tutorialStepIndex = 0;

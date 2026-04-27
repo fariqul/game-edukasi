@@ -262,6 +262,34 @@
             cursor: grabbing;
         }
 
+        #sequence-area .command-block.active-step {
+            outline: 3px solid rgba(56, 189, 248, 0.9);
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.28);
+            transform: translateY(-1px) scale(1.03);
+        }
+
+        .robot-learning-panel li {
+            list-style: disc;
+            margin-left: 1.25rem;
+        }
+
+        .robot-analytics-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            background: rgba(5, 150, 105, 0.08);
+        }
+
+        .robot-analytics-chip strong {
+            color: #6ee7b7;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
         /* Sequence Area */
         .sequence-area {
             background: rgba(15, 23, 42, 0.8);
@@ -784,6 +812,16 @@
 
         .hint-panel .hint-content {
             overflow: hidden;
+        }
+
+        body.multiplayer-focus-ui .hint-panel,
+        body.multiplayer-focus-ui .robot-learning-panel,
+        body.multiplayer-focus-ui .computer-learning-panel,
+        body.multiplayer-focus-ui #robot-analytics-panel,
+        body.multiplayer-focus-ui #btn-hint-computer,
+        body.multiplayer-focus-ui #concept-summary-overlay,
+        body.multiplayer-focus-ui #robot-tutorial-overlay {
+            display: none !important;
         }
 
         /* Feedback */
@@ -1749,7 +1787,7 @@
                     </span>
                 </div>
                 <h3 class="font-display text-2xl font-bold text-accent-400 mb-2">Main Bersama</h3>
-                <p class="text-dark-200 text-sm">Main bareng teman! Supports lebih dari 2 pemain.</p>
+                <p class="text-dark-200 text-sm">Balapan skor dan waktu. Host atur mode, semua gas.</p>
 
             </div>
         </div>
@@ -1773,7 +1811,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg> Main Bersama</h1>
-                <p class="text-dark-200">Class Battle - Supports 30+ pemain sekaligus!</p>
+                <p class="text-dark-200">Class Battle kompetitif hingga 30 pemain.</p>
             </div>
 
             <!-- 2 Main Buttons -->
@@ -1788,9 +1826,9 @@
                             </svg>
                         </span>
                     </div>
-                    <h3 class="font-display text-2xl font-bold text-accent-400 mb-3 group-hover:text-accent-300">Buat Room sebagai Host</h3>
-                    <p class="text-dark-300 mb-4">Buat sesi class battle, bagikan kode 6 digit ke temanmu</p>
-                    <div class="text-accent-400 font-bold text-lg bg-accent-500/10 px-6 py-3 rounded-2xl border-2 border-accent-400/50">Mulai Host</div>
+                    <h3 class="font-display text-2xl font-bold text-accent-400 mb-3 group-hover:text-accent-300">Jadi Host</h3>
+                    <p class="text-dark-300 mb-4">Atur match dan bagikan kode 6 digit ke pemain.</p>
+                    <div class="text-accent-400 font-bold text-lg bg-accent-500/10 px-6 py-3 rounded-2xl border-2 border-accent-400/50">Buat Match</div>
                 </div>
 
                 <!-- Join Button -->
@@ -1803,8 +1841,8 @@
                             </svg>
                         </span>
                     </div>
-                    <h3 class="font-display text-2xl font-bold text-secondary-400 mb-3 group-hover:text-secondary-300">Gabung Room sebagai Pemain</h3>
-                    <p class="text-dark-300 mb-4">Masukkan kode room dari host untuk bergabung</p>
+                    <h3 class="font-display text-2xl font-bold text-secondary-400 mb-3 group-hover:text-secondary-300">Masuk Room</h3>
+                    <p class="text-dark-300 mb-4">Masukkan kode 6 digit dari host untuk gabung.</p>
                     <div class="text-secondary-400 font-bold text-lg bg-secondary-500/10 px-6 py-3 rounded-2xl border-2 border-secondary-400/50">Gabung Room</div>
                 </div>
             </div>
@@ -1814,7 +1852,7 @@
 
                 <!-- Host Form -->
                 <div id="class-host-panel" class="lobby-panel hidden mb-6">
-                    <h3 class="font-display text-xl font-bold text-primary-400 mb-6 text-center">Buat Class Battle Room</h3>
+                    <h3 class="font-display text-xl font-bold text-primary-400 mb-6 text-center">Buat Match Class Battle</h3>
                     
                     <!-- Host Name -->
                     <div class="mb-4">
@@ -1825,7 +1863,7 @@
 
                     <!-- Mode Select -->
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-dark-200 mb-2">Mode Permainan:</label>
+                        <label class="block text-sm font-medium text-dark-200 mb-2">Mode Match:</label>
                         <select id="class-mode-select" class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-lg font-bold focus:border-accent-400 transition-colors">
                             <option value="coding">Coding Puzzle</option>
                             <option value="robot">Robot Logic</option>
@@ -1837,7 +1875,7 @@
 
                     <!-- Target Level -->
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-dark-200 mb-2">Target Jumlah Level (1-10):</label>
+                        <label class="block text-sm font-medium text-dark-200 mb-2">Level Match (1-10):</label>
                         <input id="class-target-level" type="number" min="1" max="10" value="3"
                             class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-center font-mono text-lg focus:border-accent-400 transition-colors">
                     </div>
@@ -1846,7 +1884,7 @@
                         <label class="block text-sm font-medium text-dark-200 mb-2">Durasi per Level (detik):</label>
                         <input id="class-per-level-seconds" type="number" min="10" max="300" value="20"
                             class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-center font-mono text-lg focus:border-accent-400 transition-colors">
-                        <p class="mt-2 text-xs text-dark-400">Total timer sesi = target level × durasi per level.</p>
+                        <p class="mt-2 text-xs text-dark-400">Timer total = target level × detik per level.</p>
                     </div>
 
                     <button onclick="Multiplayer.createClassBattleRoom()" 
@@ -1859,22 +1897,22 @@
 
                 <!-- Join Form -->
                 <div id="class-join-panel" class="lobby-panel hidden mb-6">
-                    <h3 class="font-display text-xl font-bold text-secondary-400 mb-6 text-center">Gabung Class Battle</h3>
+                    <h3 class="font-display text-xl font-bold text-secondary-400 mb-6 text-center">Masuk Class Battle</h3>
                     
                     <!-- Player Name -->
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-dark-200 mb-2">Nama Pemain:</label>
+                        <label class="block text-sm font-medium text-dark-200 mb-2">Nama:</label>
                         <input id="class-join-name" type="text" placeholder="Nama kamu..." maxlength="30"
                             class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-center font-bold text-lg focus:border-secondary-400 transition-colors">
                     </div>
 
                     <!-- Room Code -->
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-dark-200 mb-2">Kode Room (6 digit):</label>
+                        <label class="block text-sm font-medium text-dark-200 mb-2">Kode Match (6 digit):</label>
                         <div class="relative">
                             <input id="class-join-code" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="123456"
                                 class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-center font-mono text-2xl font-bold tracking-wider focus:border-secondary-400 transition-colors">
-                            <button onclick="navigator.clipboard.writeText(document.getElementById('class-join-code').value); showToast('Kode disalin!')" 
+                            <button onclick="navigator.clipboard.writeText(document.getElementById('class-join-code').value); if (typeof Toast !== 'undefined' && typeof Toast.show === 'function') { Toast.show('Kode match disalin.', 'info', 1800); }" 
                                 class="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-secondary-400 transition-colors p-1" title="Salin">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7a2 2 0 012-2h7a2 2 0 012 2v10a2 2 0 01-2 2h-7a2 2 0 01-2-2V7z"></path>
@@ -1905,11 +1943,11 @@
                     <div class="flex items-center gap-2">
                         <span id="class-countdown-label" class="text-sm font-mono bg-dark-700 px-3 py-1 rounded-full text-accent-400">-</span>
                         <button id="class-start-btn" onclick="Multiplayer.startClassBattle()" class="hidden px-4 py-2 bg-gradient-to-r from-accent-400 to-accent-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-accent-500/50 transition-all">
-                            Mulai Class Battle
+                            Mulai Match
                         </button>
                     </div>
                 </div>
-                <p class="text-sm mb-4" id="class-session-status">Belum terhubung ke sesi</p>
+                <p class="text-sm mb-4" id="class-session-status">Offline</p>
                 <p class="mb-3 text-xs font-semibold text-secondary-300" id="class-completion-progress">Selesai: 0/0 peserta</p>
 
                 <!-- Participants Preview -->
@@ -1938,9 +1976,9 @@
                 </div>
             </div>
 
-            <button onclick="Multiplayer.backFromLobby()"
+            <button id="lobby-back-btn" onclick="Multiplayer.backFromLobby()"
                 class="text-sm text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2">
-                ← Kembali ke Play Mode
+                ← Kembali
             </button>
         </div>
 
@@ -1953,9 +1991,9 @@
             <!-- Dynamic VS player grid -->
             <div class="max-w-4xl mx-auto mb-8">
                 <div id="vs-vs-title" class="text-center mb-8">
-                    <h2 class="font-display text-4xl font-bold text-accent-400 mb-2">Waiting Room</h2>
+                    <h2 class="font-display text-4xl font-bold text-accent-400 mb-2">Ruang Siap</h2>
                     <span class="font-display text-6xl md:text-8xl font-black text-accent-400 vs-glow block mb-4">VS</span>
-                    <p class="text-xl text-dark-200" id="vs-player-count">Waiting for players...</p>
+                    <p class="text-xl text-dark-200" id="vs-player-count">Menunggu pemain...</p>
                 </div>
                 <div id="vs-player-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center"></div>
             </div>
@@ -1964,10 +2002,10 @@
         <!-- Host start button -->
         <button id="vs-start-btn" onclick="Multiplayer.vsStart()"
             class="hidden px-8 py-4 rounded-2xl font-bold text-lg text-dark-900 bg-gradient-to-r from-accent-400 to-accent-500 hover:scale-105 transition-transform shadow-lg shadow-accent-500/30">
-             Mulai!
+               Mulai Match!
         </button>
         <!-- Guest wait message -->
-        <p id="vs-wait-msg" class="hidden text-dark-200 text-lg animate-pulse">Menunggu host memulai permainan...</p>
+           <p id="vs-wait-msg" class="hidden text-dark-200 text-lg animate-pulse">Menunggu host memulai match...</p>
     </div>
 
     <!-- ============================================
@@ -1979,7 +2017,7 @@
                 <img id="mp-opp-avatar" class="w-8 h-8 object-contain" src="" alt="">
                 <span class="text-sm font-bold" id="mp-opp-name">Lawan</span>
                 <span class="text-xs px-2 py-0.5 rounded-full bg-primary-500/20 text-primary-300"
-                    id="mp-opp-status">Mengerjakan...</span>
+                    id="mp-opp-status">Standby...</span>
             </div>
             <div class="flex items-center gap-3">
                 <span class="text-sm font-mono text-accent-400" id="mp-timer">⏱ 00:00</span>
@@ -2003,7 +2041,7 @@
     <!-- Guest waiting overlay on dashboard -->
     <div id="mp-guest-waiting"
         class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-dark-800/90 backdrop-blur-sm border border-accent-500/30 rounded-2xl px-6 py-3 text-center">
-        <p class="text-accent-400 font-medium animate-pulse">⏳ Menunggu host memilih mode...</p>
+        <p class="text-accent-400 font-medium animate-pulse">Menunggu host pilih mode...</p>
     </div>
 
     <!-- ============================================
@@ -2020,7 +2058,7 @@
                     </svg>
                 </span>
             </div>
-            <h2 id="mp-result-title" class="font-display text-3xl font-bold text-accent-400 mb-2">Hasil</h2>
+            <h2 id="mp-result-title" class="font-display text-3xl font-bold text-accent-400 mb-2">Hasil Match</h2>
             <div id="mp-result-detail" class="mb-6">
                 <!-- Legacy 2-player fallback -->
                 <div class="grid grid-cols-2 gap-8 justify-items-center hidden" id="legacy-result">
@@ -2037,7 +2075,7 @@
                 </div>
                 <!-- N-player ranked list -->
                 <div id="result-ranked-list" class="mt-6">
-                    <h3 class="font-bold text-lg mb-2 text-accent-400 text-center">Ranking (Waktu tercepat menang)</h3>
+                    <h3 class="font-bold text-lg mb-2 text-accent-400 text-center">Ranking Final (waktu tercepat menang)</h3>
                     <p id="result-completion-progress" class="mb-3 text-xs font-semibold text-secondary-300 text-center">Selesai: 0/0 peserta</p>
                     <div id="result-player-list" class="space-y-2 max-h-64 overflow-y-auto bg-dark-800 rounded-xl p-4"></div>
                 </div>
@@ -2469,6 +2507,8 @@
                         <p class="text-dark-100" id="robot-mission">Bantu robot mencapai bendera hijau!</p>
                     </div>
                     <div class="flex flex-col gap-1 items-end">
+                        <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-medium"
+                            id="robot-grade-focus">Fase E SMA - Dasar algoritma</span>
                         <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-medium"
                             id="robot-concept">Sequence</span>
                         <span class="px-3 py-1 rounded-full text-xs font-bold hidden" id="robot-dual-badge">
@@ -2483,8 +2523,17 @@
                         <span class="px-2 py-0.5 bg-dark-700 text-dark-300 rounded text-[10px] font-medium hidden"
                             id="robot-phase">
                         </span>
+                        <span class="px-3 py-1 bg-sky-500/20 text-sky-300 rounded-full text-xs font-semibold"
+                            id="robot-progress-chip">0 langkah / target 0</span>
                     </div>
                 </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 mb-4 robot-learning-panel border border-sky-500/20 bg-sky-500/5">
+                <h4 class="font-display text-sm font-bold text-sky-300 mb-2">Target Belajar (SMA)</h4>
+                <ul class="text-sm text-dark-100 space-y-1" id="robot-objectives">
+                    <li>Menyusun urutan perintah untuk mencapai bendera.</li>
+                </ul>
             </div>
 
             <!-- Hint Panel -->
@@ -2552,9 +2601,11 @@
                         <h4 class="font-display text-sm font-bold text-dark-200">Urutan Perintah:</h4>
                         <span class="text-sm font-bold text-dark-200" id="command-count">0</span>
                     </div>
-                    <div class="sequence-area p-4 flex flex-wrap gap-2 content-start flex-1 mb-4" id="sequence-area">
+                    <div class="sequence-area p-4 flex flex-wrap gap-2 content-start flex-1 mb-2" id="sequence-area">
                         <span class="text-dark-200 text-sm w-full text-center py-8">Seret blok perintah ke sini</span>
                     </div>
+                    <p class="text-xs text-dark-300 mb-2" id="loop-preview">Loop akan menyalin 2 perintah setelah blok loop.</p>
+                    <p class="text-xs text-sky-300 mb-4" id="robot-run-status">Status: siap simulasi.</p>
 
                     <!-- Action Buttons -->
                     <div class="flex gap-3">
@@ -2573,6 +2624,26 @@
 
             <!-- Feedback -->
             <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="robot-feedback"></div>
+
+            <div class="glass-card rounded-2xl p-4 mt-4 border border-emerald-500/20 bg-emerald-500/5"
+                id="robot-analytics-panel">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                    <h4 class="font-display text-sm font-bold text-emerald-300">Analitik Robot</h4>
+                    <button class="px-3 py-2 rounded-lg text-sm font-semibold bg-dark-800 text-dark-100 hover:bg-dark-700"
+                        id="btn-reset-robot-analytics" type="button">
+                        Reset Data
+                    </button>
+                </div>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-3 text-sm text-dark-100">
+                    <div class="robot-analytics-chip"><span>Attempts</span><strong id="robot-analytics-attempts">0</strong></div>
+                    <div class="robot-analytics-chip"><span>Error Out</span><strong id="robot-analytics-out">0</strong></div>
+                    <div class="robot-analytics-chip"><span>Error Wall</span><strong id="robot-analytics-wall">0</strong></div>
+                    <div class="robot-analytics-chip"><span>Efisiensi</span><strong id="robot-analytics-efficiency">0%</strong></div>
+                </div>
+                <ul class="text-sm text-dark-100 space-y-1" id="robot-analytics-levels">
+                    <li>Belum ada data percobaan.</li>
+                </ul>
+            </div>
 
             <!-- Tutorial Overlay -->
             <div id="robot-tutorial-overlay" class="fixed inset-0 z-[60] hidden items-center justify-center p-4"
@@ -3358,9 +3429,14 @@
     <script src="js/classBattleState.js"></script>
     <script src="js/classBattleService.js"></script>
     <script src="js/classBattleBridge.js"></script>
+    <script src="js/multiplayerUiRules.js"></script>
     <script src="js/multiplayer.js"></script>
 
     <script src="js/main.js"></script>
+    <script src="js/robotSequenceRules.js"></script>
+    <script src="js/modeFeedbackRules.js"></script>
+    <script src="js/robotLearningRules.js"></script>
+    <script src="js/robotAnalyticsRules.js"></script>
     <script src="js/robot.js"></script>
     <script src="js/network.js"></script>
     <script src="js/computer.js"></script>

@@ -7,7 +7,11 @@
     "sync:vendor": "node scripts/sync-vendor.cjs",
     "serve": "npx serve . -l 5500",
     "test": "node --test",
-    "test:smoke": "node tests/computerSmoke.playwright.cjs",
+    "test:smoke:computer": "node tests/computerSmoke.playwright.cjs",
+    "test:smoke:robot": "node tests/robotSmoke.playwright.cjs",
+    "test:smoke:multiplayer": "node tests/multiplayerFocusSmoke.playwright.cjs",
+    "test:smoke:multiplayer:room": "node tests/multiplayerRoomFlowSmoke.playwright.cjs",
+    "test:smoke": "npm run test:smoke:computer && npm run test:smoke:robot && npm run test:smoke:multiplayer && npm run test:smoke:multiplayer:room",
     "test:all": "npm test && npm run test:smoke"
   },
   "repository": {

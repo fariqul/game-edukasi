@@ -336,10 +336,61 @@ function navigateTo(screenId) {
                 }
             }
 
+            syncMultiplayerFocusUi(GameState.currentScreen);
+
             resolve();
         }
     });
     });
+}
+
+function shouldEnableMultiplayerFocusUi(screenId) {
+    const active = typeof Multiplayer !== 'undefined'
+        && typeof Multiplayer.isActive === 'function'
+        && Multiplayer.isActive();
+
+    const currentScreen = typeof screenId === 'string'
+        ? screenId
+        : (GameState.currentScreen || 'dashboard');
+
+    const normalizedScreen = String(currentScreen).endsWith('-screen')
+        ? String(currentScreen).replace(/-screen$/, '')
+        : String(currentScreen);
+
+    if (typeof MultiplayerUiRules !== 'undefined' && typeof MultiplayerUiRules.shouldEnableFocusPlayUi === 'function') {
+        return MultiplayerUiRules.shouldEnableFocusPlayUi({ active, currentScreen: normalizedScreen });
+    }
+
+    return Boolean(active) && ['robot', 'network', 'computer', 'coding', 'circuit'].includes(normalizedScreen);
+}
+
+function forceCloseEducationalOverlays() {
+    if (typeof AdaptiveHints !== 'undefined' && typeof AdaptiveHints.closeConceptSummary === 'function') {
+        AdaptiveHints.closeConceptSummary();
+    }
+
+    const conceptOverlay = document.getElementById('concept-summary-overlay');
+    if (conceptOverlay) {
+        conceptOverlay.classList.add('hidden');
+        conceptOverlay.classList.remove('flex');
+    }
+
+    const robotTutorialOverlay = document.getElementById('robot-tutorial-overlay');
+    if (robotTutorialOverlay) {
+        robotTutorialOverlay.classList.add('hidden');
+        robotTutorialOverlay.classList.remove('flex');
+        robotTutorialOverlay.style.opacity = '';
+    }
+}
+
+function syncMultiplayerFocusUi(screenId = GameState.currentScreen) {
+    const shouldFocus = shouldEnableMultiplayerFocusUi(screenId);
+    document.body.classList.toggle('multiplayer-focus-ui', shouldFocus);
+
+    if (shouldFocus) {
+        resetHintPanels();
+        forceCloseEducationalOverlays();
+    }
 }
 
 async function initMode(mode) {
@@ -361,6 +412,7 @@ async function initMode(mode) {
 
     // Reset hint panels to closed state
     resetHintPanels();
+    syncMultiplayerFocusUi(mode);
 
     // Start level timer for progress tracking
     if (typeof ProgressSystem !== 'undefined') {
@@ -373,7 +425,7 @@ async function initMode(mode) {
     }
 
     // Record attempt for adaptive hints
-    if (typeof AdaptiveHints !== 'undefined') {
+    if (!shouldEnableMultiplayerFocusUi(mode) && typeof AdaptiveHints !== 'undefined') {
         AdaptiveHints.recordAttempt(mode, GameState.currentLevel[mode]);
     }
 
@@ -487,7 +539,7 @@ function completeLevel(mode, options) {
             
             // Provide non-intrusive feedback instead of a modal
             if (typeof Toast !== 'undefined') {
-                Toast.success('Level Selesai! Menunggu pemain lain...', 3000);
+                Toast.success('Finish! Tunggu pemain lain...', 2600);
                 if (mabarResult) {
                     // Show small flyout indicators for XP/Stars instead of blocking the screen
                     setTimeout(() => Toast.showLevelResult(mabarResult), 500);
@@ -692,6 +744,10 @@ function updateLevelIndicator(mode) {
 // ============================================
 
 function toggleHintPanel(btn) {
+    if (shouldEnableMultiplayerFocusUi(GameState.currentScreen)) {
+        return;
+    }
+
     const panel = btn.closest('.hint-panel');
     if (!panel) return;
     const content = panel.querySelector('.hint-content');
