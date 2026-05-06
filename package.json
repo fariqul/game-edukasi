@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/fariqul/game-edukasi#readme",
   "dependencies": {
+    "@netlify/database": "^1.0.0",
     "animejs": "^3.2.2",
     "lottie-web": "^5.13.0",
     "peerjs": "^1.5.5"
