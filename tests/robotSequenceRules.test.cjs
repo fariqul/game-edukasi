@@ -17,6 +17,12 @@ test('expandRobotSequence: loop tanpa 2 command ditolak', () => {
     assert.match(result.error, /Loop perlu 2 perintah/);
 });
 
+test('expandRobotSequence: loop tidak boleh menyalin loop lain', () => {
+    const result = expandRobotSequence(['loop', 'loop', 'forward']);
+    assert.equal(result.ok, false);
+    assert.match(result.error, /tidak bisa menyalin Loop/i);
+});
+
 test('expandRobotSequenceWithTrace: menyimpan indeks sumber untuk highlight eksekusi', () => {
     const result = expandRobotSequenceWithTrace(['forward', 'loop', 'left', 'right', 'forward']);
     assert.equal(result.ok, true);

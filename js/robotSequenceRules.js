@@ -23,6 +23,13 @@
                 };
             }
 
+            if (c1 === 'loop' || c2 === 'loop') {
+                return {
+                    ok: false,
+                    error: 'Loop tidak bisa menyalin Loop. Gunakan dua perintah biasa setelah loop.'
+                };
+            }
+
             expanded.push(c1, c2, c1, c2);
             trace.push(i + 1, i + 2, i + 1, i + 2);
             i += 2;

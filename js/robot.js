@@ -184,9 +184,9 @@ const RobotGame = (() => {
         // ===== GRADE 12: Advanced Computational Thinking =====
         {
             id: 11,
-            mission: "Level 11: Nested Loop Pattern",
-            hint: "Gunakan loop di dalam loop! Pattern: (maju-maju-belok) x 2",
-            concept: "Nested Loops - Loop Bersarang",
+            mission: "Level 11: Pola Loop Beruntun",
+            hint: "Gunakan dua loop beruntun untuk maju 4 langkah, belok, lalu maju 4 langkah lagi.",
+            concept: "Loop Beruntun - Pola Berulang",
             grid: [
                 ['S', 0, 0, 0, 0],
                 [0, 0, 0, 0, 0],
@@ -195,8 +195,8 @@ const RobotGame = (() => {
                 [0, 0, 0, 0, 'G']
             ],
             startDirection: 'right',
-            solution: ['loop', 'loop', 'forward', 'forward', 'right'],
-            minCommands: 5
+            solution: ['loop', 'forward', 'forward', 'right', 'loop', 'forward', 'forward'],
+            minCommands: 7
         },
         {
             id: 12,
@@ -393,7 +393,7 @@ const RobotGame = (() => {
         9: { maxCommands: 16, phase: 'Advanced' },
         10: { maxCommands: 15, phase: 'Advanced' },
         // Phase 5: Expert - Batas sangat ketat, butuh loop
-        11: { maxCommands: 6, phase: 'Expert' },
+        11: { maxCommands: 7, phase: 'Expert' },
         12: { maxCommands: 17, phase: 'Expert' },
         13: { maxCommands: 13, phase: 'Expert' },
         14: { maxCommands: 12, phase: 'Expert' },

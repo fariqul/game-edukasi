@@ -102,13 +102,13 @@ const AdaptiveHints = (() => {
                     hints.push(
                         { level: 1, text: 'Hint Gunakan LOOP! Jika ada pola berulang (maju-maju-belok), masukkan ke dalam loop.', type: 'tip' },
                         { level: 2, text: 'Panduan Cara menggunakan Loop:\n1. Cari pola yang berulang dalam jalurmu\n2. Klik "Loop" dan atur jumlah pengulangan\n3. Masukkan perintah yang diulang ke dalam loop\n4. 1 loop = banyak perintah di hemat!', type: 'guide' },
-                        { level: 3, text: 'Target Teknik Loop:\n• Pola "maju-maju" bisa jadi "Loop 2x: maju"\n• Pola "maju-belok kanan" berulang? Loop!\n• Nested loop (loop dalam loop) untuk pola kompleks\n• Selalu hitung total langkah dari loop', type: 'walkthrough' }
+                        { level: 3, text: 'Target Teknik Loop:\n• Pola "maju-maju" bisa jadi "Loop 2x: maju"\n• Pola "maju-belok kanan" berulang? Loop!\n• Loop beruntun (lebih dari satu loop) untuk pola kompleks\n• Selalu hitung total langkah dari loop', type: 'walkthrough' }
                     );
                 } else {
                     hints.push(
                         { level: 1, text: 'Hint Level expert! Kombinasikan loop dan perintah biasa. Cari pola geometris di maze.', type: 'tip' },
                         { level: 2, text: 'Panduan Strategi Expert:\n1. Bagi maze jadi segmen-segmen kecil\n2. Cari pola berulang di setiap segmen\n3. Optimalkan dengan loop\n4. Pastikan total langkah pas - tidak kurang, tidak lebih', type: 'guide' },
-                        { level: 3, text: 'Target Master tips:\n• Visualkan jalur sebagai bentuk geometris\n• L-shape = 2 maju + belok + 2 maju\n• Zigzag = Loop: (maju + belok kanan + maju + belok kiri)\n• Spiral = nested loops dengan decrementing count', type: 'walkthrough' }
+                        { level: 3, text: 'Target Master tips:\n• Visualkan jalur sebagai bentuk geometris\n• L-shape = 2 maju + belok + 2 maju\n• Zigzag = Loop: (maju + belok kanan + maju + belok kiri)\n• Spiral = loop beruntun dengan jumlah langkah berkurang', type: 'walkthrough' }
                     );
                 }
                 return hints;
