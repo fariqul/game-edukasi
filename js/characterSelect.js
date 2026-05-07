@@ -38,15 +38,25 @@ const CharacterSystem = (() => {
         { id: 'alienBlue',  name: 'Xion',   type: 'alien', colorFolder: 'Blue',   color: '#60a5fa' },
         { id: 'alienGreen', name: 'Vega',   type: 'alien', colorFolder: 'Green',  color: '#34d399' },
         { id: 'alienPink',  name: 'Nova',   type: 'alien', colorFolder: 'Pink',   color: '#f9a8d4' },
+        { id: 'alienBeige', name: 'Sandy',  type: 'alien', colorFolder: 'Beige',  color: '#f5d0a9' },
+        { id: 'alienYellow', name: 'Sol',   type: 'alien', colorFolder: 'Yellow', color: '#facc15' },
         // ── Animal Pack ─────────────────────────────────
         { id: 'panda',   name: 'Panda',   type: 'animal', animal: 'panda',   color: '#e2e8f0' },
         { id: 'rabbit',  name: 'Kelinci', type: 'animal', animal: 'rabbit',  color: '#fde68a' },
         { id: 'monkey',  name: 'Monyet',  type: 'animal', animal: 'monkey',  color: '#d97706' },
         { id: 'penguin', name: 'Pinguin', type: 'animal', animal: 'penguin', color: '#93c5fd' },
+        { id: 'elephant', name: 'Gajah',  type: 'animal', animal: 'elephant', color: '#cbd5e1' },
+        { id: 'giraffe', name: 'Jerapah', type: 'animal', animal: 'giraffe', color: '#fbbf24' },
+        { id: 'hippo',   name: 'Kudanil', type: 'animal', animal: 'hippo',   color: '#94a3b8' },
+        { id: 'parrot',  name: 'Nuri',    type: 'animal', animal: 'parrot',  color: '#22c55e' },
+        { id: 'pig',     name: 'Babi',    type: 'animal', animal: 'pig',     color: '#fda4af' },
+        { id: 'snake',   name: 'Ular',    type: 'animal', animal: 'snake',   color: '#4ade80' },
         // ── Orang Pack ──────────────────────────────────
         { id: 'orangAdventurer', name: 'Petualang', type: 'orang', subfolder: 'Adventurer', prefix: 'adventurer', color: '#fb923c' },
         { id: 'orangFemale',     name: 'Putri',     type: 'orang', subfolder: 'Female',      prefix: 'female',      color: '#e879f9' },
-        { id: 'orangPlayer',     name: 'Pemain',    type: 'orang', subfolder: 'Player',      prefix: 'player',      color: '#a3e635' },
+        { id: 'orangPlayer',     name: 'Steve',     type: 'orang', subfolder: 'Player',      prefix: 'player',      color: '#a3e635' },
+        { id: 'orangSoldier',    name: 'Prajurit',  type: 'orang', subfolder: 'Soldier',     prefix: 'soldier',     color: '#38bdf8' },
+        { id: 'orangZombie',     name: 'Zombi',     type: 'orang', subfolder: 'Zombie',      prefix: 'zombie',      color: '#84cc16' },
     ];
 
     // Animation frames for idle cycle

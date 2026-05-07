@@ -91,15 +91,25 @@ const Multiplayer = (() => {
         alienBlue:  { name: 'Xion',   type:'alien', colorFolder:'Blue',  color:'#60a5fa' },
         alienGreen: { name: 'Vega',   type:'alien', colorFolder:'Green', color:'#34d399' },
         alienPink:  { name: 'Nova',   type:'alien', colorFolder:'Pink',  color:'#f9a8d4' },
+        alienBeige: { name: 'Sandy',  type:'alien', colorFolder:'Beige', color:'#f5d0a9' },
+        alienYellow: { name: 'Sol',    type:'alien', colorFolder:'Yellow', color:'#facc15' },
         // Animal Pack
         panda:   { name: 'Panda',   type:'animal', animal:'panda',   color:'#e2e8f0' },
         rabbit:  { name: 'Kelinci', type:'animal', animal:'rabbit',  color:'#fde68a' },
         monkey:  { name: 'Monyet',  type:'animal', animal:'monkey',  color:'#d97706' },
         penguin: { name: 'Pinguin', type:'animal', animal:'penguin', color:'#93c5fd' },
+        elephant: { name: 'Gajah',   type:'animal', animal:'elephant', color:'#cbd5e1' },
+        giraffe: { name: 'Jerapah', type:'animal', animal:'giraffe', color:'#fbbf24' },
+        hippo:   { name: 'Kudanil', type:'animal', animal:'hippo',   color:'#94a3b8' },
+        parrot:  { name: 'Nuri',    type:'animal', animal:'parrot',  color:'#22c55e' },
+        pig:     { name: 'Babi',    type:'animal', animal:'pig',     color:'#fda4af' },
+        snake:   { name: 'Ular',    type:'animal', animal:'snake',   color:'#4ade80' },
         // Orang Pack
         orangAdventurer: { name: 'Petualang', type:'orang', subfolder:'Adventurer', prefix:'adventurer', color:'#fb923c' },
         orangFemale:     { name: 'Putri',     type:'orang', subfolder:'Female',      prefix:'female',      color:'#e879f9' },
-        orangPlayer:     { name: 'Pemain',    type:'orang', subfolder:'Player',      prefix:'player',      color:'#a3e635' },
+        orangPlayer:     { name: 'Steve',     type:'orang', subfolder:'Player',      prefix:'player',      color:'#a3e635' },
+        orangSoldier:    { name: 'Prajurit',  type:'orang', subfolder:'Soldier',     prefix:'soldier',     color:'#38bdf8' },
+        orangZombie:     { name: 'Zombi',     type:'orang', subfolder:'Zombie',      prefix:'zombie',      color:'#84cc16' },
     };
 
     // ============================================
@@ -2293,6 +2303,12 @@ const Multiplayer = (() => {
     }
 
     function renderRoomPlayers(listId = null) {
+        const myChar = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getSelected === 'function'
+            ? CharacterSystem.getSelected()
+            : null;
+        const myName = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getPlayerName === 'function'
+            ? CharacterSystem.getPlayerName()
+            : '';
         const lists = listId ? [document.getElementById(listId)] : [
             document.getElementById('lobby-player-list'),
             document.getElementById('vs-player-list')
@@ -2305,10 +2321,14 @@ const Multiplayer = (() => {
                 countEl.textContent = `${roomPlayers.length}/${maxPlayers} pemain`;
             }
             list.innerHTML = roomPlayers.map(p => {
-                const charData = opponentCharacters[p.id] || CHAR_DATA[p.charId];
+                const isMe = Boolean(p.isMe) || (myPlayerId && p.id === myPlayerId);
+                const effectiveCharId = p.charId || (isMe && myChar ? myChar.id : null);
+                const displayName = p.name || (isMe ? myName : '');
+                const charData = opponentCharacters[p.id] || CHAR_DATA[effectiveCharId];
+                const nameColor = charData?.color || (isMe && myChar ? myChar.color : '#fff');
+                const avatarSrc = effectiveCharId ? charImgPath(effectiveCharId, 'idle') : '';
                 const isReady = p.ready ? 'ready' : '';
                 const isHostClass = p.id === roomPlayers[0]?.id ? 'host' : '';
-                const isMe = p.isMe;
                 const status = p.completedTime ? formatTime(p.completedTime) : (p.ready ? 'Siap' : 'Menunggu');
                 let readyBtn = '';
                 if (!p.completedTime && !isHostLobbyLockedInClassBattle()) {
@@ -2316,9 +2336,9 @@ const Multiplayer = (() => {
                 }
                 return `
                     <div class="player-list-item ${isReady} ${isHostClass} flex">
-                        <img src="${charImgPath(p.charId, 'idle')}" alt="${p.name}" class="player-avatar" loading="lazy">
+                        <img src="${avatarSrc}" alt="${escapeHtml(displayName)}" class="player-avatar" loading="lazy">
                         <div class="player-info flex-1">
-                            <div class="player-name" style="color: ${charData?.color || '#fff'}">${escapeHtml(p.name)}</div>
+                            <div class="player-name" style="color: ${nameColor}">${escapeHtml(displayName)}</div>
                             <div class="player-status">${status}</div>
                         </div>
                         ${readyBtn}
