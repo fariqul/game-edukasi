@@ -66,13 +66,40 @@ const Multiplayer = (() => {
     let classJoinPending = false;
     let classJoinCooldownUntil = 0;
 
+    const ALIEN_POSE_MAP_MP = {
+        idle:'stand', cheer0:'jump', cheer1:'walk1', think:'front', show:'front',
+        jump:'jump', kick:'hit', slide:'duck', hang:'duck',
+        walk0:'walk1', walk1:'walk1', walk2:'walk2', walk3:'walk1', walk4:'walk2',
+        walk5:'walk1', walk6:'walk2', walk7:'walk1', fall:'duck'
+    };
+    const ORANG_POSE_MAP_MP = {
+        idle:'idle', cheer0:'cheer1', cheer1:'cheer2', think:'talk', show:'stand',
+        jump:'jump', kick:'action1', slide:'slide', hang:'hang', fall:'fall',
+        walk0:'walk1', walk1:'walk1', walk2:'walk2', walk3:'walk1', walk4:'walk2',
+        walk5:'walk1', walk6:'walk2', walk7:'walk1'
+    };
+
     const CHAR_DATA = {
-        maleAdventurer:   { name: 'Alex',  folder: 'Male adventurer',   prefix: 'character_maleAdventurer',   color: '#38bdf8' },
-        femaleAdventurer: { name: 'Luna',  folder: 'Female adventurer', prefix: 'character_femaleAdventurer', color: '#f472b6' },
-        malePerson:       { name: 'Budi',  folder: 'Male person',       prefix: 'character_malePerson',       color: '#4ade80' },
-        femalePerson:     { name: 'Sari',  folder: 'Female person',     prefix: 'character_femalePerson',     color: '#a78bfa' },
-        robot:            { name: 'Robo',  folder: 'Robot',             prefix: 'character_robot',            color: '#22d3ee' },
-        zombie:           { name: 'Zed',   folder: 'Zombie',            prefix: 'character_zombie',           color: '#84cc16' }
+        // Kenney Toon Pack
+        maleAdventurer:   { name: 'Alex',  type:'kenney', folder: 'Male adventurer',   prefix: 'character_maleAdventurer',   color: '#38bdf8' },
+        femaleAdventurer: { name: 'Luna',  type:'kenney', folder: 'Female adventurer', prefix: 'character_femaleAdventurer', color: '#f472b6' },
+        malePerson:       { name: 'Budi',  type:'kenney', folder: 'Male person',       prefix: 'character_malePerson',       color: '#4ade80' },
+        femalePerson:     { name: 'Sari',  type:'kenney', folder: 'Female person',     prefix: 'character_femalePerson',     color: '#a78bfa' },
+        robot:            { name: 'Robo',  type:'kenney', folder: 'Robot',             prefix: 'character_robot',            color: '#22d3ee' },
+        zombie:           { name: 'Zed',   type:'kenney', folder: 'Zombie',            prefix: 'character_zombie',           color: '#84cc16' },
+        // Alien Pack
+        alienBlue:  { name: 'Xion',   type:'alien', colorFolder:'Blue',  color:'#60a5fa' },
+        alienGreen: { name: 'Vega',   type:'alien', colorFolder:'Green', color:'#34d399' },
+        alienPink:  { name: 'Nova',   type:'alien', colorFolder:'Pink',  color:'#f9a8d4' },
+        // Animal Pack
+        panda:   { name: 'Panda',   type:'animal', animal:'panda',   color:'#e2e8f0' },
+        rabbit:  { name: 'Kelinci', type:'animal', animal:'rabbit',  color:'#fde68a' },
+        monkey:  { name: 'Monyet',  type:'animal', animal:'monkey',  color:'#d97706' },
+        penguin: { name: 'Pinguin', type:'animal', animal:'penguin', color:'#93c5fd' },
+        // Orang Pack
+        orangAdventurer: { name: 'Petualang', type:'orang', subfolder:'Adventurer', prefix:'adventurer', color:'#fb923c' },
+        orangFemale:     { name: 'Putri',     type:'orang', subfolder:'Female',      prefix:'female',      color:'#e879f9' },
+        orangPlayer:     { name: 'Pemain',    type:'orang', subfolder:'Player',      prefix:'player',      color:'#a3e635' },
     };
 
     // ============================================
@@ -102,6 +129,17 @@ const Multiplayer = (() => {
     function charImgPath(charId, pose) {
         const c = CHAR_DATA[charId];
         if (!c) return '';
+        if (c.type === 'alien') {
+            const p = ALIEN_POSE_MAP_MP[pose] || 'stand';
+            return `assets/alien_player/PNG/Players/128x256/${c.colorFolder}/alien${c.colorFolder}_${p}.png`;
+        }
+        if (c.type === 'animal') {
+            return `assets/animal_player/PNG/Round/${c.animal}.png`;
+        }
+        if (c.type === 'orang') {
+            const p = ORANG_POSE_MAP_MP[pose] || 'idle';
+            return `assets/orang_player/PNG/${c.subfolder}/Poses/${c.prefix}_${p}.png`;
+        }
         return `assets/kenney_toon-characters-1/${c.folder}/PNG/Poses HD/${c.prefix}_${pose}.png`;
     }
 
@@ -1005,6 +1043,72 @@ const Multiplayer = (() => {
         return activeParticipants.every((item) => doneSet.has(String(item && item.id)));
     }
 
+    async function checkAllDoneAtCurrentLevel() {
+        // Only the host should trigger early level-end
+        if (classBattleRole !== 'host') return;
+        if (!classBattleActive || !classBattleSession) return;
+        if (classBattleSession.status !== 'in_progress') return;
+        // Only check while a timer is actively running
+        if (!classLevelTimerTicker) return;
+        // Don't trigger if intermission is already showing
+        if (classIntermissionVisible) return;
+
+        const bridge = getClassBattleBridge();
+        if (!bridge || !bridge.service) return;
+
+        const currentLevel = Math.max(1, Math.floor(Number(classLevelTimerLevel) || 1));
+        const startLevel = Math.max(1, Math.floor(Number(classBattleStartLevel) || 1));
+        // The "current level" in ranking terms is the levelIndex (relative)
+        // Participants' reached_level should be >= currentLevel
+
+        try {
+            const participants = await bridge.service.listParticipants(classBattleSession.id);
+            const activeParticipants = (participants || []).filter((item) => !Boolean(item && item.is_host));
+            if (activeParticipants.length === 0) return;
+
+            const ranking = Array.isArray(classBattleRankingRows) && classBattleRankingRows.length > 0
+                ? classBattleRankingRows
+                : await bridge.service.fetchRanking({ sessionId: classBattleSession.id, limit: 100 });
+
+            const doneSet = new Set((ranking || [])
+                .filter((row) => Math.max(0, Number(row && row.reached_level) || 0) >= currentLevel)
+                .map((row) => String(row && row.participant_id)));
+
+            const allDone = activeParticipants.every((item) => doneSet.has(String(item && item.id)));
+            if (!allDone) return;
+
+            // All participants finished the current level!
+            // Stop the timer and trigger intermission (or finish if last level)
+            const target = Math.max(
+                1,
+                Math.floor(Number(classBattleSession.target_level) || Number(classLevelTimerTargetLevel) || 1)
+            );
+
+            stopClassLevelTimer();
+            setClassCountdownLabel('-');
+
+            if (currentLevel >= target) {
+                // Last level — finish the match
+                setClassSessionStatus('Semua peserta selesai level terakhir! Menutup match...', false);
+                await finishClassBattleSession('finished');
+            } else {
+                // Not the last level — show intermission
+                setClassSessionStatus(`Semua peserta selesai level ${currentLevel}! Menampilkan skor.`, false);
+                await announceClassLevelIntermission({
+                    levelIndex: currentLevel,
+                    targetLevel: target
+                });
+                await openClassBattleIntermission({
+                    levelIndex: currentLevel,
+                    targetLevel: target,
+                    isHost: true
+                });
+            }
+        } catch (error) {
+            console.warn('checkAllDoneAtCurrentLevel error:', error);
+        }
+    }
+
     function isHostLobbyLockedInClassBattle() {
         return Boolean(classBattleActive)
             && classBattleRole === 'host'
@@ -1174,6 +1278,9 @@ const Multiplayer = (() => {
         }
 
         updateClassCompletionProgress();
+
+        // Check if all participants finished the current level (auto-advance)
+        checkAllDoneAtCurrentLevel().catch(() => {});
     }
 
     async function openClassBattleIntermission({ levelIndex, targetLevel, isHost }) {

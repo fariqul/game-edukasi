@@ -237,7 +237,7 @@ const DailyChallenge = (() => {
                 `).join('')}
             </div>
 
-            <button class="w-full py-3 rounded-xl font-bold text-white text-lg ${completed ? 'bg-dark-600 cursor-not-allowed opacity-50' : `bg-gradient-to-r ${modeInfo.gradient} hover:shadow-lg hover:shadow-${modeInfo.color}-500/20`} transition-all"
+            <button class="w-full py-3 rounded-xl font-game text-xs text-white ${completed ? 'bg-dark-600 cursor-not-allowed opacity-50' : `bg-gradient-to-r ${modeInfo.gradient} hover:shadow-lg hover:shadow-${modeInfo.color}-500/20`} transition-all"
                     ${completed ? 'disabled' : ''} id="daily-play-btn">
                 ${completed ? 'Tantangan Hari Ini Selesai!' : 'Mulai Tantangan!'}
             </button>

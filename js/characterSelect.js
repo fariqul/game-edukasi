@@ -11,49 +11,42 @@ const CharacterSystem = (() => {
 
     const BASE = 'assets/kenney_toon-characters-1';
 
+    // Pose map for alien pack (limited poses)
+    const ALIEN_POSE_MAP = {
+        idle:'stand', cheer0:'jump', cheer1:'walk1', think:'front', show:'front',
+        jump:'jump', kick:'hit', slide:'duck', hang:'duck',
+        run0:'walk1', run1:'walk2', walk0:'walk1', walk1:'walk1', walk2:'walk2',
+        walk3:'walk1', walk4:'walk2', walk5:'walk1', walk6:'walk2', walk7:'walk1', fall:'duck'
+    };
+    // Pose map for orang_player pack
+    const ORANG_POSE_MAP = {
+        idle:'idle', cheer0:'cheer1', cheer1:'cheer2', think:'talk', show:'stand',
+        jump:'jump', kick:'action1', slide:'slide', hang:'hang', fall:'fall',
+        run0:'walk1', run1:'walk2', walk0:'walk1', walk1:'walk1', walk2:'walk2',
+        walk3:'walk1', walk4:'walk2', walk5:'walk1', walk6:'walk2', walk7:'walk1'
+    };
+
     const characters = [
-        {
-            id: 'maleAdventurer',
-            name: 'Alex',
-            folder: 'Male adventurer',
-            prefix: 'character_maleAdventurer',
-            color: '#38bdf8'
-        },
-        {
-            id: 'femaleAdventurer',
-            name: 'Luna',
-            folder: 'Female adventurer',
-            prefix: 'character_femaleAdventurer',
-            color: '#f472b6'
-        },
-        {
-            id: 'malePerson',
-            name: 'Budi',
-            folder: 'Male person',
-            prefix: 'character_malePerson',
-            color: '#4ade80'
-        },
-        {
-            id: 'femalePerson',
-            name: 'Sari',
-            folder: 'Female person',
-            prefix: 'character_femalePerson',
-            color: '#a78bfa'
-        },
-        {
-            id: 'robot',
-            name: 'Robo',
-            folder: 'Robot',
-            prefix: 'character_robot',
-            color: '#22d3ee'
-        },
-        {
-            id: 'zombie',
-            name: 'Zed',
-            folder: 'Zombie',
-            prefix: 'character_zombie',
-            color: '#84cc16'
-        }
+        // ── Kenney Toon Pack ────────────────────────────
+        { id: 'maleAdventurer',   name: 'Alex',     type: 'kenney', folder: 'Male adventurer',   prefix: 'character_maleAdventurer',   color: '#38bdf8' },
+        { id: 'femaleAdventurer', name: 'Luna',     type: 'kenney', folder: 'Female adventurer', prefix: 'character_femaleAdventurer', color: '#f472b6' },
+        { id: 'malePerson',       name: 'Budi',     type: 'kenney', folder: 'Male person',       prefix: 'character_malePerson',       color: '#4ade80' },
+        { id: 'femalePerson',     name: 'Sari',     type: 'kenney', folder: 'Female person',     prefix: 'character_femalePerson',     color: '#a78bfa' },
+        { id: 'robot',            name: 'Robo',     type: 'kenney', folder: 'Robot',             prefix: 'character_robot',            color: '#22d3ee' },
+        { id: 'zombie',           name: 'Zed',      type: 'kenney', folder: 'Zombie',            prefix: 'character_zombie',           color: '#84cc16' },
+        // ── Alien Pack ──────────────────────────────────
+        { id: 'alienBlue',  name: 'Xion',   type: 'alien', colorFolder: 'Blue',   color: '#60a5fa' },
+        { id: 'alienGreen', name: 'Vega',   type: 'alien', colorFolder: 'Green',  color: '#34d399' },
+        { id: 'alienPink',  name: 'Nova',   type: 'alien', colorFolder: 'Pink',   color: '#f9a8d4' },
+        // ── Animal Pack ─────────────────────────────────
+        { id: 'panda',   name: 'Panda',   type: 'animal', animal: 'panda',   color: '#e2e8f0' },
+        { id: 'rabbit',  name: 'Kelinci', type: 'animal', animal: 'rabbit',  color: '#fde68a' },
+        { id: 'monkey',  name: 'Monyet',  type: 'animal', animal: 'monkey',  color: '#d97706' },
+        { id: 'penguin', name: 'Pinguin', type: 'animal', animal: 'penguin', color: '#93c5fd' },
+        // ── Orang Pack ──────────────────────────────────
+        { id: 'orangAdventurer', name: 'Petualang', type: 'orang', subfolder: 'Adventurer', prefix: 'adventurer', color: '#fb923c' },
+        { id: 'orangFemale',     name: 'Putri',     type: 'orang', subfolder: 'Female',      prefix: 'female',      color: '#e879f9' },
+        { id: 'orangPlayer',     name: 'Pemain',    type: 'orang', subfolder: 'Player',      prefix: 'player',      color: '#a3e635' },
     ];
 
     // Animation frames for idle cycle
@@ -73,6 +66,18 @@ const CharacterSystem = (() => {
     // ============================================
 
     function imgPath(char, pose) {
+        if (char.type === 'alien') {
+            const p = ALIEN_POSE_MAP[pose] || 'stand';
+            return `assets/alien_player/PNG/Players/128x256/${char.colorFolder}/alien${char.colorFolder}_${p}.png`;
+        }
+        if (char.type === 'animal') {
+            return `assets/animal_player/PNG/Round/${char.animal}.png`;
+        }
+        if (char.type === 'orang') {
+            const p = ORANG_POSE_MAP[pose] || 'idle';
+            return `assets/orang_player/PNG/${char.subfolder}/Poses/${char.prefix}_${p}.png`;
+        }
+        // Default: kenney toon pack
         return `${BASE}/${char.folder}/PNG/Poses HD/${char.prefix}_${pose}.png`;
     }
 

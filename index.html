@@ -62,8 +62,10 @@
                         }
                     },
                     fontFamily: {
-                        'display': ['Fredoka', 'sans-serif'],
+                        'game': ['"Press Start 2P"', 'cursive'],
+                        'display': ['"Press Start 2P"', 'cursive'],
                         'body': ['Nunito', 'sans-serif'],
+                        'body-alt': ['Fredoka', 'sans-serif'],
                         'mono': ['JetBrains Mono', 'monospace'],
                     },
                     animation: {
@@ -95,7 +97,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&display=swap"
         rel="stylesheet">
 
     <!-- Custom External Styles -->
@@ -121,6 +123,64 @@
         }
 
         .font-display {
+            font-family: 'Press Start 2P', cursive;
+            line-height: 1.6;
+            letter-spacing: 0.02em;
+        }
+
+        /* Scale down Press Start 2P for larger text sizes — pixel font is much wider */
+        .font-display.text-5xl,
+        .font-display.text-6xl {
+            font-size: 1.5rem !important;
+        }
+        .font-display.text-4xl {
+            font-size: 1.25rem !important;
+        }
+        .font-display.text-3xl {
+            font-size: 1.1rem !important;
+        }
+        .font-display.text-2xl {
+            font-size: 0.9rem !important;
+        }
+        .font-display.text-xl {
+            font-size: 0.8rem !important;
+        }
+        .font-display.text-lg {
+            font-size: 0.72rem !important;
+        }
+        .font-display.text-sm,
+        .font-display.text-xs {
+            font-size: 0.55rem !important;
+        }
+
+        @media (min-width: 768px) {
+            .font-display.text-5xl,
+            .font-display.text-6xl,
+            .font-display.md\:text-5xl,
+            .font-display.md\:text-6xl {
+                font-size: 2rem !important;
+            }
+            .font-display.md\:text-8xl {
+                font-size: 2.5rem !important;
+            }
+            .font-display.text-4xl {
+                font-size: 1.5rem !important;
+            }
+            .font-display.text-3xl {
+                font-size: 1.25rem !important;
+            }
+            .font-display.text-2xl {
+                font-size: 1rem !important;
+            }
+        }
+
+        .font-game {
+            font-family: 'Press Start 2P', cursive;
+            line-height: 1.6;
+            letter-spacing: 0.02em;
+        }
+
+        .font-body-alt {
             font-family: 'Fredoka', sans-serif;
         }
 
@@ -870,6 +930,16 @@
         }
 
         /* Buttons */
+        .btn-primary,
+        .btn-success,
+        .btn-warning,
+        .btn-danger {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.6rem;
+            letter-spacing: 0.03em;
+            line-height: 1.8;
+        }
+
         .btn-primary {
             background: linear-gradient(145deg, #0ea5e9, #0284c7);
             transition: all 0.3s ease;
@@ -2579,6 +2649,7 @@
                     <button class="btn-warning px-3 py-2 rounded-xl font-semibold text-sm" onclick="backToPlayMode()">
                         Pilih Mode
                     </button>
+                    <button class="lm-btn" onclick="LearningMaterials.show('robot')" title="Buka Materi">📖 Materi</button>
                 </div>
                 <h2 class="font-display text-2xl font-bold text-primary-400 flex items-center gap-2">
                     <img src="assets/PNG robot/Side view/robot_blueBody.png" alt="Robot"
@@ -2785,6 +2856,7 @@
                     <button class="btn-warning px-3 py-2 rounded-xl font-semibold text-sm" onclick="backToPlayMode()">
                         Pilih Mode
                     </button>
+                    <button class="lm-btn" onclick="LearningMaterials.show('network')" title="Buka Materi">📖 Materi</button>
                 </div>
                 <h2 class="font-display text-2xl font-bold text-secondary-400 flex items-center gap-2">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2957,6 +3029,7 @@
                     <button class="btn-warning px-3 py-2 rounded-xl font-semibold text-sm" onclick="backToPlayMode()">
                         Pilih Mode
                     </button>
+                    <button class="lm-btn" onclick="LearningMaterials.show('computer')" title="Buka Materi">📖 Materi</button>
                 </div>
                 <h2 class="font-display text-2xl font-bold text-purple-400 flex items-center gap-2">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3164,6 +3237,7 @@
                     <button class="btn-warning px-3 py-2 rounded-xl font-semibold text-sm" onclick="backToPlayMode()">
                         Pilih Mode
                     </button>
+                    <button class="lm-btn" onclick="LearningMaterials.show('coding')" title="Buka Materi">📖 Materi</button>
                 </div>
                 <h2 class="font-display text-2xl font-bold text-accent-400 flex items-center gap-2">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3327,6 +3401,7 @@
                     <button class="btn-warning px-3 py-2 rounded-xl font-semibold text-sm" onclick="backToPlayMode()">
                         Pilih Mode
                     </button>
+                    <button class="lm-btn" onclick="LearningMaterials.show('circuit')" title="Buka Materi">📖 Materi</button>
                 </div>
                 <h2 class="font-display text-2xl font-bold text-teal-400 flex items-center gap-2">
                      Circuit Builder
@@ -3521,6 +3596,7 @@
     <script src="js/settingsPanel.js"></script>
     <script src="js/adaptiveHints.js"></script>
     <script src="js/dailyChallenge.js"></script>
+    <script src="js/learningMaterials.js"></script>
     <script src="js/levelSelect.js"></script>
     <script src="js/statsDashboard.js"></script>
     <script src="js/characterSelect.js"></script>
