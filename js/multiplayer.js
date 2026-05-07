@@ -2182,20 +2182,32 @@ const Multiplayer = (() => {
     }
 
     function addPlayer(playerData, isMe = false) {
-        const existing = roomPlayers.find(p => p.id === playerData.id);
+        if (!playerData || !playerData.id) return;
+        const myChar = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getSelected === 'function'
+            ? CharacterSystem.getSelected()
+            : null;
+        const myName = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getPlayerName === 'function'
+            ? CharacterSystem.getPlayerName()
+            : '';
+        const normalized = { ...playerData };
+        if (isMe && !normalized.name) normalized.name = myName;
+        if (isMe && !normalized.charId && myChar) normalized.charId = myChar.id;
+
+        const existing = roomPlayers.find(p => p.id === normalized.id);
         if (existing) {
-            Object.assign(existing, playerData);
+            Object.assign(existing, normalized);
         } else {
-            roomPlayers.push({ ...playerData, isMe, ready: false, completedTime: null });
+            roomPlayers.push({ ...normalized, isMe, ready: false, completedTime: null });
         }
-        if (playerData.charId) {
-            opponentCharacters[playerData.id] = {
-                id: playerData.id,
-                name: playerData.charName || playerData.name,
-                ...CHAR_DATA[playerData.charId]
+        if (normalized.charId) {
+            opponentCharacters[normalized.id] = {
+                id: normalized.id,
+                name: normalized.charName || normalized.name,
+                charId: normalized.charId,
+                ...CHAR_DATA[normalized.charId]
             };
         }
-        if (isMe) myPlayerId = playerData.id;
+        if (isMe) myPlayerId = normalized.id;
         renderRoomPlayers();
     }
 
@@ -2238,7 +2250,23 @@ const Multiplayer = (() => {
 
     function broadcastRoomState() {
         if (isHost && conn && conn.open) {
-            send('room-state', { players: roomPlayers });
+            const myChar = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getSelected === 'function'
+                ? CharacterSystem.getSelected()
+                : null;
+            const myName = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getPlayerName === 'function'
+                ? CharacterSystem.getPlayerName()
+                : '';
+            const players = roomPlayers.map(p => {
+                const meta = resolvePlayerMeta(p, myChar, myName);
+                return {
+                    id: p.id,
+                    name: meta.displayName || p.name,
+                    charId: meta.charId || p.charId || null,
+                    ready: Boolean(p.ready),
+                    completedTime: p.completedTime || null
+                };
+            });
+            send('room-state', { players });
         }
     }
 
@@ -2264,10 +2292,34 @@ const Multiplayer = (() => {
                 }
                 break;
             case 'room-state':
-                roomPlayers = msg.data.players || [];
-                roomPlayers.forEach(p => {
-                    if (p.id in opponentCharacters) Object.assign(opponentCharacters[p.id], p);
-                });
+                {
+                    const incoming = Array.isArray(msg.data.players) ? msg.data.players : [];
+                    const myChar = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getSelected === 'function'
+                        ? CharacterSystem.getSelected()
+                        : null;
+                    const myName = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getPlayerName === 'function'
+                        ? CharacterSystem.getPlayerName()
+                        : '';
+                    roomPlayers = incoming.map(p => {
+                        const isMe = Boolean(myPlayerId) && p.id === myPlayerId;
+                        const fallbackCharId = isMe && myChar ? myChar.id : (opponentCharacters[p.id]?.charId || null);
+                        const charId = p.charId || fallbackCharId || null;
+                        const name = p.name || (isMe ? myName : p.name);
+                        if (charId) {
+                            if (!opponentCharacters[p.id]) {
+                                opponentCharacters[p.id] = {
+                                    id: p.id,
+                                    name: p.charName || name,
+                                    charId,
+                                    ...CHAR_DATA[charId]
+                                };
+                            } else if (!opponentCharacters[p.id].charId) {
+                                opponentCharacters[p.id].charId = charId;
+                            }
+                        }
+                        return { ...p, charId, name, isMe };
+                    });
+                }
                 renderRoomPlayers();
                 break;
             case 'char-info':
@@ -2302,6 +2354,34 @@ const Multiplayer = (() => {
         send('player-ready', { id: playerId, ready: player.ready });
     }
 
+    function resolvePlayerMeta(player, myChar, myName) {
+        if (!player) {
+            return {
+                isMe: false,
+                charId: null,
+                charData: null,
+                displayName: '',
+                nameColor: '#fff',
+                avatarSrc: ''
+            };
+        }
+        const isMe = (myPlayerId && player.id === myPlayerId) || (!myPlayerId && player.isMe);
+        const fallbackCharId = isMe && myChar ? myChar.id : (opponentCharacters[player.id]?.charId || null);
+        const charId = player.charId || fallbackCharId || null;
+        const charData = opponentCharacters[player.id] || CHAR_DATA[charId];
+        const displayName = player.name || (isMe ? myName : (charData ? charData.name : 'Player'));
+        const nameColor = charData?.color || (isMe && myChar ? myChar.color : '#fff');
+        const avatarSrc = charId ? charImgPath(charId, 'idle') : '';
+        return {
+            isMe,
+            charId,
+            charData,
+            displayName,
+            nameColor,
+            avatarSrc
+        };
+    }
+
     function renderRoomPlayers(listId = null) {
         const myChar = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getSelected === 'function'
             ? CharacterSystem.getSelected()
@@ -2321,12 +2401,7 @@ const Multiplayer = (() => {
                 countEl.textContent = `${roomPlayers.length}/${maxPlayers} pemain`;
             }
             list.innerHTML = roomPlayers.map(p => {
-                const isMe = Boolean(p.isMe) || (myPlayerId && p.id === myPlayerId);
-                const effectiveCharId = p.charId || (isMe && myChar ? myChar.id : null);
-                const displayName = p.name || (isMe ? myName : '');
-                const charData = opponentCharacters[p.id] || CHAR_DATA[effectiveCharId];
-                const nameColor = charData?.color || (isMe && myChar ? myChar.color : '#fff');
-                const avatarSrc = effectiveCharId ? charImgPath(effectiveCharId, 'idle') : '';
+                const meta = resolvePlayerMeta(p, myChar, myName);
                 const isReady = p.ready ? 'ready' : '';
                 const isHostClass = p.id === roomPlayers[0]?.id ? 'host' : '';
                 const status = p.completedTime ? formatTime(p.completedTime) : (p.ready ? 'Siap' : 'Menunggu');
@@ -2336,9 +2411,9 @@ const Multiplayer = (() => {
                 }
                 return `
                     <div class="player-list-item ${isReady} ${isHostClass} flex">
-                        <img src="${avatarSrc}" alt="${escapeHtml(displayName)}" class="player-avatar" loading="lazy">
+                        <img src="${meta.avatarSrc}" alt="${escapeHtml(meta.displayName)}" class="player-avatar" loading="lazy">
                         <div class="player-info flex-1">
-                            <div class="player-name" style="color: ${nameColor}">${escapeHtml(displayName)}</div>
+                            <div class="player-name" style="color: ${meta.nameColor}">${escapeHtml(meta.displayName)}</div>
                             <div class="player-status">${status}</div>
                         </div>
                         ${readyBtn}
@@ -2481,16 +2556,24 @@ const Multiplayer = (() => {
         const listEl = document.getElementById('result-player-list');
         if (!listEl) return;
 
+        const myChar = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getSelected === 'function'
+            ? CharacterSystem.getSelected()
+            : null;
+        const myName = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getPlayerName === 'function'
+            ? CharacterSystem.getPlayerName()
+            : '';
+        const myId = myPlayerId;
+
         listEl.innerHTML = completedPlayers.map((p, index) => {
-            const charData = opponentCharacters[p.id] || CHAR_DATA[p.charId];
+            const meta = resolvePlayerMeta(p, myChar, myName);
             const rankColor = index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-400' : 'text-dark-300';
             const medal = `#${index + 1}`;
             return `
                 <div class="flex items-center gap-3 p-3 rounded-xl bg-dark-800 border border-dark-700">
                     <span class="text-2xl font-bold ${rankColor}">${medal}</span>
-                    <img src="${charImgPath(p.charId, 'idle')}" alt="${p.name}" class="w-12 h-12 object-contain rounded-lg border-2 border-primary-500/50">
+                    <img src="${meta.avatarSrc}" alt="${escapeHtml(meta.displayName)}" class="w-12 h-12 object-contain rounded-lg border-2 border-primary-500/50">
                     <div class="flex-1 min-w-0">
-                        <div class="font-bold text-white truncate" style="color: ${charData?.color || '#fff'}">${escapeHtml(p.name)}</div>
+                        <div class="font-bold text-white truncate" style="color: ${meta.nameColor}">${escapeHtml(meta.displayName)}</div>
                         <div class="text-xs font-mono text-accent-400">${formatTime(p.completedTime)}</div>
                     </div>
                 </div>
@@ -2499,8 +2582,8 @@ const Multiplayer = (() => {
 
         const modalTitle = document.getElementById('mp-result-title');
         if (modalTitle) {
-            const myRank = completedPlayers.findIndex(p => p.isMe);
-            const myTime = roomPlayers.find(p => p.isMe)?.completedTime;
+            const myRank = completedPlayers.findIndex(p => myId && p.id === myId);
+            const myTime = completedPlayers.find(p => myId && p.id === myId)?.completedTime;
             if (myRank === 0 && myTime) {
                 modalTitle.textContent = `Menang! Peringkat #1 (${formatTime(myTime)})`;
             } else if (myRank > -1) {
