@@ -26,6 +26,7 @@ const GameState = {
     }
 };
 let latestModeInitToken = 0;
+const LAST_SCREEN_KEY = 'lastScreenId';
 
 // ============================================
 // INITIALIZATION
@@ -67,6 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
         animateDashboardEntrance();
     }
 
+    if (typeof Multiplayer !== 'undefined' && typeof Multiplayer.resetAfterRefresh === 'function') {
+        Multiplayer.resetAfterRefresh();
+    }
+
+    restoreLastScreen();
+
     // Preload mode pertama saat browser idle agar transisi klik pertama lebih cepat.
     if (typeof ModuleLoader !== 'undefined') {
         if ('requestIdleCallback' in window) {
@@ -76,6 +83,65 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+function saveLastScreenId(screenId) {
+    try {
+        if (typeof sessionStorage === 'undefined') return;
+        sessionStorage.setItem(LAST_SCREEN_KEY, screenId);
+    } catch (error) {
+        // Ignore storage errors.
+    }
+}
+
+function restoreLastScreen() {
+    let saved = '';
+    try {
+        if (typeof sessionStorage !== 'undefined') {
+            saved = sessionStorage.getItem(LAST_SCREEN_KEY) || '';
+        }
+    } catch (error) {
+        saved = '';
+    }
+
+    if (!saved) return false;
+
+    const hasCharacter = typeof CharacterSystem !== 'undefined'
+        && typeof CharacterSystem.getSelected === 'function'
+        && CharacterSystem.getSelected();
+
+    if (!hasCharacter && saved !== 'character-select') {
+        return false;
+    }
+
+    if (saved === 'dashboard') {
+        navigateTo('dashboard');
+        return true;
+    }
+
+    if (saved === 'play-mode-screen') {
+        if (typeof Multiplayer !== 'undefined' && typeof Multiplayer.showPlayModeScreen === 'function') {
+            Multiplayer.showPlayModeScreen();
+            return true;
+        }
+    }
+
+    if (saved === 'lobby-screen' || saved === 'vs-screen') {
+        if (typeof Multiplayer !== 'undefined' && typeof Multiplayer.goMultiplayer === 'function') {
+            Multiplayer.goMultiplayer();
+            return true;
+        }
+    }
+
+    if (saved.endsWith('-screen')) {
+        const mode = saved.replace(/-screen$/, '');
+        if (['robot', 'network', 'computer', 'coding', 'circuit'].includes(mode)) {
+            navigateTo(mode);
+            return true;
+        }
+    }
+
+    return false;
+}
 
 // ============================================
 // LOTTIE ANIMATIONS SETUP
@@ -321,6 +387,11 @@ function navigateTo(screenId) {
                 });
             }
 
+            const screenKey = screenId === 'dashboard'
+                ? 'dashboard'
+                : `${screenId}-screen`;
+            saveLastScreenId(screenKey);
+
             // Update progress when returning to dashboard
             if (screenId === 'dashboard') {
                 updateProgressDisplay();
@@ -355,6 +426,7 @@ function backToPlayMode() {
             if (typeof syncMultiplayerFocusUi === 'function') {
                 syncMultiplayerFocusUi('play-mode');
             }
+            saveLastScreenId('play-mode-screen');
             return;
         }
     }

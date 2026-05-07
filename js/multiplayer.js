@@ -57,6 +57,7 @@ const Multiplayer = (() => {
     let classLevelTimerLevel = 1;
     let classLevelTimerTargetLevel = 1;
     const classBattleSavedLevels = {};
+    const CLASS_BATTLE_CACHE_KEY = 'classBattleParticipantCache';
 
     const JOIN_SPAM_COOLDOWN_MS = 3000;
     let joinRoomPending = false;
@@ -88,6 +89,15 @@ const Multiplayer = (() => {
         return new Peer(undefined, PEER_OPTIONS);
     }
 
+    function setLastScreenId(screenId) {
+        try {
+            if (typeof sessionStorage === 'undefined') return;
+            sessionStorage.setItem('lastScreenId', screenId);
+        } catch (error) {
+            // Ignore storage errors.
+        }
+    }
+
     function charImgPath(charId, pose) {
         const c = CHAR_DATA[charId];
         if (!c) return '';
@@ -100,6 +110,17 @@ const Multiplayer = (() => {
         if (target) {
             target.classList.add('active');
             target.style.opacity = 1;
+        }
+
+        if (typeof GameState !== 'undefined') {
+            const normalized = String(id || '').endsWith('-screen')
+                ? String(id).replace(/-screen$/, '')
+                : id;
+            GameState.currentScreen = normalized || GameState.currentScreen;
+        }
+
+        if (id) {
+            setLastScreenId(id);
         }
 
         if (typeof syncMultiplayerFocusUi === 'function') {
@@ -394,6 +415,124 @@ const Multiplayer = (() => {
         overlay.classList.remove('countdown-overlay-pop');
         void overlay.offsetWidth;
         overlay.classList.add('countdown-overlay-pop');
+    }
+
+    function readClassBattleParticipantCache() {
+        try {
+            const raw = localStorage.getItem(CLASS_BATTLE_CACHE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || !parsed.sessionId || !parsed.participantId) return null;
+            return parsed;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function writeClassBattleParticipantCache(payload) {
+        if (!payload) return;
+        localStorage.setItem(CLASS_BATTLE_CACHE_KEY, JSON.stringify(payload));
+    }
+
+    function saveClassBattleParticipantCache() {
+        if (!classBattleSession || !classBattleParticipant) return;
+        writeClassBattleParticipantCache({
+            sessionId: classBattleSession.id,
+            participantId: classBattleParticipant.id,
+            playerToken: classBattleParticipant.player_token,
+            status: classBattleSession.status || 'waiting'
+        });
+    }
+
+    function updateClassBattleParticipantCacheStatus(status) {
+        const cached = readClassBattleParticipantCache();
+        if (!cached) return;
+        cached.status = status || cached.status;
+        writeClassBattleParticipantCache(cached);
+    }
+
+    function clearClassBattleParticipantCache() {
+        localStorage.removeItem(CLASS_BATTLE_CACHE_KEY);
+    }
+
+    async function cleanupStaleClassBattleParticipant(retryCount = 0) {
+        const cached = readClassBattleParticipantCache();
+        if (!cached) return;
+        if (cached.status === 'finished' || cached.status === 'cancelled') {
+            clearClassBattleParticipantCache();
+            return;
+        }
+
+        const bridge = getClassBattleBridge();
+        if (!bridge || !bridge.service || typeof bridge.service.removeParticipant !== 'function') {
+            if (retryCount < 2) {
+                setTimeout(() => cleanupStaleClassBattleParticipant(retryCount + 1), 800);
+            }
+            return;
+        }
+
+        try {
+            await bridge.service.removeParticipant({
+                sessionId: cached.sessionId,
+                participantId: cached.participantId,
+                playerToken: cached.playerToken
+            });
+        } catch (error) {
+            console.warn('Gagal keluar dari sesi class battle:', error);
+        } finally {
+            clearClassBattleParticipantCache();
+        }
+    }
+
+    async function leaveClassBattleSession() {
+        const cached = readClassBattleParticipantCache();
+        const sessionId = classBattleSession && classBattleSession.id
+            ? classBattleSession.id
+            : cached && cached.sessionId;
+        const participantId = classBattleParticipant && classBattleParticipant.id
+            ? classBattleParticipant.id
+            : cached && cached.participantId;
+        const playerToken = classBattleParticipant && classBattleParticipant.player_token
+            ? classBattleParticipant.player_token
+            : cached && cached.playerToken;
+        const status = (classBattleSession && classBattleSession.status)
+            ? classBattleSession.status
+            : cached && cached.status;
+
+        if (!sessionId || !participantId) return;
+        if (status === 'finished' || status === 'cancelled') {
+            clearClassBattleParticipantCache();
+            return;
+        }
+
+        const bridge = getClassBattleBridge();
+        if (!bridge || !bridge.service || typeof bridge.service.removeParticipant !== 'function') {
+            return;
+        }
+
+        try {
+            await bridge.service.removeParticipant({
+                sessionId,
+                participantId,
+                playerToken
+            });
+        } catch (error) {
+            console.warn('Gagal keluar dari sesi class battle:', error);
+        } finally {
+            clearClassBattleParticipantCache();
+        }
+    }
+
+    function clearClassBattleJoinInputs() {
+        const nameEl = document.getElementById('class-join-name');
+        const codeEl = document.getElementById('class-join-code');
+        if (nameEl) nameEl.value = '';
+        if (codeEl) codeEl.value = '';
+    }
+
+    function resetAfterRefresh() {
+        clearClassBattleJoinInputs();
+        cleanupStaleClassBattleParticipant();
     }
 
     function clearClassIntermissionTimers() {
@@ -1075,6 +1214,7 @@ const Multiplayer = (() => {
             setClassJoinStatus((error && error.message) || 'Gagal menutup match.', true);
         } finally {
             classBattleActive = false;
+            updateClassBattleParticipantCacheStatus(finalStatus);
             hideClassBattleIntermission();
             setClassSessionStatus('Match ditutup.', false);
             stopClassLevelTimer();
@@ -1168,6 +1308,7 @@ const Multiplayer = (() => {
 
         if (eventName === 'session-started') {
             classBattleActive = true;
+            updateClassBattleParticipantCacheStatus('in_progress');
             const mode = (payload && payload.mode) || (classBattleSession && classBattleSession.mode) || 'coding';
             refreshClassParticipants().catch(() => {});
             hideClassBattleIntermission();
@@ -1196,6 +1337,7 @@ const Multiplayer = (() => {
             if (classBattleSession) {
                 classBattleSession.status = (payload && payload.status) || 'finished';
             }
+            updateClassBattleParticipantCacheStatus(classBattleSession && classBattleSession.status);
             hideClassBattleIntermission();
             restoreSavedLevelAfterClassBattle(classBattleSession && classBattleSession.mode);
             stopClassLevelTimer();
@@ -1279,6 +1421,7 @@ const Multiplayer = (() => {
                         complete: () => {
                             if (typeof syncMultiplayerFocusUi === 'function') syncMultiplayerFocusUi('dashboard');
                             if (typeof animateDashboardEntrance === 'function') animateDashboardEntrance();
+                            setLastScreenId('dashboard');
                         }
                     });
                 }
@@ -1287,6 +1430,7 @@ const Multiplayer = (() => {
             screen.classList.remove('active');
             dashboard.classList.add('active');
             if (typeof syncMultiplayerFocusUi === 'function') syncMultiplayerFocusUi('dashboard');
+            setLastScreenId('dashboard');
         }
     }
 
@@ -1544,6 +1688,9 @@ const Multiplayer = (() => {
                 classBattleSession = { ...classBattleSession, session_code: resolvedSessionCode };
             }
 
+            saveClassBattleParticipantCache();
+            updateClassBattleParticipantCacheStatus(classBattleSession.status || 'waiting');
+
             bridge.resetFirstFinishLock();
             bridge.syncSessionMeta({
                 session: classBattleSession,
@@ -1635,6 +1782,9 @@ const Multiplayer = (() => {
                 classBattleSession = { ...classBattleSession, session_code: resolvedSessionCode };
             }
 
+            saveClassBattleParticipantCache();
+            updateClassBattleParticipantCacheStatus(classBattleSession.status || 'waiting');
+
             bridge.resetFirstFinishLock();
             bridge.syncSessionMeta({
                 session: classBattleSession,
@@ -1703,6 +1853,7 @@ const Multiplayer = (() => {
                 status: (started && started.status) || 'in_progress'
             };
             classBattleActive = true;
+            updateClassBattleParticipantCacheStatus(classBattleSession.status || 'in_progress');
             classBattleRoundStartedAt = Date.now();
             classBattleStartLevel = getCurrentModeLevel(classBattleSession.mode);
 
@@ -2304,6 +2455,7 @@ const Multiplayer = (() => {
     function disconnect() {
         active = false;
         syncGuestWaitingOverlay('disconnected');
+        leaveClassBattleSession().catch(() => {});
         if (timerInterval) clearInterval(timerInterval);
         if (reconnectTimer) clearTimeout(reconnectTimer);
         if (roomStateInterval) { clearInterval(roomStateInterval); roomStateInterval = null; }
@@ -2420,6 +2572,7 @@ const Multiplayer = (() => {
         showOpponentBar,
         disconnect,
         advanceClassBattleLevel,
+        resetAfterRefresh,
         isActive: () => active,
         isClassBattleActive: () => classBattleActive && classBattleRole !== 'host',
         isHostPlayer: () => isHost,

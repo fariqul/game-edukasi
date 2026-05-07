@@ -503,6 +503,12 @@ with check (
     and length(normalized_name) > 0
 );
 
+drop policy if exists guest_participants_delete_open on public.guest_participants;
+create policy guest_participants_delete_open
+on public.guest_participants
+for delete
+using (true);
+
 drop policy if exists guest_submissions_select_open on public.guest_submissions;
 create policy guest_submissions_select_open
 on public.guest_submissions
@@ -556,6 +562,6 @@ $$;
 
 grant usage on schema public to anon;
 grant select, insert, update on public.guest_sessions to anon;
-grant select, insert on public.guest_participants to anon;
+grant select, insert, delete on public.guest_participants to anon;
 grant select, insert, update on public.guest_submissions to anon;
 grant execute on function public.cleanup_expired_guest_sessions() to anon, authenticated;

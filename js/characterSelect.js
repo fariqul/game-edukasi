@@ -84,6 +84,14 @@ const CharacterSystem = (() => {
         // Check if character was previously selected
         const saved = localStorage.getItem('selectedCharacter');
         const savedName = localStorage.getItem('playerName');
+        let lastScreenId = '';
+        try {
+            if (typeof sessionStorage !== 'undefined') {
+                lastScreenId = sessionStorage.getItem('lastScreenId') || '';
+            }
+        } catch (error) {
+            lastScreenId = '';
+        }
         if (savedName) playerName = savedName;
 
         // Always set up the character select screen so it's ready if user returns
@@ -99,9 +107,22 @@ const CharacterSystem = (() => {
                 const card = document.querySelector(`.char-card[data-char-id="${saved}"]`);
                 if (card) card.classList.add('selected');
                 checkStartReady();
-                // Skip select screen, go straight to play mode
-                skipToGame();
-                return;
+                // Skip select screen, go straight to play mode (unless restoring last screen)
+                const shouldSkip = !lastScreenId || lastScreenId === 'play-mode-screen';
+                if (shouldSkip) {
+                    skipToGame();
+                    return;
+                }
+            }
+        }
+
+        if (!saved) {
+            try {
+                if (typeof sessionStorage !== 'undefined') {
+                    sessionStorage.setItem('lastScreenId', 'character-select');
+                }
+            } catch (error) {
+                // Ignore storage errors.
             }
         }
     }
@@ -550,6 +571,13 @@ const CharacterSystem = (() => {
     }
 
     function changeCharacter() {
+        try {
+            if (typeof sessionStorage !== 'undefined') {
+                sessionStorage.setItem('lastScreenId', 'character-select');
+            }
+        } catch (error) {
+            // Ignore storage errors.
+        }
         localStorage.removeItem('selectedCharacter');
         localStorage.removeItem('playerName');
         selectedCharacter = null;

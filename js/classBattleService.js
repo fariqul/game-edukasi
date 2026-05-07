@@ -324,6 +324,23 @@
             throw toError(lastError, 'Gagal mengirim hasil. Coba lagi.');
         }
 
+        async function removeParticipant({ sessionId, participantId, playerToken }) {
+            assertClient();
+            if (!sessionId || !participantId) return null;
+
+            let query = client.from(tables.participants)
+                .delete()
+                .eq('session_id', sessionId)
+                .eq('id', participantId);
+
+            if (playerToken) {
+                query = query.eq('player_token', toSafeString(playerToken));
+            }
+
+            query = applySelectSingle(query, false);
+            return run(query, 'Gagal keluar dari sesi class battle.');
+        }
+
         function createSessionChannel(sessionCode, handlers) {
             if (!client || typeof client.channel !== 'function') return null;
 
@@ -391,6 +408,7 @@
             finishSession,
             fetchRanking,
             submitResultWithRetry,
+            removeParticipant,
             assertSessionOpen,
             createSessionChannel,
             sendSessionEvent,

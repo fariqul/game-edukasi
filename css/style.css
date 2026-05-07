@@ -1403,8 +1403,8 @@ body {
    ============================================ */
 
 .class-intermission-overlay {
-    background: radial-gradient(circle at top, rgba(248, 113, 113, 0.12), rgba(15, 23, 42, 0.92));
-    backdrop-filter: blur(10px);
+    background: #0b0f1a;
+    backdrop-filter: blur(6px);
 }
 
 .class-intermission-card {
