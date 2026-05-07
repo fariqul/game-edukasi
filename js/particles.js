@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Particles & Visual Effects System
  * Juicy game-feel effects: confetti, sparkles, floating particles
  */

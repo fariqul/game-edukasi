@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Mode 4: Coding Puzzle Lab
  * Konsep: Loop, If-Else, Variabel, Output, Debugging
  * 10 Levels with Progressive Difficulty
@@ -806,6 +806,11 @@ const CodingGame = (() => {
             nextBtn.addEventListener('click', () => {
                 if (currentPuzzle.id < puzzles.length) {
                     const nextLevel = currentPuzzle.id + 1;
+                    if (typeof Multiplayer !== 'undefined'
+                        && typeof Multiplayer.shouldBlockClassBattleAdvance === 'function'
+                        && Multiplayer.shouldBlockClassBattleAdvance('coding', nextLevel)) {
+                        return;
+                    }
                     init(nextLevel);
                 }
             });

@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Mode 5: Circuit Builder — Interactive Electronics Simulator
  * Konsep: Rangkaian Elektronik, Komponen, Arus Listrik, Logika Digital
  * Inspired by withdiode.com

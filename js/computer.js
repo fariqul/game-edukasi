@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Mode 3: Build a Computer
  * Konsep: Sistem Komputer, Fungsi Hardware, Input-Process-Output
  * 15 Levels with Progressive Difficulty

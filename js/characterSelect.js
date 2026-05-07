@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Character Selection & Floating Space Background
  * Kahoot-style character picker with sprite animation
  */

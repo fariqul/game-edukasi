@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Progress System - XP, Star Ratings, Achievements, Streaks
  * Enhanced progression with motivational feedback
  */

@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Keyboard Shortcuts & Accessibility System
  * Controller-first accessibility following game UI design principles
  */
@@ -38,6 +38,21 @@ const KeyboardManager = (() => {
                 const mpModal = document.getElementById('mp-result-modal');
                 if (mpModal && !mpModal.classList.contains('hidden')) {
                     return;
+                }
+                // Close visible feedback panels on active screen
+                const activeScreen = document.querySelector('.screen.active');
+                if (activeScreen) {
+                    const activeFeedbacks = Array.from(activeScreen.querySelectorAll('.game-feedback'));
+                    const visible = activeFeedbacks.find(el => !el.classList.contains('hidden'));
+                    if (visible) {
+                        if (typeof hideFeedback === 'function' && visible.id) {
+                            hideFeedback(visible.id);
+                        } else {
+                            visible.classList.add('hidden');
+                            visible.innerHTML = '';
+                        }
+                        return;
+                    }
                 }
                 // Open settings
                 if (typeof SettingsPanel !== 'undefined') {

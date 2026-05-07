@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Settings Panel - Sound, Accessibility, Display Options
  * Follows game UI principles: non-intrusive, accessible, controller-friendly
  */
@@ -163,7 +163,7 @@ const SettingsPanel = (() => {
 
                     <!-- Version Info -->
                     <div class="text-center pt-4 pb-8 border-t border-white/5">
-                        <p class="text-xs text-slate-500">Informatika Lab Adventure v2.0</p>
+                        <p class="text-xs text-slate-500">BLOOMPA v2.0</p>
                         <p class="text-xs text-slate-600 mt-1">Made with Dengan semangat for Indonesian Students</p>
                     </div>
                 </div>

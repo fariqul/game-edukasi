@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Multiplayer System — PeerJS-based 2-player rooms
  * Flow: Play Mode → Create/Join Room → VS Screen → Game → Result
  */
@@ -48,12 +48,21 @@ const Multiplayer = (() => {
     let classParticipantPollTimer = null;
     let classBattleParticipantRows = [];
     let classBattleRankingRows = [];
+    let classBattleAdvanceNoticeUntil = 0;
+    let classIntermissionVisible = false;
+    let classIntermissionTimers = [];
     let classLevelTimerTicker = null;
     let classLevelTimerStartedAt = 0;
     let classLevelTimerSeconds = 0;
     let classLevelTimerLevel = 1;
     let classLevelTimerTargetLevel = 1;
     const classBattleSavedLevels = {};
+
+    const JOIN_SPAM_COOLDOWN_MS = 3000;
+    let joinRoomPending = false;
+    let joinRoomCooldownUntil = 0;
+    let classJoinPending = false;
+    let classJoinCooldownUntil = 0;
 
     const CHAR_DATA = {
         maleAdventurer:   { name: 'Alex',  folder: 'Male adventurer',   prefix: 'character_maleAdventurer',   color: '#38bdf8' },
@@ -119,6 +128,48 @@ const Multiplayer = (() => {
         );
         const startLevel = Math.max(1, Math.floor(Number(classBattleStartLevel) || 1));
         return Math.max(1, absoluteLevel - startLevel + 1);
+    }
+
+    function getClassBattleAdvanceGate(mode) {
+        if (!classBattleActive || classBattleRole === 'host') return null;
+        if (!classBattleSession || !mode || mode !== classBattleSession.mode) return null;
+
+        const startLevel = Math.max(1, Math.floor(Number(classBattleStartLevel) || 1));
+        const levelIndex = Math.max(1, Math.floor(Number(classLevelTimerLevel) || 1));
+        const allowedLevel = startLevel + levelIndex - 1;
+        const snapshot = buildClassLevelTimerSnapshot(Date.now());
+        const countdownLeft = snapshot ? snapshot.left : null;
+        const waitingForTimer = !snapshot || countdownLeft === 0;
+        const targetLevel = Math.max(
+            levelIndex,
+            Math.floor(Number(classBattleSession.target_level) || levelIndex)
+        );
+
+        return {
+            allowedLevel,
+            levelIndex,
+            targetLevel,
+            countdownLeft,
+            waitingForTimer
+        };
+    }
+
+    function shouldBlockClassBattleAdvance(mode, desiredLevel) {
+        const gate = getClassBattleAdvanceGate(mode);
+        if (!gate) return false;
+
+        const targetLevel = Math.max(1, Math.floor(Number(desiredLevel) || 1));
+        if (targetLevel <= gate.allowedLevel) return false;
+
+        const now = Date.now();
+        if (now >= classBattleAdvanceNoticeUntil && typeof Toast !== 'undefined') {
+            const message = gate.waitingForTimer
+                ? 'Class battle: tunggu host memulai timer level.'
+                : `Class battle: tunggu ${gate.countdownLeft} detik sebelum lanjut.`;
+            Toast.warning(message, 2200);
+            classBattleAdvanceNoticeUntil = now + 1200;
+        }
+        return true;
     }
 
     function setModeLevel(mode, level) {
@@ -235,6 +286,22 @@ const Multiplayer = (() => {
         el.className = `text-sm ${isError ? 'text-red-400' : 'text-accent-300'}`;
     }
 
+    function setButtonBusy(buttonId, busy, label) {
+        const btn = document.getElementById(buttonId);
+        if (!btn) return;
+        if (busy) {
+            if (!btn.dataset.label) btn.dataset.label = btn.textContent.trim();
+            btn.textContent = label || 'Menghubungkan...';
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-wait');
+        } else {
+            const original = btn.dataset.label;
+            if (original) btn.textContent = original;
+            btn.disabled = false;
+            btn.classList.remove('opacity-70', 'cursor-wait');
+        }
+    }
+
     function setClassCountdownLabel(left, meta) {
         const el = document.getElementById('class-countdown-label');
         if (left === '-' || left === null || typeof left === 'undefined') {
@@ -327,6 +394,93 @@ const Multiplayer = (() => {
         overlay.classList.remove('countdown-overlay-pop');
         void overlay.offsetWidth;
         overlay.classList.add('countdown-overlay-pop');
+    }
+
+    function clearClassIntermissionTimers() {
+        if (classIntermissionTimers.length === 0) return;
+        classIntermissionTimers.forEach((timer) => clearTimeout(timer));
+        classIntermissionTimers = [];
+    }
+
+    function setClassIntermissionVisible(visible) {
+        const overlay = document.getElementById('class-intermission-overlay');
+        if (!overlay) return;
+        classIntermissionVisible = visible;
+        overlay.classList.toggle('hidden', !visible);
+        overlay.classList.toggle('flex', visible);
+        if (!visible) {
+            clearClassIntermissionTimers();
+        }
+    }
+
+    function hideClassBattleIntermission() {
+        setClassIntermissionVisible(false);
+    }
+
+    function playIntermissionSfx(rowCount) {
+        clearClassIntermissionTimers();
+        if (typeof SoundManager === 'undefined') return;
+
+        SoundManager.play('drumroll');
+        classIntermissionTimers.push(setTimeout(() => SoundManager.play('heartbeat'), 220));
+        classIntermissionTimers.push(setTimeout(() => SoundManager.play('heartbeat'), 520));
+
+        const safeCount = Math.min(Math.max(0, Number(rowCount) || 0), 8);
+        for (let i = 0; i < safeCount; i += 1) {
+            classIntermissionTimers.push(setTimeout(() => {
+                SoundManager.play('tick');
+            }, 320 + i * 160));
+        }
+    }
+
+    function renderClassIntermissionRanking(rows) {
+        const list = document.getElementById('class-intermission-ranking');
+        if (!list) return;
+
+        const rankedRows = Array.isArray(rows) ? rows : [];
+        if (rankedRows.length === 0) {
+            list.innerHTML = '<div class="class-intermission-rank" style="opacity:1; transform:none;">Belum ada submission.</div>';
+            playIntermissionSfx(0);
+            return;
+        }
+
+        const targetLevel = Math.max(1, Number(classBattleSession && classBattleSession.target_level) || 1);
+        list.innerHTML = rankedRows.slice(0, 10).map((row, index) => {
+            const rank = Number(row.rank) || index + 1;
+            const name = escapeHtml(row.participantName || row.display_name || 'Peserta');
+            const reachedLevel = Math.max(0, Number(row.reached_level) || 0);
+            const score = Number(row.score) || 0;
+            const timeMs = Number(row.timeMs ?? row.time_ms) || 0;
+            const badgeTone = rank === 1
+                ? 'border-yellow-300/50 bg-yellow-500/20 text-yellow-200'
+                : rank === 2
+                    ? 'border-slate-300/50 bg-slate-400/20 text-slate-200'
+                    : rank === 3
+                        ? 'border-amber-400/50 bg-amber-500/20 text-amber-200'
+                        : 'border-dark-500 bg-dark-700/60 text-dark-200';
+            const badgeText = rank <= 3 ? `TOP ${rank}` : `#${rank}`;
+            return `
+                <div class="class-intermission-rank" data-rank="${rank}">
+                    <span class="rank-badge rounded-lg border px-2 py-1 ${badgeTone}">${badgeText}</span>
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-semibold text-dark-100">${name}</p>
+                        <p class="text-[11px] text-dark-300">Lv ${reachedLevel}/${targetLevel} • ${score} pts</p>
+                    </div>
+                    <span class="text-xs font-mono text-accent-300">${formatTime(timeMs)}</span>
+                </div>
+            `;
+        }).join('');
+
+        const items = Array.from(list.querySelectorAll('.class-intermission-rank'));
+        items.forEach((item, index) => {
+            const delayMs = index * 180;
+            item.style.animation = `rankReveal 0.45s ease forwards ${delayMs}ms, rankShake 0.35s ease ${delayMs + 420}ms`;
+            if (index === 0) {
+                item.classList.add('rank-top');
+            }
+        });
+
+        playIntermissionSfx(items.length);
     }
 
     function renderClassParticipantPreview(participants) {
@@ -513,6 +667,7 @@ const Multiplayer = (() => {
         const bridge = getClassBattleBridge();
         if (!bridge || !classBattleSession || !classBattleSession.id) return;
 
+        hideClassBattleIntermission();
         const safeSeconds = Math.max(1, Math.floor(Number(seconds) || getClassBattlePerLevelSeconds(classBattleSession)));
         const safeLevel = Math.max(1, Math.floor(Number(levelIndex) || 1));
         const safeTarget = Math.max(
@@ -542,6 +697,23 @@ const Multiplayer = (() => {
         });
     }
 
+    async function announceClassLevelIntermission({ levelIndex, targetLevel }) {
+        const bridge = getClassBattleBridge();
+        if (!bridge || !classBattleSession || !classBattleSession.id) return;
+
+        const safeLevel = Math.max(1, Math.floor(Number(levelIndex) || 1));
+        const safeTarget = Math.max(
+            safeLevel,
+            Math.floor(Number(targetLevel) || Math.max(1, Math.floor(Number(classBattleSession.target_level) || 1)))
+        );
+
+        await bridge.broadcast('level-ended', {
+            levelIndex: safeLevel,
+            targetLevel: safeTarget,
+            endedAt: new Date().toISOString()
+        });
+    }
+
     async function onClassLevelTimerElapsed() {
         if (!classBattleSession || classBattleRole !== 'host' || !classBattleActive) return;
 
@@ -558,8 +730,37 @@ const Multiplayer = (() => {
             return;
         }
 
+        setClassSessionStatus(`Level ${currentLevel} selesai. Skor sementara ditampilkan.`, false);
+        await announceClassLevelIntermission({
+            levelIndex: currentLevel,
+            targetLevel: target
+        });
+        await openClassBattleIntermission({
+            levelIndex: currentLevel,
+            targetLevel: target,
+            isHost: true
+        });
+    }
+
+    async function advanceClassBattleLevel() {
+        if (!classBattleSession || classBattleRole !== 'host' || !classBattleActive) return;
+        if (classBattleSession.status !== 'in_progress') return;
+        if (classLevelTimerTicker) return;
+
+        const target = Math.max(
+            1,
+            Math.floor(Number(classBattleSession.target_level) || Number(classLevelTimerTargetLevel) || 1)
+        );
+        const currentLevel = Math.max(1, Math.floor(Number(classLevelTimerLevel) || 1));
         const nextLevel = currentLevel + 1;
-        setClassSessionStatus(`Level ${currentLevel} selesai. Naik ke level ${nextLevel}.`, false);
+        const seconds = Math.max(1, Math.floor(Number(classLevelTimerSeconds) || getClassBattlePerLevelSeconds(classBattleSession)));
+
+        if (nextLevel > target) {
+            await finishClassBattleSession('finished');
+            return;
+        }
+
+        setClassSessionStatus(`Host melanjutkan ke level ${nextLevel}.`, false);
         await announceClassLevelTimerStart({
             levelIndex: nextLevel,
             targetLevel: target,
@@ -758,6 +959,43 @@ const Multiplayer = (() => {
         updateClassCompletionProgress();
     }
 
+    async function openClassBattleIntermission({ levelIndex, targetLevel, isHost }) {
+        const levelEl = document.getElementById('class-intermission-level');
+        if (levelEl) {
+            levelEl.textContent = `Level ${levelIndex}/${targetLevel} selesai`;
+        }
+
+        const waitEl = document.getElementById('class-intermission-wait');
+        if (waitEl) {
+            waitEl.textContent = isHost
+                ? 'Tekan "Lanjut Level" untuk memulai ronde berikutnya.'
+                : 'Menunggu host melanjutkan ke level berikutnya.';
+        }
+
+        const advanceBtn = document.getElementById('class-intermission-advance-btn');
+        if (advanceBtn) {
+            advanceBtn.classList.toggle('hidden', !isHost);
+        }
+
+        setClassIntermissionVisible(true);
+
+        let ranking = Array.isArray(classBattleRankingRows) ? classBattleRankingRows : [];
+        const bridge = getClassBattleBridge();
+        if (bridge && classBattleSession && classBattleSession.id) {
+            try {
+                ranking = await bridge.service.fetchRanking({
+                    sessionId: classBattleSession.id,
+                    limit: 30
+                });
+                renderClassBattleRanking(ranking);
+            } catch (error) {
+                console.warn('Gagal mengambil ranking intermission:', error);
+            }
+        }
+
+        renderClassIntermissionRanking(ranking);
+    }
+
     function showClassBattleResultModal() {
         const modal = document.getElementById('mp-result-modal');
         if (!modal) return;
@@ -816,6 +1054,7 @@ const Multiplayer = (() => {
         if (!bridge || !classBattleSession || !classBattleSession.id) return;
         if (classBattleSession.status === 'finished' || classBattleSession.status === 'cancelled') {
             classBattleActive = false;
+            hideClassBattleIntermission();
             await bridge.refreshRanking().catch(() => {});
             syncLobbyBackButtonState();
             showClassBattleResultModal();
@@ -836,6 +1075,7 @@ const Multiplayer = (() => {
             setClassJoinStatus((error && error.message) || 'Gagal menutup match.', true);
         } finally {
             classBattleActive = false;
+            hideClassBattleIntermission();
             setClassSessionStatus('Match ditutup.', false);
             stopClassLevelTimer();
             classLevelTimerStartedAt = 0;
@@ -862,6 +1102,7 @@ const Multiplayer = (() => {
             );
 
             if (seconds > 0) {
+                hideClassBattleIntermission();
                 startClassLevelCountdown({
                     startedAt: payload && payload.startedAt,
                     seconds,
@@ -875,7 +1116,7 @@ const Multiplayer = (() => {
                         Math.floor(Number(classBattleStartLevel) || 1) + levelIndex - 1
                     );
                     const currentAbsoluteLevel = getCurrentModeLevel(classBattleSession.mode);
-                    if (currentAbsoluteLevel < absoluteLevelFromTimer) {
+                    if (currentAbsoluteLevel !== absoluteLevelFromTimer) {
                         setModeLevel(classBattleSession.mode, absoluteLevelFromTimer);
                         if (typeof navigateTo === 'function') {
                             navigateTo(classBattleSession.mode);
@@ -885,6 +1126,22 @@ const Multiplayer = (() => {
 
                 setClassSessionStatus(`Timer level ${levelIndex}/${targetLevel} aktif (${seconds} dtk).`, false);
             }
+            return;
+        }
+
+        if (eventName === 'level-ended') {
+            const levelIndex = Math.max(1, Math.floor(Number(payload && payload.levelIndex) || Number(classLevelTimerLevel) || 1));
+            const targetLevel = Math.max(
+                levelIndex,
+                Math.floor(Number(payload && payload.targetLevel) || Number(classBattleSession && classBattleSession.target_level) || levelIndex)
+            );
+            stopClassLevelTimer();
+            setClassSessionStatus(`Level ${levelIndex} selesai. Skor sementara ditampilkan.`, false);
+            openClassBattleIntermission({
+                levelIndex,
+                targetLevel,
+                isHost: classBattleRole === 'host'
+            }).catch(() => {});
             return;
         }
 
@@ -913,6 +1170,7 @@ const Multiplayer = (() => {
             classBattleActive = true;
             const mode = (payload && payload.mode) || (classBattleSession && classBattleSession.mode) || 'coding';
             refreshClassParticipants().catch(() => {});
+            hideClassBattleIntermission();
 
             if (classBattleRole === 'host') {
                 setClassSessionStatus('Match berjalan. Host pantau progres live.', false);
@@ -938,6 +1196,7 @@ const Multiplayer = (() => {
             if (classBattleSession) {
                 classBattleSession.status = (payload && payload.status) || 'finished';
             }
+            hideClassBattleIntermission();
             restoreSavedLevelAfterClassBattle(classBattleSession && classBattleSession.mode);
             stopClassLevelTimer();
             classLevelTimerStartedAt = 0;
@@ -1041,6 +1300,7 @@ const Multiplayer = (() => {
 
     function showLobbyScreen() {
         showScreen('lobby-screen');
+        hideClassBattleIntermission();
 
         // Reset UI
         const pinDisplay = document.getElementById('lobby-pin-area');
@@ -1144,6 +1404,16 @@ const Multiplayer = (() => {
     }
 
     function joinRoom() {
+        const now = Date.now();
+        if (joinRoomPending || now < joinRoomCooldownUntil) {
+            const joinStatus = document.getElementById('lobby-join-status');
+            if (joinStatus) {
+                joinStatus.textContent = 'Tunggu sebentar sebelum mencoba lagi.';
+                joinStatus.className = 'text-amber-400 text-sm mt-2';
+            }
+            return;
+        }
+
         const input = document.getElementById('input-room-pin');
         const pin = input ? input.value.trim() : '';
         const joinStatus = document.getElementById('lobby-join-status');
@@ -1155,6 +1425,10 @@ const Multiplayer = (() => {
             }
             return;
         }
+
+        joinRoomPending = true;
+        joinRoomCooldownUntil = now + JOIN_SPAM_COOLDOWN_MS;
+        setButtonBusy('lobby-join-btn', true, 'Menghubungkan...');
 
         isHost = false;
         roomPin = pin;
@@ -1172,10 +1446,14 @@ const Multiplayer = (() => {
             conn = peer.connect(PREFIX + pin, { reliable: true });
 
             conn.on('open', () => {
+                joinRoomPending = false;
+                setButtonBusy('lobby-join-btn', false);
                 setupConnection();
             });
 
             conn.on('error', () => {
+                joinRoomPending = false;
+                setButtonBusy('lobby-join-btn', false);
                 if (joinStatus) {
                     joinStatus.textContent = 'Gagal terhubung.';
                     joinStatus.className = 'text-red-400 text-sm mt-2';
@@ -1184,6 +1462,8 @@ const Multiplayer = (() => {
         });
 
         peer.on('error', (err) => {
+            joinRoomPending = false;
+            setButtonBusy('lobby-join-btn', false);
             if (joinStatus) {
                 joinStatus.textContent = mapPeerError(err.type);
                 joinStatus.className = 'text-red-400 text-sm mt-2';
@@ -1197,6 +1477,8 @@ const Multiplayer = (() => {
         // Timeout
         setTimeout(() => {
             if (!active) {
+                joinRoomPending = false;
+                setButtonBusy('lobby-join-btn', false);
                 if (joinStatus) {
                     joinStatus.textContent = 'Timeout, room tidak ditemukan.';
                     joinStatus.className = 'text-red-400 text-sm mt-2';
@@ -1293,6 +1575,17 @@ const Multiplayer = (() => {
     }
 
     async function joinClassBattleRoom() {
+        if (classBattleSession && classBattleParticipant) {
+            setClassJoinStatus('Sudah terhubung ke room.', false);
+            return;
+        }
+
+        const now = Date.now();
+        if (classJoinPending || now < classJoinCooldownUntil) {
+            setClassJoinStatus('Tunggu sebentar sebelum mencoba lagi.', true);
+            return;
+        }
+
         const bridge = getClassBattleBridge();
         if (!bridge) {
             setClassJoinStatus('Supabase belum siap untuk match.', true);
@@ -1308,6 +1601,10 @@ const Multiplayer = (() => {
             setClassJoinStatus('Kode match harus 6 digit angka.', true);
             return;
         }
+
+        classJoinPending = true;
+        classJoinCooldownUntil = now + JOIN_SPAM_COOLDOWN_MS;
+        setButtonBusy('class-join-btn', true, 'Menghubungkan...');
 
         setClassJoinStatus('Menghubungkan ke room...', false);
         setClassCreateStatus('', false);
@@ -1379,6 +1676,9 @@ const Multiplayer = (() => {
             }
         } catch (error) {
             setClassJoinStatus((error && error.message) || 'Gagal masuk ke match.', true);
+        } finally {
+            classJoinPending = false;
+            setButtonBusy('class-join-btn', false);
         }
     }
 
@@ -1451,6 +1751,14 @@ const Multiplayer = (() => {
         // Debounce: ignore rapid-fire calls within 800ms
         if (classBattleSubmitTimer) return;
         classBattleSubmitTimer = setTimeout(() => { classBattleSubmitTimer = null; }, 800);
+
+        const timerSnapshot = buildClassLevelTimerSnapshot(Date.now());
+        if (!timerSnapshot || timerSnapshot.left <= 0 || classIntermissionVisible) {
+            if (typeof Toast !== 'undefined') {
+                Toast.warning('Waktu level sudah habis. Menunggu host lanjut.', 2200);
+            }
+            return;
+        }
 
         try {
             bridge.service.assertSessionOpen(classBattleSession);
@@ -2018,6 +2326,7 @@ const Multiplayer = (() => {
         classBattleRoundStartedAt = 0;
         classBattleStartLevel = 1;
         stopClassLevelTimer();
+        hideClassBattleIntermission();
         classLevelTimerStartedAt = 0;
         classLevelTimerSeconds = 0;
         classLevelTimerLevel = 1;
@@ -2102,6 +2411,7 @@ const Multiplayer = (() => {
         vsStart,
         backFromLobby,
         startMultiplayerMode,
+        toggleReady,
         onMyComplete,
         onClassBattleComplete,
         resultBackToMenu,
@@ -2109,9 +2419,11 @@ const Multiplayer = (() => {
         hideResult,
         showOpponentBar,
         disconnect,
+        advanceClassBattleLevel,
         isActive: () => active,
         isClassBattleActive: () => classBattleActive && classBattleRole !== 'host',
         isHostPlayer: () => isHost,
+        shouldBlockClassBattleAdvance,
         charImgPath
     };
 })();

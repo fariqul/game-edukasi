@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Stats Dashboard - 10x Engagement Feature
  * Comprehensive stats showing total time, accuracy, efficiency,
  * per-mode breakdown, and learning journey visualization

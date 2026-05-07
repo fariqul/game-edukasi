@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Mode 1: Robot Logic Adventure
  * Konsep: Sequence, Algoritma, Loop, Conditional Logic
  * 10 Levels with Progressive Difficulty
@@ -719,19 +719,35 @@ const RobotGame = (() => {
     }
 
     function getExpandedSequenceResult() {
-        if (typeof RobotSequenceRules !== 'undefined') {
-            if (typeof RobotSequenceRules.expandRobotSequenceWithTrace === 'function') {
-                return RobotSequenceRules.expandRobotSequenceWithTrace(commandSequence);
+        const hasLoop = commandSequence.includes('loop');
+        const rules = typeof RobotSequenceRules !== 'undefined' ? RobotSequenceRules : null;
+
+        if (!rules) {
+            if (hasLoop) {
+                return { ok: false, error: 'Loop belum siap. Coba refresh halaman.' };
             }
-            if (typeof RobotSequenceRules.expandRobotSequence === 'function') {
-                const basic = RobotSequenceRules.expandRobotSequence(commandSequence);
-                if (!basic.ok) return basic;
-                return {
-                    ok: true,
-                    expanded: basic.expanded,
-                    trace: basic.expanded.map((_, idx) => idx)
-                };
-            }
+            return {
+                ok: true,
+                expanded: [...commandSequence],
+                trace: commandSequence.map((_, idx) => idx)
+            };
+        }
+
+        if (typeof rules.expandRobotSequenceWithTrace === 'function') {
+            return rules.expandRobotSequenceWithTrace(commandSequence);
+        }
+        if (typeof rules.expandRobotSequence === 'function') {
+            const basic = rules.expandRobotSequence(commandSequence);
+            if (!basic.ok) return basic;
+            return {
+                ok: true,
+                expanded: basic.expanded,
+                trace: basic.expanded.map((_, idx) => idx)
+            };
+        }
+
+        if (hasLoop) {
+            return { ok: false, error: 'Loop belum siap. Coba refresh halaman.' };
         }
 
         return {
@@ -751,7 +767,7 @@ const RobotGame = (() => {
         if (expandedCount === null) {
             chipEl.textContent = `${blockCount} blok / target ${target}`;
         } else {
-            chipEl.textContent = `${expandedCount} langkah simulasi / target ${target}`;
+            chipEl.textContent = `${expandedCount} langkah simulasi | ${blockCount} blok / target ${target}`;
         }
 
         if (target && blockCount > target) {
@@ -1323,6 +1339,11 @@ const RobotGame = (() => {
     // EXECUTION
     // ============================================
 
+    function waitMs(ms) {
+        if (typeof delay === 'function') return delay(ms);
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
     async function runSequence() {
         if (isRunning || commandSequence.length === 0) return;
         hideFeedback('robot-feedback');
@@ -1424,7 +1445,7 @@ const RobotGame = (() => {
                 isRunning = false;
                 return;
             }
-            await delay(400);
+            await waitMs(400);
         }
 
         // Check win condition
@@ -1447,7 +1468,7 @@ const RobotGame = (() => {
             recordAnalyticsSuccess();
             if (typeof SoundManager !== 'undefined') SoundManager.play('success');
             animateSuccess();
-            await delay(800);
+            await waitMs(800);
             const totalErrors = crashCount + crashCount2;
             completeLevel('robot', {
                 timeTaken: typeof ProgressSystem !== 'undefined' ? ProgressSystem.getLevelTime() : 0,

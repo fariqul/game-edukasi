@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Toast Notification System - Non-intrusive feedback
  * Follows game UI design principles: communication without interruption
  */

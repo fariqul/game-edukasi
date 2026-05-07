@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Daily Challenge System - 10x Retention Feature
  * Procedurally generates a daily puzzle from all 4 modes.
  * Same seed for everyone → same puzzle → shareable experience.

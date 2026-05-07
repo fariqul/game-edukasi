@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Main Controller - Navigation, Core Logic & Animations
  * Enhanced with XP, Stars, Sounds, Particles, Achievements
  */
@@ -344,6 +344,32 @@ function navigateTo(screenId) {
     });
 }
 
+function backToPlayMode() {
+    if (typeof Multiplayer !== 'undefined') {
+        if (typeof Multiplayer.disconnect === 'function') {
+            Multiplayer.disconnect();
+        }
+        if (typeof Multiplayer.showPlayModeScreen === 'function') {
+            Multiplayer.showPlayModeScreen();
+            GameState.currentScreen = 'play-mode';
+            if (typeof syncMultiplayerFocusUi === 'function') {
+                syncMultiplayerFocusUi('play-mode');
+            }
+            return;
+        }
+    }
+
+    const screen = document.getElementById('play-mode-screen');
+    if (!screen) return;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    screen.classList.add('active');
+    screen.style.opacity = 1;
+    GameState.currentScreen = 'play-mode';
+    if (typeof syncMultiplayerFocusUi === 'function') {
+        syncMultiplayerFocusUi('play-mode');
+    }
+}
+
 function shouldEnableMultiplayerFocusUi(screenId) {
     const active = typeof Multiplayer !== 'undefined'
         && typeof Multiplayer.isActive === 'function'
@@ -528,7 +554,11 @@ function completeLevel(mode, options) {
     const levelNum = GameState.currentLevel[mode];
 
     // IN MABAR MODE: Skip UI popups (modal and info materi) and sync directly 
-    const isMabar = typeof Multiplayer !== 'undefined' && Multiplayer.isActive();
+    const isMabar = typeof Multiplayer !== 'undefined'
+        && (
+            Multiplayer.isActive()
+            || (typeof Multiplayer.isClassBattleActive === 'function' && Multiplayer.isClassBattleActive())
+        );
     if (isMabar) {
         // Calculate result silently so they still get XP
         if (typeof ProgressSystem !== 'undefined') {
@@ -619,6 +649,12 @@ function initModal() {
     btnNext.addEventListener('click', async () => {
         hideModal();
         const mode = GameState.currentScreen;
+        const nextLevel = GameState.currentLevel[mode] + 1;
+        if (typeof Multiplayer !== 'undefined'
+            && typeof Multiplayer.shouldBlockClassBattleAdvance === 'function'
+            && Multiplayer.shouldBlockClassBattleAdvance(mode, nextLevel)) {
+            return;
+        }
         if (advanceLevel(mode)) {
             await initMode(mode);
             updateLevelIndicator(mode);
@@ -783,39 +819,57 @@ function resetHintPanels() {
 
 function showFeedback(elementId, message, isSuccess, allowHtml = false) {
     const feedback = document.getElementById(elementId);
+    if (!feedback) return;
+    const content = typeof message === 'string' ? message : String(message ?? '');
+    feedback.innerHTML = '';
+
+    const body = document.createElement('div');
+    body.className = 'feedback-body';
     if (allowHtml) {
-        feedback.innerHTML = typeof message === 'string' ? message : String(message ?? '');
+        body.innerHTML = content;
     } else {
-        feedback.textContent = message;
+        body.textContent = content;
     }
-    feedback.className = `mt-4 p-4 rounded-2xl text-center font-medium ${isSuccess ? 'feedback-success' : 'feedback-error'}`;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded-lg bg-dark-900/70 text-dark-200 hover:text-white border border-white/10';
+    closeBtn.textContent = 'Tutup';
+    closeBtn.addEventListener('click', () => hideFeedback(elementId));
+
+    feedback.appendChild(body);
+    feedback.appendChild(closeBtn);
+    feedback.className = `mt-4 p-4 rounded-2xl text-center font-medium game-feedback relative ${isSuccess ? 'feedback-success' : 'feedback-error'}`;
 
     // Animate feedback
-    anime({
-        targets: feedback,
-        translateY: [10, 0],
-        opacity: [0, 1],
-        duration: 300,
-        easing: 'easeOutQuart'
-    });
-
-    // Auto hide after 4 seconds
-    setTimeout(() => {
+    if (typeof anime !== 'undefined') {
         anime({
             targets: feedback,
-            opacity: [1, 0],
+            translateY: [10, 0],
+            opacity: [0, 1],
             duration: 300,
-            easing: 'easeInQuart',
-            complete: () => {
-                feedback.className = 'hidden mt-4 p-4 rounded-2xl text-center font-medium';
-            }
+            easing: 'easeOutQuart'
         });
-    }, 4000);
+    }
+
+    const scrollToFeedback = () => {
+        if (typeof feedback.scrollIntoView === 'function') {
+            feedback.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+    if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(scrollToFeedback);
+    } else {
+        scrollToFeedback();
+    }
+
 }
 
 function hideFeedback(elementId) {
     const feedback = document.getElementById(elementId);
-    feedback.className = 'hidden mt-4 p-4 rounded-2xl text-center font-medium';
+    if (!feedback) return;
+    feedback.className = 'hidden mt-4 p-4 rounded-2xl text-center font-medium game-feedback';
+    feedback.innerHTML = '';
 }
 
 // ============================================
@@ -834,7 +888,13 @@ async function goToNextLevel(mode) {
     const maxLevel = GameState.progress[mode].completed + 1;
     const total = GameState.progress[mode].total;
     if (GameState.currentLevel[mode] < Math.min(maxLevel, total)) {
-        GameState.currentLevel[mode]++;
+        const nextLevel = GameState.currentLevel[mode] + 1;
+        if (typeof Multiplayer !== 'undefined'
+            && typeof Multiplayer.shouldBlockClassBattleAdvance === 'function'
+            && Multiplayer.shouldBlockClassBattleAdvance(mode, nextLevel)) {
+            return;
+        }
+        GameState.currentLevel[mode] = nextLevel;
         await initMode(mode);
         updateLevelIndicator(mode);
     }

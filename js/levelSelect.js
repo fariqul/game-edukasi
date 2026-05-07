@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Level Select - Visual Level Map with Stars
  * 10x Feature: See all levels, jump to any unlocked level, see star ratings
  */
@@ -185,6 +185,11 @@ const LevelSelect = (() => {
     }
 
     function selectLevel(mode, levelNum) {
+        if (typeof Multiplayer !== 'undefined'
+            && typeof Multiplayer.shouldBlockClassBattleAdvance === 'function'
+            && Multiplayer.shouldBlockClassBattleAdvance(mode, levelNum)) {
+            return;
+        }
         close();
 
         if (typeof SoundManager !== 'undefined') SoundManager.play('click');

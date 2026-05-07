@@ -260,12 +260,34 @@
             const participants = await listParticipants(sessionId);
             const participantMap = new Map(participants.map((item) => [item.id, item.display_name]));
 
-            const normalizedRows = rows.map((row) => ({
-                ...row,
-                timeMs: row.time_ms,
-                submittedAt: row.submitted_at,
-                participantName: participantMap.get(row.participant_id) || row.display_name || 'Peserta'
-            }));
+            const normalizedRows = rows.map((row) => {
+                const reachedLevel = Math.max(0, Math.floor(Number(row && row.reached_level) || 0));
+                const elapsedMs = Math.max(0, Math.floor(Number(row && row.time_ms) || 0));
+                const rawScore = Number(row && row.score);
+                let score = Number.isFinite(rawScore) ? rawScore : NaN;
+
+                if (!Number.isFinite(score) || (score <= 0 && reachedLevel > 0)) {
+                    if (typeof rules.computeClassBattleScore === 'function') {
+                        score = rules.computeClassBattleScore({
+                            reachedLevel,
+                            targetLevel: Math.max(1, reachedLevel),
+                            elapsedMs
+                        });
+                    } else {
+                        const levelPoints = reachedLevel * 100;
+                        const speedBonus = Math.max(0, 1000 - Math.floor(elapsedMs / 1000));
+                        score = levelPoints + speedBonus;
+                    }
+                }
+
+                return {
+                    ...row,
+                    timeMs: row.time_ms,
+                    submittedAt: row.submitted_at,
+                    participantName: participantMap.get(row.participant_id) || row.display_name || 'Peserta',
+                    score
+                };
+            });
 
             return rules.rankSubmissions(normalizedRows)
                 .map((row, index) => ({ ...row, rank: index + 1 }));
@@ -321,6 +343,7 @@
                 'session-started',
                 'session-timer-started',
                 'first-finish-window-started',
+                'level-ended',
                 'session-finished',
                 'ranking-updated',
                 'participant-joined',

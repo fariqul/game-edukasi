@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Sound Manager - Web Audio API synthesized sound effects
  * No external audio files needed - all sounds generated procedurally
  */
@@ -226,6 +226,18 @@ const SoundManager = (() => {
         countdownGo() {
             playTone(800, 0.1, 'sine', 0.25);
             playTone(1200, 0.3, 'sine', 0.3, 0.1);
+        },
+
+        drumroll() {
+            for (let i = 0; i < 6; i += 1) {
+                playNoise(0.05, 0.04, 2200);
+                playTone(160 + i * 20, 0.05, 'triangle', 0.08, i * 0.08);
+            }
+        },
+
+        heartbeat() {
+            playTone(120, 0.08, 'sine', 0.22);
+            playTone(90, 0.12, 'sine', 0.18, 0.12);
         },
 
         // Power on (computer mode)

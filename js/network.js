@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Mode 2: Network Mission
  * Konsep: Jaringan Komputer, Alur Data, Fungsi Perangkat, Topologi
  * 17 Levels with Progressive Difficulty (2 Cable + 15 Topology)

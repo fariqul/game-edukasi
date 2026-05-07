@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Game edukasi interaktif untuk siswa SMA kelas 10 mata pelajaran Informatika">
-    <title>Informatika Lab Adventure</title>
+    <meta name="description" content="BLOOMPA - Belajar Lebih Optimal Oleh Media Permainan Aktif. Game edukasi interaktif untuk siswa SMA kelas 10.">
+    <title>BLOOMPA</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -814,6 +814,22 @@
             overflow: hidden;
         }
 
+        .game-sticky-header {
+            position: sticky;
+            top: 0.5rem;
+            z-index: 30;
+        }
+
+        .game-sticky-hint {
+            position: sticky;
+            top: 5.75rem;
+            z-index: 25;
+        }
+
+        .game-feedback {
+            scroll-margin-top: 10rem;
+        }
+
         body.multiplayer-focus-ui .hint-panel,
         body.multiplayer-focus-ui .robot-learning-panel,
         body.multiplayer-focus-ui .computer-learning-panel,
@@ -1417,6 +1433,35 @@
             filter: drop-shadow(0 4px 16px rgba(250, 204, 21, 0.5));
         }
 
+        @media (max-width: 640px) {
+            .achievement-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+            }
+
+            .achievement-card {
+                padding: 8px;
+                border-radius: 12px;
+            }
+
+            .medal-container {
+                margin-bottom: 4px;
+            }
+
+            .medal-img {
+                width: 44px;
+                height: 44px;
+            }
+
+            .achievement-card p:last-child {
+                display: none;
+            }
+
+            .medal-unlocked {
+                animation: none;
+            }
+        }
+
         @keyframes medalShine {
 
             0%,
@@ -1684,7 +1729,7 @@
         <div class="lottie-loader" id="loader-lottie" style="display:none;"></div>
         <h2
             class="font-display text-2xl font-bold mt-6 bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-            Informatika Lab Adventure
+            BLOOMPA
         </h2>
         <div class="loader-bar-track">
             <div class="loader-bar-fill" id="loader-fill"></div>
@@ -1722,9 +1767,9 @@
         <div class="text-center mb-8 relative z-10">
             <h1
                 class="font-display text-4xl md:text-5xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-3">
-                Pilih Karaktermu!
+                BLOOMPA
             </h1>
-            <p class="text-dark-200 text-lg">Siapa yang akan menemanimu berpetualang?</p>
+            <p class="text-dark-200 text-lg">Belajar Lebih Optimal Oleh Media Permainan Aktif</p>
         </div>
 
         <!-- Character Grid -->
@@ -1922,7 +1967,7 @@
                         </div>
                     </div>
 
-                    <button onclick="Multiplayer.joinClassBattleRoom()" 
+                    <button id="class-join-btn" onclick="Multiplayer.joinClassBattleRoom()" 
                         class="btn-success w-full px-8 py-4 rounded-2xl font-bold text-xl mb-4 shadow-lg hover:shadow-xl hover:shadow-secondary-500/30 transition-all">
                         Gabung Room
                     </button>
@@ -2038,6 +2083,27 @@
         </div>
     </div>
 
+    <div id="class-intermission-overlay" class="hidden fixed inset-0 z-[85] items-center justify-center p-4 class-intermission-overlay">
+        <div class="class-intermission-card w-full max-w-3xl rounded-3xl p-6 text-center md:p-8">
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-4 text-left">
+                <div>
+                    <p class="text-[10px] uppercase tracking-[0.35em] text-dark-400">Skor Sementara</p>
+                    <h3 id="class-intermission-level" class="font-display text-2xl font-bold text-accent-300">Level 1/3 selesai</h3>
+                </div>
+                <div class="class-intermission-pulse rounded-full border border-red-400/40 bg-red-500/20 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-200">Deg-degan</div>
+            </div>
+
+            <div id="class-intermission-ranking" class="space-y-3 text-left"></div>
+
+            <div class="mt-5 flex flex-col items-center justify-between gap-3 sm:flex-row">
+                <p id="class-intermission-wait" class="text-xs text-dark-300">Menunggu host melanjutkan...</p>
+                <button id="class-intermission-advance-btn" onclick="Multiplayer.advanceClassBattleLevel()" class="hidden btn-warning px-6 py-3 rounded-xl font-bold text-white shadow-lg shadow-amber-500/30">
+                    Lanjut Level
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Guest waiting overlay on dashboard -->
     <div id="mp-guest-waiting"
         class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-dark-800/90 backdrop-blur-sm border border-accent-500/30 rounded-2xl px-6 py-3 text-center">
@@ -2113,11 +2179,20 @@
                 </div>
                 <h1
                     class="font-display text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
-                    Informatika Lab Adventure
+                    BLOOMPA
                 </h1>
                 <p class="text-xl text-dark-200 font-medium">
                     Media Pembelajaran Interaktif Kelas 10
                 </p>
+                <div class="mt-3 flex items-center justify-center gap-3">
+                    <button onclick="backToPlayMode()"
+                        class="text-xs text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2">
+                        <svg class="w-3 h-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h10m-4 6h10" />
+                        </svg> Pilih Mode
+                    </button>
+                </div>
             </header>
 
             <!-- Daily Streak Banner -->
@@ -2450,6 +2525,14 @@
                         </svg> Ganti Karakter
                     </button>
                     <span class="text-dark-700">•</span>
+                    <button onclick="backToPlayMode()"
+                        class="text-xs text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2">
+                        <svg class="w-3 h-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h10m-4 6h10" />
+                        </svg> Pilih Mode
+                    </button>
+                    <span class="text-dark-700">•</span>
                     <button onclick="SettingsPanel.open()"
                         class="text-xs text-dark-300 hover:text-dark-100 transition-colors underline underline-offset-2">
                         <svg class="w-3 h-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2470,11 +2553,16 @@
     <div id="robot-screen" class="screen relative z-10">
         <div class="max-w-6xl w-full mx-auto px-4 py-6 min-h-screen">
             <!-- Header -->
-            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
-                <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
-                    data-back="dashboard">
-                    ⬅ Kembali
-                </button>
+            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between game-sticky-header">
+                <div class="flex items-center gap-2">
+                    <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
+                        data-back="dashboard">
+                        ⬅ Kembali
+                    </button>
+                    <button class="btn-warning px-3 py-2 rounded-xl font-semibold text-sm" onclick="backToPlayMode()">
+                        Pilih Mode
+                    </button>
+                </div>
                 <h2 class="font-display text-2xl font-bold text-primary-400 flex items-center gap-2">
                     <img src="assets/PNG robot/Side view/robot_blueBody.png" alt="Robot"
                         style="width: 2rem; height: 2rem; object-fit: contain;"> Robot Logic Adventure
@@ -2537,7 +2625,7 @@
             </div>
 
             <!-- Hint Panel -->
-            <div class="glass-card rounded-2xl p-4 mb-6 bg-accent-500/10 border border-accent-500/20 hint-panel"
+            <div class="glass-card rounded-2xl p-4 mb-6 bg-accent-500/10 border border-accent-500/20 hint-panel game-sticky-hint"
                 data-hint-for="robot">
                 <button
                     class="hint-toggle-btn w-full flex items-center justify-between text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
@@ -2623,7 +2711,7 @@
             </div>
 
             <!-- Feedback -->
-            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="robot-feedback"></div>
+            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium game-feedback" id="robot-feedback"></div>
 
             <div class="glass-card rounded-2xl p-4 mt-4 border border-emerald-500/20 bg-emerald-500/5"
                 id="robot-analytics-panel">
@@ -2671,11 +2759,16 @@
     <div id="network-screen" class="screen relative z-10">
         <div class="max-w-6xl w-full mx-auto px-4 py-6 min-h-screen">
             <!-- Header -->
-            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
-                <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
-                    data-back="dashboard">
-                    ⬅ Kembali
-                </button>
+            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between game-sticky-header">
+                <div class="flex items-center gap-2">
+                    <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
+                        data-back="dashboard">
+                        ⬅ Kembali
+                    </button>
+                    <button class="btn-warning px-3 py-2 rounded-xl font-semibold text-sm" onclick="backToPlayMode()">
+                        Pilih Mode
+                    </button>
+                </div>
                 <h2 class="font-display text-2xl font-bold text-secondary-400 flex items-center gap-2">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -2715,7 +2808,7 @@
             </div>
 
             <!-- Hint Panel -->
-            <div class="glass-card rounded-2xl p-4 mb-4 bg-accent-500/10 border border-accent-500/20 hint-panel"
+            <div class="glass-card rounded-2xl p-4 mb-4 bg-accent-500/10 border border-accent-500/20 hint-panel game-sticky-hint"
                 data-hint-for="network">
                 <button
                     class="hint-toggle-btn w-full flex items-center justify-between text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
@@ -2828,7 +2921,7 @@
             </div>
 
             <!-- Feedback -->
-            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="network-feedback"></div>
+            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium game-feedback" id="network-feedback"></div>
         </div>
     </div>
 
@@ -2838,11 +2931,16 @@
     <div id="computer-screen" class="screen relative z-10">
         <div class="max-w-6xl w-full mx-auto px-4 py-6 min-h-screen">
             <!-- Header -->
-            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
-                <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
-                    data-back="dashboard">
-                    ⬅ Kembali
-                </button>
+            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between game-sticky-header">
+                <div class="flex items-center gap-2">
+                    <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
+                        data-back="dashboard">
+                        ⬅ Kembali
+                    </button>
+                    <button class="btn-warning px-3 py-2 rounded-xl font-semibold text-sm" onclick="backToPlayMode()">
+                        Pilih Mode
+                    </button>
+                </div>
                 <h2 class="font-display text-2xl font-bold text-purple-400 flex items-center gap-2">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -2895,7 +2993,7 @@
             </div>
 
             <!-- Hint Panel -->
-            <div class="glass-card rounded-2xl p-4 mb-6 bg-accent-500/10 border border-accent-500/20 hint-panel"
+            <div class="glass-card rounded-2xl p-4 mb-6 bg-accent-500/10 border border-accent-500/20 hint-panel game-sticky-hint"
                 data-hint-for="computer">
                 <button
                     class="hint-toggle-btn w-full flex items-center justify-between text-sm font-semibold text-purple-400 hover:text-purple-300 transition-colors"
@@ -3030,7 +3128,7 @@
             </p>
 
             <!-- Feedback -->
-            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="computer-feedback"></div>
+            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium game-feedback" id="computer-feedback"></div>
         </div>
     </div>
 
@@ -3040,11 +3138,16 @@
     <div id="coding-screen" class="screen relative z-10">
         <div class="max-w-6xl w-full mx-auto px-4 py-6 min-h-screen">
             <!-- Header -->
-            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
-                <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
-                    data-back="dashboard">
-                    ⬅ Kembali
-                </button>
+            <header class="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between game-sticky-header">
+                <div class="flex items-center gap-2">
+                    <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
+                        data-back="dashboard">
+                        ⬅ Kembali
+                    </button>
+                    <button class="btn-warning px-3 py-2 rounded-xl font-semibold text-sm" onclick="backToPlayMode()">
+                        Pilih Mode
+                    </button>
+                </div>
                 <h2 class="font-display text-2xl font-bold text-accent-400 flex items-center gap-2">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -3090,7 +3193,7 @@
             </div>
 
             <!-- Hint Panel -->
-            <div class="glass-card rounded-2xl p-4 mb-6 bg-accent-500/10 border border-accent-500/20 hint-panel"
+            <div class="glass-card rounded-2xl p-4 mb-6 bg-accent-500/10 border border-accent-500/20 hint-panel game-sticky-hint"
                 data-hint-for="coding">
                 <button
                     class="hint-toggle-btn w-full flex items-center justify-between text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
@@ -3188,7 +3291,7 @@
             </div>
 
             <!-- Feedback -->
-            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="coding-feedback"></div>
+            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium game-feedback" id="coding-feedback"></div>
         </div>
     </div>
 
@@ -3198,11 +3301,16 @@
     <div id="circuit-screen" class="screen relative z-10">
         <div class="max-w-7xl w-full mx-auto px-4 py-6 min-h-screen">
             <!-- Header -->
-            <header class="glass-card rounded-2xl p-4 mb-4 flex items-center justify-between">
-                <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
-                    data-back="dashboard">
-                    ⬅ Kembali
-                </button>
+            <header class="glass-card rounded-2xl p-4 mb-4 flex items-center justify-between game-sticky-header">
+                <div class="flex items-center gap-2">
+                    <button class="btn-primary px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm"
+                        data-back="dashboard">
+                        ⬅ Kembali
+                    </button>
+                    <button class="btn-warning px-3 py-2 rounded-xl font-semibold text-sm" onclick="backToPlayMode()">
+                        Pilih Mode
+                    </button>
+                </div>
                 <h2 class="font-display text-2xl font-bold text-teal-400 flex items-center gap-2">
                      Circuit Builder
                 </h2>
@@ -3237,7 +3345,7 @@
             </div>
 
             <!-- Hint Panel -->
-            <div class="glass-card rounded-2xl p-4 mb-4 bg-teal-500/10 border border-teal-500/20 hint-panel"
+            <div class="glass-card rounded-2xl p-4 mb-4 bg-teal-500/10 border border-teal-500/20 hint-panel game-sticky-hint"
                 data-hint-for="circuit">
                 <button
                     class="hint-toggle-btn w-full flex items-center justify-between text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
@@ -3320,7 +3428,7 @@
             </div>
 
             <!-- Feedback -->
-            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium" id="circuit-feedback"></div>
+            <div class="hidden mt-4 p-4 rounded-2xl text-center font-medium game-feedback" id="circuit-feedback"></div>
         </div>
     </div>
 

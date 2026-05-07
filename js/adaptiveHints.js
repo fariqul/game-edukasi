@@ -1,5 +1,5 @@
 /**
- * INFORMATIKA LAB ADVENTURE
+ * BLOOMPA
  * Adaptive Hint System - 10x Learning Feature
  * Tracks player failures per level and shows progressively detailed hints:
  *   Attempt 1: Quick tip
