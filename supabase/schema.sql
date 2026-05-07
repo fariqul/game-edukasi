@@ -444,6 +444,7 @@ create table if not exists public.guest_participants (
     name_suffix integer not null default 1 check (name_suffix > 0),
     player_token text not null,
     is_host boolean not null default false,
+    character_id text,
     joined_at timestamptz not null default now(),
     unique (session_id, normalized_name, name_suffix)
 );

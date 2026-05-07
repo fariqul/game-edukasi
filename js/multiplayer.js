@@ -48,6 +48,7 @@ const Multiplayer = (() => {
     let classParticipantPollTimer = null;
     let classBattleParticipantRows = [];
     let classBattleRankingRows = [];
+    let classBattleParticipantMetaById = {};
     let classBattleAdvanceNoticeUntil = 0;
     let classIntermissionVisible = false;
     let previousIntermissionRankMap = {}; // {participantId: previousRank}
@@ -335,6 +336,69 @@ const Multiplayer = (() => {
             .replace(/'/g, '&#39;');
     }
 
+    function normalizeClassBattleCharacterId(value) {
+        if (!value) return '';
+        return typeof value === 'string' ? value.trim() : String(value).trim();
+    }
+
+    function registerClassBattleParticipantMeta(meta) {
+        if (!meta || !meta.participantId) return;
+        const key = String(meta.participantId);
+        const current = classBattleParticipantMetaById[key] || {};
+        classBattleParticipantMetaById[key] = {
+            displayName: meta.displayName || current.displayName || '',
+            characterId: meta.characterId || current.characterId || ''
+        };
+    }
+
+    function resolveClassBattleParticipantMeta(row, fallbackName) {
+        const participantId = row && (row.id || row.participant_id)
+            ? String(row.id || row.participant_id)
+            : '';
+        const stored = participantId ? classBattleParticipantMetaById[participantId] : null;
+        const rawCharacterId = normalizeClassBattleCharacterId(
+            row && (row.character_id || row.characterId || row.charId)
+        );
+        const isMe = classBattleParticipant && participantId && classBattleParticipant.id === participantId;
+        const myChar = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getSelected === 'function'
+            ? CharacterSystem.getSelected()
+            : null;
+        const characterId = rawCharacterId
+            || (stored && stored.characterId)
+            || (isMe && myChar ? myChar.id : '');
+        const displayName = (row && (row.display_name || row.participantName || row.displayName))
+            || (stored && stored.displayName)
+            || fallbackName
+            || 'Peserta';
+        const avatarSrc = characterId ? charImgPath(characterId, 'idle') : '';
+        const initial = displayName.trim() ? displayName.trim().charAt(0).toUpperCase() : '?';
+
+        if (participantId) {
+            registerClassBattleParticipantMeta({
+                participantId,
+                displayName,
+                characterId
+            });
+        }
+
+        return {
+            participantId,
+            displayName,
+            characterId,
+            avatarSrc,
+            initial
+        };
+    }
+
+    function renderClassBattleAvatar(meta, sizeClass) {
+        const size = sizeClass ? ` ${sizeClass}` : '';
+        if (meta && meta.avatarSrc) {
+            return `<img src="${meta.avatarSrc}" alt="${escapeHtml(meta.displayName)}" class="class-avatar${size}" loading="lazy">`;
+        }
+        const fallbackText = meta && meta.initial ? meta.initial : '?';
+        return `<div class="class-avatar class-avatar-fallback${size}">${escapeHtml(fallbackText)}</div>`;
+    }
+
     function setClassCreateStatus(message, isError) {
         const el = document.getElementById('class-create-status');
         if (!el) return;
@@ -569,6 +633,7 @@ const Multiplayer = (() => {
             console.warn('Gagal keluar dari sesi class battle:', error);
         } finally {
             clearClassBattleParticipantCache();
+            classBattleParticipantMetaById = {};
         }
     }
 
@@ -643,7 +708,12 @@ const Multiplayer = (() => {
         list.innerHTML = rankedRows.slice(0, 10).map((row, index) => {
             const rank = Number(row.rank) || index + 1;
             const pid = String(row.participant_id || row.id || index);
-            const name = escapeHtml(row.participantName || row.display_name || 'Peserta');
+            const meta = resolveClassBattleParticipantMeta(
+                row,
+                row.participantName || row.display_name || 'Peserta'
+            );
+            const name = escapeHtml(meta.displayName);
+            const avatarMarkup = renderClassBattleAvatar(meta, 'class-avatar--lg');
             const reachedLevel = Math.max(0, Number(row.reached_level) || 0);
             const score = Number(row.score) || 0;
             const timeMs = Number(row.timeMs ?? row.time_ms) || 0;
@@ -685,6 +755,7 @@ const Multiplayer = (() => {
                         <span class="intermission-rank-number">${rank}</span>
                         ${medalEmoji ? `<span class="intermission-rank-medal">${medalEmoji}</span>` : ''}
                     </div>
+                    ${avatarMarkup}
                     <div class="intermission-rank-info">
                         <div class="intermission-rank-header">
                             <p class="intermission-rank-name">${name}</p>
@@ -767,12 +838,15 @@ const Multiplayer = (() => {
         }
 
         list.innerHTML = rows.slice(0, 30).map((row, index) => {
-            const name = escapeHtml((row && row.display_name) || `Peserta ${index + 1}`);
+            const meta = resolveClassBattleParticipantMeta(row, `Peserta ${index + 1}`);
+            const name = escapeHtml(meta.displayName);
+            const avatarMarkup = renderClassBattleAvatar(meta, 'class-avatar--chip');
             const hostTag = row && row.is_host
                 ? '<span class="ml-2 rounded bg-accent-500/20 px-2 py-0.5 text-[10px] font-bold text-accent-300">HOST</span>'
                 : '';
             return `
-                <div class="inline-flex items-center rounded-full border border-dark-600 bg-dark-800/70 px-3 py-1 text-xs text-dark-100">
+                <div class="inline-flex items-center gap-2 rounded-full border border-dark-600 bg-dark-800/70 px-3 py-1 text-xs text-dark-100">
+                    ${avatarMarkup}
                     <span>${name}</span>${hostTag}
                 </div>
             `;
@@ -1211,7 +1285,12 @@ const Multiplayer = (() => {
 
             list.innerHTML = rankedRows.slice(0, 30).map((row, index) => {
                 const rank = Number(row.rank) || index + 1;
-                const name = escapeHtml(row.participantName || row.display_name || 'Peserta');
+                const meta = resolveClassBattleParticipantMeta(
+                    row,
+                    row.participantName || row.display_name || 'Peserta'
+                );
+                const name = escapeHtml(meta.displayName);
+                const avatarMarkup = renderClassBattleAvatar(meta, 'class-avatar--sm');
                 const reachedLevel = Math.max(0, Number(row.reached_level) || 0);
                 const score = Number(row.score) || 0;
                 const timeMs = Number(row.timeMs ?? row.time_ms) || 0;
@@ -1227,6 +1306,7 @@ const Multiplayer = (() => {
                 return `
                     <li class="flex items-center gap-3 rounded-xl border border-dark-700 bg-dark-800/60 px-3 py-2">
                         <span class="min-w-[58px] rounded-lg border px-2 py-1 text-center text-[11px] font-extrabold tracking-wide ${badgeTone}">${badgeText}</span>
+                        ${avatarMarkup}
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-sm font-semibold text-dark-100">${name}</p>
                             <p class="text-[11px] text-dark-300">Lv ${reachedLevel}/${targetLevel} • ${score} pts</p>
@@ -1247,7 +1327,12 @@ const Multiplayer = (() => {
             } else {
                 resultList.innerHTML = rankedRows.slice(0, 30).map((row, index) => {
                     const rank = Number(row.rank) || index + 1;
-                    const name = escapeHtml(row.participantName || row.display_name || 'Peserta');
+                    const meta = resolveClassBattleParticipantMeta(
+                        row,
+                        row.participantName || row.display_name || 'Peserta'
+                    );
+                    const name = escapeHtml(meta.displayName);
+                    const avatarMarkup = renderClassBattleAvatar(meta, 'class-avatar--lg');
                     const reachedLevel = Math.max(0, Number(row.reached_level) || 0);
                     const score = Number(row.score) || 0;
                     const timeMs = Number(row.timeMs ?? row.time_ms) || 0;
@@ -1272,6 +1357,7 @@ const Multiplayer = (() => {
                         <div class="rounded-xl border px-3 py-2 ${cardTone}">
                             <div class="flex items-center gap-3">
                                 <span class="min-w-[60px] rounded-lg border px-2 py-1 text-center text-[11px] font-extrabold tracking-wide ${badgeTone}">${badgeText}</span>
+                                ${avatarMarkup}
                                 <div class="min-w-0 flex-1">
                                     <p class="truncate text-sm font-semibold text-dark-100">${name}</p>
                                     <p class="text-[11px] text-dark-300">${reachedLevel}/${targetLevel} level • ${score} pts</p>
@@ -1485,6 +1571,53 @@ const Multiplayer = (() => {
             const joinedName = payload && typeof payload.displayName === 'string'
                 ? payload.displayName.trim()
                 : '';
+            const joinedId = payload && payload.participantId ? String(payload.participantId) : '';
+            const joinedCharacterId = normalizeClassBattleCharacterId(payload && payload.characterId);
+            if (joinedId || joinedName || joinedCharacterId) {
+                registerClassBattleParticipantMeta({
+                    participantId: joinedId,
+                    displayName: joinedName,
+                    characterId: joinedCharacterId
+                });
+            }
+            if (
+                classBattleRole === 'host'
+                && classBattleParticipant
+                && classBattleParticipant.id
+                && joinedId
+                && joinedId !== String(classBattleParticipant.id)
+            ) {
+                const hostChar = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getSelected === 'function'
+                    ? CharacterSystem.getSelected()
+                    : null;
+                const hostCharacterId = hostChar ? hostChar.id : '';
+                if (hostCharacterId) {
+                    const bridge = getClassBattleBridge();
+                    if (bridge) {
+                        const entries = Object.entries(classBattleParticipantMetaById);
+                        const payloads = entries
+                            .map(([pid, meta]) => ({
+                                participantId: pid,
+                                displayName: meta.displayName || 'Peserta',
+                                characterId: meta.characterId || ''
+                            }))
+                            .filter((meta) => meta.characterId && meta.participantId);
+
+                        if (payloads.length === 0) {
+                            payloads.push({
+                                participantId: classBattleParticipant.id,
+                                displayName: classBattleParticipant.display_name || 'Host',
+                                characterId: hostCharacterId
+                            });
+                        }
+
+                        payloads.forEach((meta) => {
+                            if (meta.participantId === joinedId) return;
+                            bridge.broadcast('participant-joined', meta).catch(() => {});
+                        });
+                    }
+                }
+            }
             if (joinedName) {
                 setClassSessionStatus(`${joinedName} masuk room.`, false);
             }
@@ -1661,6 +1794,7 @@ const Multiplayer = (() => {
             classLevelTimerTargetLevel = 1;
             classBattleParticipantRows = [];
             classBattleRankingRows = [];
+            classBattleParticipantMetaById = {};
             setClassSessionCode('-');
             setClassSessionStatus('Offline', false);
             setClassCountdownLabel('-');
@@ -1844,6 +1978,10 @@ const Multiplayer = (() => {
         const mode = modeEl ? modeEl.value : 'coding';
         const targetLevel = Math.max(1, Math.floor(Number(targetEl && targetEl.value) || 1));
         const perLevelSeconds = Math.max(10, Math.min(300, Math.floor(Number(perLevelEl && perLevelEl.value) || 20)));
+        const myChar = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getSelected === 'function'
+            ? CharacterSystem.getSelected()
+            : null;
+        const characterId = myChar ? myChar.id : '';
 
         setClassCreateStatus('Membuat match...', false);
         setClassJoinStatus('', false);
@@ -1866,7 +2004,8 @@ const Multiplayer = (() => {
                 sessionCode: session.session_code,
                 displayName: hostName,
                 playerToken: session.host_token,
-                isHost: true
+                isHost: true,
+                characterId
             });
 
             classBattleSession = joined.session || session;
@@ -1875,6 +2014,15 @@ const Multiplayer = (() => {
             classBattleActive = false;
             classBattleStartLevel = 1;
             isHost = true;
+
+            if (characterId && classBattleParticipant) {
+                classBattleParticipant.character_id = characterId;
+                registerClassBattleParticipantMeta({
+                    participantId: classBattleParticipant.id,
+                    displayName: classBattleParticipant.display_name || hostName,
+                    characterId
+                });
+            }
 
             const resolvedSessionCode = classBattleSession && classBattleSession.session_code
                 ? classBattleSession.session_code
@@ -1938,6 +2086,10 @@ const Multiplayer = (() => {
         const codeEl = document.getElementById('class-join-code');
         const displayName = (nameEl && nameEl.value.trim()) || 'Peserta';
         const sessionCode = (codeEl && codeEl.value.trim()) || '';
+        const myChar = typeof CharacterSystem !== 'undefined' && typeof CharacterSystem.getSelected === 'function'
+            ? CharacterSystem.getSelected()
+            : null;
+        const characterId = myChar ? myChar.id : '';
 
         if (sessionCode.length !== 6 || isNaN(sessionCode)) {
             setClassJoinStatus('Kode match harus 6 digit angka.', true);
@@ -1960,7 +2112,8 @@ const Multiplayer = (() => {
             const joined = await bridge.service.joinSession({
                 sessionCode,
                 displayName,
-                isHost: false
+                isHost: false,
+                characterId
             });
 
             classBattleSession = joined.session;
@@ -1969,6 +2122,15 @@ const Multiplayer = (() => {
             classBattleActive = false;
             classBattleStartLevel = 1;
             isHost = false;
+
+            if (characterId && classBattleParticipant) {
+                classBattleParticipant.character_id = characterId;
+                registerClassBattleParticipantMeta({
+                    participantId: classBattleParticipant.id,
+                    displayName: classBattleParticipant.display_name || displayName,
+                    characterId
+                });
+            }
 
             const resolvedSessionCode = classBattleSession && classBattleSession.session_code
                 ? classBattleSession.session_code
@@ -2009,7 +2171,8 @@ const Multiplayer = (() => {
                 participantId: classBattleParticipant && classBattleParticipant.id,
                 displayName: classBattleParticipant && classBattleParticipant.display_name
                     ? classBattleParticipant.display_name
-                    : displayName
+                    : displayName,
+                characterId: characterId || ''
             }).catch(() => {});
 
             if (classBattleSession.status === 'in_progress') {
@@ -2775,6 +2938,7 @@ const Multiplayer = (() => {
         stopClassParticipantPolling();
         classBattleParticipantRows = [];
         classBattleRankingRows = [];
+        classBattleParticipantMetaById = {};
 
         setClassSessionPanelVisible(false);
         setClassSessionCode('-');

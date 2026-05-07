@@ -54,6 +54,17 @@
         return typeof value === 'string' ? value.trim() : '';
     }
 
+    function isMissingColumnError(error, columnName) {
+        const code = error && error.code;
+        if (code === '42703') return true;
+        const needle = String(columnName || '').toLowerCase();
+        if (!needle) return false;
+        const message = String((error && error.message) || '').toLowerCase();
+        const details = String((error && error.details) || '').toLowerCase();
+        const hint = String((error && error.hint) || '').toLowerCase();
+        return message.includes(needle) || details.includes(needle) || hint.includes(needle);
+    }
+
     function randomCode() {
         return String(Math.floor(100000 + Math.random() * 900000));
     }
@@ -157,7 +168,7 @@
             return set;
         }
 
-        async function joinSession({ sessionCode, displayName, playerToken, isHost }) {
+        async function joinSession({ sessionCode, displayName, playerToken, isHost, characterId }) {
             assertClient();
             const session = await getSessionByCode(sessionCode);
             if (!session) throw new Error('Sesi tidak ditemukan.');
@@ -180,11 +191,27 @@
                 is_host: Boolean(isHost)
             };
 
-            const query = applySelectSingle(client.from(tables.participants).insert([payload]), false);
-            const data = await run(query, 'Gagal bergabung ke sesi class battle.');
+            const safeCharacterId = toSafeString(characterId);
+            const payloadWithCharacter = safeCharacterId
+                ? { ...payload, character_id: safeCharacterId }
+                : payload;
+
+            let query = applySelectSingle(client.from(tables.participants).insert([payloadWithCharacter]), false);
+            let result = toResult(await query);
+
+            if (result.error && safeCharacterId && isMissingColumnError(result.error, 'character_id')) {
+                query = applySelectSingle(client.from(tables.participants).insert([payload]), false);
+                result = toResult(await query);
+            }
+
+            if (result.error) {
+                throw toError(result.error, 'Gagal bergabung ke sesi class battle.');
+            }
+
+            const data = result.data;
             return {
                 session,
-                participant: Array.isArray(data) ? data[0] : (data || payload)
+                participant: Array.isArray(data) ? data[0] : (data || payloadWithCharacter)
             };
         }
 
@@ -258,7 +285,13 @@
             const rows = Array.isArray(submissions) ? submissions : [];
 
             const participants = await listParticipants(sessionId);
-            const participantMap = new Map(participants.map((item) => [item.id, item.display_name]));
+            const participantMap = new Map(participants.map((item) => [
+                item.id,
+                {
+                    name: item.display_name,
+                    characterId: item.character_id || item.characterId || item.char_id || ''
+                }
+            ]));
 
             const normalizedRows = rows.map((row) => {
                 const reachedLevel = Math.max(0, Math.floor(Number(row && row.reached_level) || 0));
@@ -280,11 +313,13 @@
                     }
                 }
 
+                const participantMeta = participantMap.get(row.participant_id) || {};
                 return {
                     ...row,
                     timeMs: row.time_ms,
                     submittedAt: row.submitted_at,
-                    participantName: participantMap.get(row.participant_id) || row.display_name || 'Peserta',
+                    participantName: participantMeta.name || row.display_name || 'Peserta',
+                    characterId: participantMeta.characterId || row.character_id || row.characterId || '',
                     score
                 };
             });

@@ -65,7 +65,7 @@
                 return JSON.parse(localStorage.getItem(key) || '[]');
             },
             
-            async joinSession({ sessionCode, displayName, playerToken, isHost }) {
+            async joinSession({ sessionCode, displayName, playerToken, isHost, characterId }) {
                 const session = this.getSessionByCode(sessionCode);
                 if (!session) throw new Error('Sesi tidak ditemukan.');
                 
@@ -82,6 +82,7 @@
                     name_suffix: 1,
                     player_token: playerToken || randomId(),
                     is_host: !!isHost,
+                    character_id: characterId || '',
                     joined_at: new Date().toISOString()
                 };
                 
@@ -159,14 +160,21 @@
             fetchRanking({ sessionId, limit = 30 }) {
                 const key = SUBMISSIONS_KEY_PREFIX + sessionId;
                 const submissions = JSON.parse(localStorage.getItem(key) || '[]');
+                const participants = this.listParticipants(sessionId);
+                const participantMap = new Map(participants.map((item) => [item.id, item]));
                 
                 // Mock ranking logic: faster time + higher level = better score
                 const ranked = submissions
-                    .map(s => ({
-                        ...s,
-                        timeMs: s.time_ms,
-                        score: Math.floor((s.reached_level * 1000) + (60000 / Math.max(1, s.time_ms || 60000)))
-                    }))
+                    .map(s => {
+                        const participant = participantMap.get(s.participant_id);
+                        return {
+                            ...s,
+                            timeMs: s.time_ms,
+                            participantName: (participant && participant.display_name) || s.display_name || 'Peserta',
+                            characterId: (participant && participant.character_id) || '',
+                            score: Math.floor((s.reached_level * 1000) + (60000 / Math.max(1, s.time_ms || 60000)))
+                        };
+                    })
                     .sort((a, b) => b.score - a.score)
                     .slice(0, limit)
                     .map((s, i) => ({ ...s, rank: i + 1 }));
