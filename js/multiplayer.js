@@ -369,7 +369,7 @@ const Multiplayer = (() => {
         if (!overlay || !valueEl) return;
 
         if (left === '-' || left === null || typeof left === 'undefined') {
-            overlay.classList.add('hidden');
+            overlay.style.display = 'none';
             overlay.classList.remove('countdown-overlay-pop', 'countdown-overlay-danger');
             if (progressEl) progressEl.style.width = '0%';
             if (levelEl) levelEl.textContent = '';
@@ -410,7 +410,7 @@ const Multiplayer = (() => {
             progressEl.style.width = `${Math.round(progress01 * 100)}%`;
         }
 
-        overlay.classList.remove('hidden');
+        overlay.style.display = 'block';
         overlay.classList.toggle('countdown-overlay-danger', safeLeft <= 3);
         overlay.classList.remove('countdown-overlay-pop');
         void overlay.offsetWidth;
@@ -545,8 +545,7 @@ const Multiplayer = (() => {
         const overlay = document.getElementById('class-intermission-overlay');
         if (!overlay) return;
         classIntermissionVisible = visible;
-        overlay.classList.toggle('hidden', !visible);
-        overlay.classList.toggle('flex', visible);
+        overlay.style.display = visible ? 'flex' : 'none';
         if (!visible) {
             clearClassIntermissionTimers();
         }
