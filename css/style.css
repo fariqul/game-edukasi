@@ -1403,8 +1403,23 @@ body {
    ============================================ */
 
 .class-intermission-overlay {
-    background: #0b0f1a;
+    background-color: #0b0f1a;
+    background-image: none;
+    opacity: 1;
     backdrop-filter: blur(6px);
+}
+
+.class-intermission-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: #0b0f1a;
+    pointer-events: none;
+}
+
+.class-intermission-card {
+    position: relative;
+    z-index: 1;
 }
 
 .class-intermission-card {
@@ -1488,6 +1503,51 @@ body {
     0%,
     100% { opacity: 0.4; }
     50% { opacity: 0.95; }
+}
+
+@media (max-width: 640px) {
+    .class-intermission-card {
+        padding: 16px;
+        border-radius: 18px;
+        max-height: 86vh;
+        overflow-y: auto;
+    }
+
+    #class-intermission-level {
+        font-size: 1.25rem;
+    }
+
+    #class-intermission-ranking {
+        max-height: 40vh;
+        overflow-y: auto;
+    }
+
+    .class-intermission-rank {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    #class-intermission-advance-btn {
+        width: 100%;
+    }
+
+    #class-countdown-overlay {
+        left: 0.75rem;
+        right: 0.75rem;
+        top: 0.75rem;
+    }
+
+    #class-countdown-overlay > div {
+        min-width: 0 !important;
+        width: 100%;
+    }
+
+    #class-countdown-overlay-level {
+        max-width: 70%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
 
 .btn-modal:hover {
