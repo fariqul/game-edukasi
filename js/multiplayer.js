@@ -50,6 +50,7 @@ const Multiplayer = (() => {
     let classBattleRankingRows = [];
     let classBattleAdvanceNoticeUntil = 0;
     let classIntermissionVisible = false;
+    let previousIntermissionRankMap = {}; // {participantId: previousRank}
     let classIntermissionTimers = [];
     let classLevelTimerTicker = null;
     let classLevelTimerStartedAt = 0;
@@ -555,7 +556,7 @@ const Multiplayer = (() => {
         setClassIntermissionVisible(false);
     }
 
-    function playIntermissionSfx(rowCount) {
+    function playIntermissionSfx(rowCount, hasOvertake) {
         clearClassIntermissionTimers();
         if (typeof SoundManager === 'undefined') return;
 
@@ -569,6 +570,12 @@ const Multiplayer = (() => {
                 SoundManager.play('tick');
             }, 320 + i * 160));
         }
+
+        if (hasOvertake) {
+            classIntermissionTimers.push(setTimeout(() => {
+                SoundManager.play('levelUp');
+            }, 320 + safeCount * 160 + 200));
+        }
     }
 
     function renderClassIntermissionRanking(rows) {
@@ -577,48 +584,120 @@ const Multiplayer = (() => {
 
         const rankedRows = Array.isArray(rows) ? rows : [];
         if (rankedRows.length === 0) {
-            list.innerHTML = '<div class="class-intermission-rank" style="opacity:1; transform:none;">Belum ada submission.</div>';
-            playIntermissionSfx(0);
+            list.innerHTML = '<div class="intermission-empty-msg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Belum ada submission.</div>';
+            playIntermissionSfx(0, false);
             return;
         }
 
         const targetLevel = Math.max(1, Number(classBattleSession && classBattleSession.target_level) || 1);
+        let hasOvertake = false;
+
         list.innerHTML = rankedRows.slice(0, 10).map((row, index) => {
             const rank = Number(row.rank) || index + 1;
+            const pid = String(row.participant_id || row.id || index);
             const name = escapeHtml(row.participantName || row.display_name || 'Peserta');
             const reachedLevel = Math.max(0, Number(row.reached_level) || 0);
             const score = Number(row.score) || 0;
             const timeMs = Number(row.timeMs ?? row.time_ms) || 0;
-            const badgeTone = rank === 1
-                ? 'border-yellow-300/50 bg-yellow-500/20 text-yellow-200'
+            const progressPercent = Math.max(0, Math.min(100, Math.round((reachedLevel / targetLevel) * 100)));
+
+            // Determine rank change from previous intermission
+            const prevRank = previousIntermissionRankMap[pid];
+            let rankChangeClass = '';
+            let rankChangeIndicator = '';
+            if (typeof prevRank === 'number' && prevRank !== rank) {
+                const diff = prevRank - rank;
+                if (diff > 0) {
+                    // Moved up
+                    rankChangeClass = 'rank-moved-up';
+                    rankChangeIndicator = `<span class="rank-change-arrow rank-up"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2L10 7H2L6 2Z" fill="currentColor"/></svg>+${diff}</span>`;
+                    hasOvertake = true;
+                } else {
+                    // Moved down (got overtaken)
+                    rankChangeClass = 'rank-moved-down';
+                    rankChangeIndicator = `<span class="rank-change-arrow rank-down"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10L2 5H10L6 10Z" fill="currentColor"/></svg>${diff}</span>`;
+                }
+            }
+
+            // Card styling matching final ranking
+            const cardTone = rank === 1
+                ? 'intermission-rank-gold'
                 : rank === 2
-                    ? 'border-slate-300/50 bg-slate-400/20 text-slate-200'
+                    ? 'intermission-rank-silver'
                     : rank === 3
-                        ? 'border-amber-400/50 bg-amber-500/20 text-amber-200'
-                        : 'border-dark-500 bg-dark-700/60 text-dark-200';
-            const badgeText = rank <= 3 ? `TOP ${rank}` : `#${rank}`;
+                        ? 'intermission-rank-bronze'
+                        : 'intermission-rank-default';
+
+            const medalEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+            const rankLabel = rank <= 3 ? `TOP ${rank}` : `#${rank}`;
+
             return `
-                <div class="class-intermission-rank" data-rank="${rank}">
-                    <span class="rank-badge rounded-lg border px-2 py-1 ${badgeTone}">${badgeText}</span>
-                    <div class="min-w-0 flex-1">
-                        <p class="truncate text-sm font-semibold text-dark-100">${name}</p>
-                        <p class="text-[11px] text-dark-300">Lv ${reachedLevel}/${targetLevel} • ${score} pts</p>
+                <div class="intermission-rank-card ${cardTone} ${rankChangeClass}" data-rank="${rank}" data-pid="${pid}">
+                    <div class="intermission-rank-position">
+                        <span class="intermission-rank-number">${rank}</span>
+                        ${medalEmoji ? `<span class="intermission-rank-medal">${medalEmoji}</span>` : ''}
                     </div>
-                    <span class="text-xs font-mono text-accent-300">${formatTime(timeMs)}</span>
+                    <div class="intermission-rank-info">
+                        <div class="intermission-rank-header">
+                            <p class="intermission-rank-name">${name}</p>
+                            ${rankChangeIndicator}
+                        </div>
+                        <div class="intermission-rank-stats">
+                            <span>Lv ${reachedLevel}/${targetLevel}</span>
+                            <span class="intermission-rank-score">${score} pts</span>
+                            <span class="intermission-rank-time">${formatTime(timeMs)}</span>
+                        </div>
+                        <div class="intermission-rank-progress-bar">
+                            <div class="intermission-rank-progress-fill" style="width:${progressPercent}%" data-progress="${progressPercent}"></div>
+                        </div>
+                    </div>
                 </div>
             `;
         }).join('');
 
-        const items = Array.from(list.querySelectorAll('.class-intermission-rank'));
+        // Save current ranks for next intermission comparison
+        const newRankMap = {};
+        rankedRows.forEach((row, index) => {
+            const pid = String(row.participant_id || row.id || index);
+            newRankMap[pid] = Number(row.rank) || index + 1;
+        });
+        previousIntermissionRankMap = newRankMap;
+
+        // Animate entrance with staggered reveal
+        const items = Array.from(list.querySelectorAll('.intermission-rank-card'));
         items.forEach((item, index) => {
-            const delayMs = index * 180;
-            item.style.animation = `rankReveal 0.45s ease forwards ${delayMs}ms, rankShake 0.35s ease ${delayMs + 420}ms`;
+            const delayMs = index * 220;
+            item.style.animationDelay = `${delayMs}ms`;
+            item.classList.add('intermission-rank-animate-in');
+
+            // If rank changed, add movement animation after reveal
+            if (item.classList.contains('rank-moved-up')) {
+                const extraDelay = delayMs + 500;
+                setTimeout(() => {
+                    item.classList.add('rank-overtake-pulse');
+                }, extraDelay);
+            } else if (item.classList.contains('rank-moved-down')) {
+                const extraDelay = delayMs + 500;
+                setTimeout(() => {
+                    item.classList.add('rank-dropped-shake');
+                }, extraDelay);
+            }
+
             if (index === 0) {
                 item.classList.add('rank-top');
             }
         });
 
-        playIntermissionSfx(items.length);
+        // Animate progress bars after cards appear
+        setTimeout(() => {
+            const fills = list.querySelectorAll('.intermission-rank-progress-fill');
+            fills.forEach((fill) => {
+                const target = fill.getAttribute('data-progress') || '0';
+                fill.style.width = target + '%';
+            });
+        }, items.length * 220 + 300);
+
+        playIntermissionSfx(items.length, hasOvertake);
     }
 
     function renderClassParticipantPreview(participants) {
